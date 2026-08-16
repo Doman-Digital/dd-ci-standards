@@ -1,0 +1,124 @@
+name: node-ci (reusable)
+
+# Reference reusable CI for a single-app pnpm/Node repo. NOT yet adopted by
+# any repo in the portfolio as of 2026-08-16 — each repo's existing ci.yml
+# reflects real, previously-tested logic (GitHub App token minting for
+# private deps, Playwright caching, monorepo path filters) that a first-pass
+# generic workflow shouldn't blindly replace while GitHub Actions billing is
+# blocked and no run can verify the swap. Migrate one repo at a time once
+# billing clears and each migration can be confirmed by an actual green run.
+#
+# Adoption, once ready:
+#
+#   jobs:
+#     ci:
+#       uses: Doman-Digital/ci-standards/.github/workflows/node-ci.yml@v1
+#       with:
+#         node_version: "22"
+#       secrets: inherit
+#
+# Pin the @v1 tag and let Renovate keep it current — that's what stops every
+# repo re-drifting onto a different actions/checkout generation.
+
+on:
+  workflow_call:
+    inputs:
+      node_version:
+        type: string
+        default: "22"
+      pnpm_version:
+        type: string
+        default: "9"
+      run_lint:
+        type: boolean
+        default: true
+      lint_command:
+        type: string
+        default: "pnpm run lint"
+      run_typecheck:
+        type: boolean
+        default: true
+      typecheck_command:
+        type: string
+        default: "pnpm run typecheck"
+      run_test:
+        type: boolean
+        default: true
+      test_command:
+        type: string
+        default: "pnpm run test"
+      run_build:
+        type: boolean
+        default: true
+      build_command:
+        type: string
+        default: "pnpm run build"
+      # Set when a private git+https dependency needs a short-lived GitHub
+      # App token minted before `pnpm install` (mirrors the pattern already
+      # used by redacted, redacted, Doman-Digital for dd-graph).
+      private_dep_owner:
+        type: string
+        default: ""
+      private_dep_repo:
+        type: string
+        default: ""
+      timeout_minutes:
+        type: number
+        default: 10
+    secrets:
+      PRIVATE_DEP_APP_ID:
+        required: false
+      PRIVATE_DEP_APP_PRIVATE_KEY:
+        required: false
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.timeout_minutes }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ inputs.pnpm_version }}
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ inputs.node_version }}
+          cache: "pnpm"
+
+      - name: Mint GitHub App token for private dependency
+        if: inputs.private_dep_owner != '' && inputs.private_dep_repo != ''
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.PRIVATE_DEP_APP_ID }}
+          private-key: ${{ secrets.PRIVATE_DEP_APP_PRIVATE_KEY }}
+          owner: ${{ inputs.private_dep_owner }}
+          repositories: ${{ inputs.private_dep_repo }}
+
+      - name: Authenticate git for private dependency
+        if: inputs.private_dep_owner != '' && inputs.private_dep_repo != ''
+        run: |
+          git config --global \
+            url."https://x-access-token:${{ steps.app-token.outputs.token }}@github.com/${{ inputs.private_dep_owner }}/${{ inputs.private_dep_repo }}".insteadOf \
+            "https://github.com/${{ inputs.private_dep_owner }}/${{ inputs.private_dep_repo }}"
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        if: inputs.run_lint
+        run: ${{ inputs.lint_command }}
+
+      - name: Typecheck
+        if: inputs.run_typecheck
+        run: ${{ inputs.typecheck_command }}
+
+      - name: Test
+        if: inputs.run_test
+        run: ${{ inputs.test_command }}
+
+      - name: Build
+        if: inputs.run_build
+        run: ${{ inputs.build_command }}

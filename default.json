@@ -1,0 +1,38 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "timezone": "Europe/London",
+  "schedule": ["before 6am on monday"],
+  "prConcurrentLimit": 3,
+  "prHourlyLimit": 2,
+  "dependencyDashboard": true,
+  "labels": ["dependencies"],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 6am on the first day of the month"]
+  },
+  "packageRules": [
+    {
+      "description": "Group all non-major updates into one PR per repo instead of one per package",
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "all non-major dependencies"
+    },
+    {
+      "description": "Group major updates by manager instead of one PR per package — this is the fix for the 18-PR fan-out found on redacted 2026-08-10, where every major landed as its own PR despite dependencyDashboard-style grouping already being configured for minors",
+      "matchUpdateTypes": ["major"],
+      "groupName": "{{manager}} major dependencies"
+    },
+    {
+      "description": "Automerge devDependencies once CI is green — they don't run in production, so a bad bump breaks the build loudly rather than shipping",
+      "matchDepTypes": ["devDependencies"],
+      "automerge": true,
+      "platformAutomerge": true
+    },
+    {
+      "description": "Automerge patch bumps on any dependency type once CI is green — semver-safe by convention",
+      "matchUpdateTypes": ["patch"],
+      "automerge": true,
+      "platformAutomerge": true
+    }
+  ]
+}

@@ -1,0 +1,192 @@
+# Registry of every recurring CI/Vercel cost across the portfolio: GitHub
+# Actions `schedule:` crons and Vercel `crons:` entries. scripts/check-workflow-
+# policy.mjs fails a PR that adds a schedule or vercel.json cron not listed
+# here — a cron becomes something you register with a reason, not something
+# that silently starts billing.
+#
+# Baseline captured 2026-08-16 from the portfolio CI/Vercel audit. Add a new
+# entry in the same PR that adds the cron, with a one-line reason.
+
+repos:
+  Doman-Digital:
+    github_actions_crons:
+      - workflow: stale.yml
+        cron: "30 1 * * *"
+        reason: "daily stale issue/PR sweep, no checkout, near-zero cost"
+      - workflow: coverage-audit.yml
+        cron: "0 5 * * 1"
+        reason: "weekly content coverage crawl of production, 15min cap"
+      - workflow: ci.yml
+        cron: "0 6 * * 1"
+        reason: "weekly comprehensive full-suite sweep — deliberate, catches regressions on repos that haven't shipped in a week; paths-filter is intentionally bypassed on this trigger"
+      - workflow: security-rotation-reminder.yml
+        cron: "0 9 1 1,4,7,10 *"
+        reason: "quarterly secret-rotation-due check, 5min cap"
+    vercel_crons:
+      - app: apps/marketing
+        path: /api/cron/churn-followup
+        schedule: "0 9 * * *"
+        reason: "daily churn-followup dispatch"
+      - app: apps/portal
+        path: /api/internal/demo-followup/dispatch
+        schedule: "30 9 * * *"
+        reason: "daily demo-followup dispatch"
+
+  chair-and-blade:
+    github_actions_crons: []
+    vercel_crons:
+      - app: root
+        path: /api/cron/revalidate-reviews
+        schedule: "0 3 * * *"
+        reason: "daily Google review revalidation"
+
+  Tardi-Group:
+    github_actions_crons: []
+    vercel_crons:
+      - app: root
+        path: /api/cron/nurture
+        schedule: "0 9 * * *"
+        reason: "daily lead nurture sequence"
+      - app: root
+        path: /api/cron/gdpr-retention
+        schedule: "0 3 * * *"
+        reason: "daily GDPR data retention sweep"
+
+  sen-sphere:
+    github_actions_crons: []
+    vercel_crons:
+      - app: apps/portal
+        path: /api/portal/cron/notifications
+        schedule: "0 7 * * *"
+        reason: "daily portal notification dispatch"
+
+  RMP-Electrical:
+    github_actions_crons: []
+    vercel_crons: []
+
+  Rise-and-bloom:
+    github_actions_crons: []
+    vercel_crons: []
+
+  MMM-Beauty:
+    github_actions_crons:
+      - workflow: lighthouse.yml
+        cron: "0 3 * * 1"
+        reason: "weekly Lighthouse run — moved off every-PR after it became the single most expensive part of CI"
+    # 23 Vercel crons registered on apps/portal as of 2026-08-16, ~2,180
+    # invocations/day, dominated by process-jobs running every minute
+    # (1,440/day alone). Flagged in the audit as a Phase 4 follow-up —
+    # process-jobs is a strong candidate to move to QStash event-driven
+    # dispatch instead of a minute poll. Registering the full baseline here
+    # so the policy check doesn't fire on pre-existing crons; do not add to
+    # this list without a reason, and treat this repo's cron count itself
+    # as the thing to bring down, not just keep steady.
+    vercel_crons:
+      - app: apps/portal
+        path: /api/cron/process-jobs
+        schedule: "* * * * *"
+        reason: "job queue poll — candidate for QStash event-driven replacement, see Phase 4"
+      - app: apps/portal
+        path: /api/cron/sync-gmail
+        schedule: "*/5 * * * *"
+        reason: "inbox sync"
+      - app: apps/portal
+        path: /api/cron/warm-revenue-cache
+        schedule: "*/8 * * * *"
+        reason: "revenue dashboard cache warm"
+      - app: apps/portal
+        path: /api/cron/expire-slot-holds
+        schedule: "*/15 * * * *"
+        reason: "booking slot hold expiry"
+      - app: apps/portal
+        path: /api/cron/sync-receipts
+        schedule: "*/20 * * * *"
+        reason: "receipt sync"
+      - app: apps/portal
+        path: /api/cron/reconcile-gift-cards
+        schedule: "*/30 * * * *"
+        reason: "gift card reconciliation"
+      - app: apps/portal
+        path: /api/cron/reconcile-orphan-bookings
+        schedule: "0 * * * *"
+        reason: "hourly orphan booking reconciliation"
+      - app: apps/portal
+        path: /api/cron/reconcile-square-bookings
+        schedule: "15 */2 * * *"
+        reason: "Square booking reconciliation"
+      - app: apps/portal
+        path: /api/cron/recovery
+        schedule: "0 */4 * * *"
+        reason: "recovery sweep"
+      - app: apps/portal
+        path: /api/cron/data-retention
+        schedule: "30 2 * * *"
+        reason: "daily data retention sweep"
+      - app: apps/portal
+        path: /api/cron/reconcile-payments
+        schedule: "0 3 * * *"
+        reason: "daily payment reconciliation"
+      - app: apps/portal
+        path: /api/cron/lifecycle-emitter
+        schedule: "30 3 * * *"
+        reason: "lifecycle event emission"
+      - app: apps/portal
+        path: /api/cron/sync-square-sanity
+        schedule: "0 4 * * *"
+        reason: "Square-to-Sanity sync"
+      - app: apps/portal
+        path: /api/cron/sync-instagram-gallery
+        schedule: "15 4 * * *"
+        reason: "Instagram gallery sync"
+      - app: apps/portal
+        path: /api/cron/sync-freeagent-tax
+        schedule: "0 5 * * *"
+        reason: "FreeAgent tax sync"
+      - app: apps/portal
+        path: /api/cron/sync-reviews
+        schedule: "0 5 * * *"
+        reason: "review sync"
+      - app: apps/portal
+        path: /api/cron/sync-personal-finance
+        schedule: "10 5 * * *"
+        reason: "personal finance sync"
+      - app: apps/portal
+        path: /api/cron/detect-recurring-bills
+        schedule: "35 5 * * *"
+        reason: "recurring bill detection"
+      - app: apps/portal
+        path: /api/cron/reconcile-unit-costs
+        schedule: "50 5 * * *"
+        reason: "unit cost reconciliation"
+      - app: apps/portal
+        path: /api/cron/sync-marketing-analytics
+        schedule: "0 6 * * *"
+        reason: "marketing analytics sync"
+      - app: apps/portal
+        path: /api/cron/lumi-outreach-digest
+        schedule: "0 7 * * *"
+        reason: "outreach digest"
+      - app: apps/portal
+        path: /api/cron/finance-digest
+        schedule: "0 8 * * *"
+        reason: "finance digest"
+      - app: apps/portal
+        path: /api/cron/consultation-form-chaser
+        schedule: "0 10 * * *"
+        reason: "consultation form follow-up"
+
+  dd-graph:
+    github_actions_crons: []
+    vercel_crons: []
+
+  dd-gbp:
+    github_actions_crons: []
+    vercel_crons: []
+
+  dd-seo:
+    github_actions_crons: []
+    vercel_crons: []
+
+  verqan-api:
+    github_actions_crons: []
+    vercel_crons: []

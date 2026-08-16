@@ -1,0 +1,41 @@
+name: ci-standards policy
+
+# Reusable workflow — call it from any repo's own CI:
+#
+#   jobs:
+#     ci-standards-policy:
+#       uses: Doman-Digital/ci-standards/.github/workflows/policy.yml@v1
+#
+# Fails the calling PR if it reintroduces the waste patterns found in the
+# 2026-08-16 portfolio CI audit: push+pull_request double-runs, jobs with
+# no timeout-minutes, PR-triggered workflows with no concurrency
+# cancellation, unregistered cron schedules (GitHub Actions or Vercel), and
+# unexplained continue-on-error. See scripts/check-workflow-policy.mjs for
+# what each check actually does.
+
+on:
+  workflow_call: {}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout calling repo
+        uses: actions/checkout@v7
+        with:
+          path: repo
+
+      - name: Checkout ci-standards
+        uses: actions/checkout@v7
+        with:
+          repository: Doman-Digital/ci-standards
+          ref: v1
+          path: ci-standards
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Run policy check
+        run: node ci-standards/scripts/check-workflow-policy.mjs repo ci-standards/budget.yml
