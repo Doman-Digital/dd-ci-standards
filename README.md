@@ -41,7 +41,11 @@ has to pass a policy check to merge, not get caught in the next audit.
 - **`default.json`** — shared Renovate preset. Weekly Monday-morning window,
   concurrency caps, majors grouped by manager (the fix for an 18-PR fan-out
   where individually-grouped minors still let every major land separately),
-  automerge on devDependencies and patch bumps only.
+  automerge on devDependencies and patch bumps only. Vulnerability handling
+  is the deliberate exception to all of the above: `osvVulnerabilityAlerts`
+  + `vulnerabilityAlerts` bypass the weekly schedule and concurrency cap
+  entirely (`schedule: "at any time"`, `prConcurrentLimit: 0`) — a real CVE
+  gets an immediate PR, everything else stays batched.
 
 ## Versioning
 

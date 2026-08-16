@@ -11,6 +11,13 @@
     "enabled": true,
     "schedule": ["before 6am on the first day of the month"]
   },
+  "osvVulnerabilityAlerts": true,
+  "vulnerabilityAlerts": {
+    "schedule": ["at any time"],
+    "prConcurrentLimit": 0,
+    "prCreation": "immediate",
+    "labels": ["security"]
+  },
   "packageRules": [
     {
       "description": "Group all non-major updates into one PR per repo instead of one per package",
