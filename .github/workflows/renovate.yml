@@ -16,8 +16,13 @@ name: Renovate (self-hosted)
 # One job per GitHub owner, each minting its own short-lived App
 # installation token (mirrors the same actions/create-github-app-token
 # pattern already used in every repo's own ci.yml for the private dd-graph
-# dependency) and running Renovate with --autodiscover, scoped naturally to
-# whatever that installation can see.
+# dependency), running Renovate against an explicit repo list rather than
+# --autodiscover. Autodiscover was tried first and it scanned every repo the
+# App's installation could see under each owner, including repos that were
+# never part of this rollout and were never onboarded (e.g. Doman-Digital's
+# own dd-library, StarrLuxury) -- those failed at initRepo, harmlessly under
+# --dry-run, but it's the wrong blast radius for a real run. List only the
+# repos that actually carry a renovate.json from this rollout.
 
 on:
   schedule:
@@ -38,14 +43,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        owner:
-          - dmitridoman
-          - Doman-Digital
-          - rmp474
-          - chairandblade
-          - joetardi
-          - riseandbloom
-          - sensphere
+        include:
+          - owner: dmitridoman
+            repos: "dmitridoman/Doman-Digital dmitridoman/redacted-api"
+          - owner: Doman-Digital
+            repos: "Doman-Digital/dd-graph Doman-Digital/dd-gbp Doman-Digital/dd-seo"
+          - owner: redacted
+            repos: "redacted/redacted"
+          - owner: redacted
+            repos: "redacted/redacted"
+          - owner: redacted
+            repos: "redacted/redacted"
+          - owner: redacted
+            repos: "redacted/redacted"
+          - owner: redacted
+            repos: "redacted/redacted"
     steps:
       - name: Mint token for ${{ matrix.owner }}
         id: app-token
@@ -59,8 +71,6 @@ jobs:
         env:
           RENOVATE_TOKEN: ${{ steps.app-token.outputs.token }}
           RENOVATE_PLATFORM: github
-          RENOVATE_AUTODISCOVER: "true"
-          RENOVATE_AUTODISCOVER_FILTER: "${{ matrix.owner }}/*"
           RENOVATE_DRY_RUN: ${{ (github.event_name == 'workflow_dispatch' && inputs.dryRun) && 'full' || 'null' }}
-          LOG_LEVEL: info
-        run: npx --yes renovate
+          LOG_LEVEL: debug
+        run: npx --yes renovate ${{ matrix.repos }}
