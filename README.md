@@ -22,6 +22,18 @@ has to pass a policy check to merge, not get caught in the next audit.
   repo's own CI to run the policy check against that repo:
 
   ```yaml
+  name: ci-standards policy
+
+  on:
+    pull_request:
+
+  # The gate has to satisfy its own [missing-concurrency] rule. Copy this
+  # block along with the job or the policy workflow flags its own file on
+  # every PR.
+  concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
   jobs:
     ci-standards-policy:
       uses: Doman-Digital/ci-standards/.github/workflows/policy.yml@v1
@@ -31,6 +43,22 @@ has to pass a policy check to merge, not get caught in the next audit.
   missing `timeout-minutes`, PR-triggered workflows missing a `concurrency`
   cancel group, unregistered crons (GitHub Actions and Vercel), and
   `continue-on-error: true` with no explanatory comment.
+
+  Two of those take an in-file opt-out, because the intent belongs where the
+  next reader is standing rather than in a config file they won't open:
+
+  - `continue-on-error: true` is accepted with a comment in the three lines
+    above it.
+  - A deliberate double-run is accepted with a
+    `# ci-standards: allow-double-run <reason>` comment anywhere in the
+    workflow. Use it for a genuine backstop — a secret scan or commit-author
+    check that re-runs on push to main catches whatever reaches main without
+    a PR, which is the exact case branch protection can be bypassed for.
+    Scoping push to a non-overlapping branch there would delete the coverage,
+    not the waste.
+
+  Neither opt-out is a way to silence the gate on ordinary waste. A full
+  test suite re-running on push to main is the thing this rule exists for.
 
 - **`.github/workflows/node-ci.yml`** — reference reusable CI for a single
   pnpm/Node app. **Not yet adopted anywhere** — see the comment at the top
