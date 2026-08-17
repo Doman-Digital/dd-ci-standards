@@ -1,0 +1,37 @@
+name: ci-standards policy (self)
+
+# The gate, run against the repo that defines it.
+#
+# Deliberately NOT `uses: ./.github/workflows/policy.yml` or the @v1 reusable
+# call every consumer makes. That workflow hardcodes `ref: v1` when it checks
+# out the script, so a PR editing check-workflow-policy.mjs would be graded by
+# the already-released version of itself and could never fail on its own
+# change. Running the script straight out of the PR checkout is the whole
+# point: the policy has to hold on the PR's code, not on the last tag.
+#
+# This exists because two defects sat here unnoticed while the gate ran green
+# in six consumer repos: the caller snippet in README.md omitted the
+# concurrency block (so every repo that copied it failed [missing-concurrency]
+# forever), and checkTimeouts rejected `timeout-minutes: ${{ inputs.x }}`.
+# Nothing was checking this repo.
+
+on:
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  self-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Run policy check against this repo
+        run: node scripts/check-workflow-policy.mjs . budget.yml

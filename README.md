@@ -22,6 +22,18 @@ has to pass a policy check to merge, not get caught in the next audit.
   repo's own CI to run the policy check against that repo:
 
   ```yaml
+  name: ci-standards policy
+
+  on:
+    pull_request:
+
+  # The gate has to satisfy its own [missing-concurrency] rule. Copy this
+  # block along with the job or the policy workflow flags its own file on
+  # every PR.
+  concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
   jobs:
     ci-standards-policy:
       uses: Doman-Digital/ci-standards/.github/workflows/policy.yml@v1

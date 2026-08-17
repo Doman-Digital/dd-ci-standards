@@ -1,6 +1,17 @@
 name: ci-standards policy
 
-# Reusable workflow — call it from any repo's own CI:
+# Reusable workflow — call it from any repo's own CI. Copy the whole
+# snippet, concurrency block included: the caller runs on pull_request, so
+# without it the gate reports [missing-concurrency] against its own file.
+#
+#   name: ci-standards policy
+#
+#   on:
+#     pull_request:
+#
+#   concurrency:
+#     group: ${{ github.workflow }}-${{ github.ref }}
+#     cancel-in-progress: true
 #
 #   jobs:
 #     ci-standards-policy:

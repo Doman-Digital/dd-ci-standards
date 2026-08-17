@@ -130,7 +130,11 @@ function checkTimeouts(file, text) {
       // in the called workflow, not here.
       continue;
     }
-    if (!/timeout-minutes:\s*\d+/.test(block)) {
+    // Accept an expression as well as a literal — a reusable workflow sets
+    // its timeout from an input (`timeout-minutes: ${{ inputs.timeout_minutes }}`),
+    // which is a real timeout, not a missing one. Mirrors how the
+    // cancel-in-progress check treats expressions.
+    if (!/timeout-minutes:\s*(\d+|\$\{\{)/.test(block)) {
       violations.push({
         file,
         rule: "missing-timeout",
