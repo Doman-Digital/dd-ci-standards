@@ -93,14 +93,26 @@ function checkDoubleRun(file, text) {
   const overlap = pushBranches.length === 0 || prBranches.length === 0
     ? true // no explicit branch filter on one side — can't rule out overlap, so flag it
     : pushBranches.some((b) => prBranches.includes(b));
-  if (overlap) {
-    violations.push({
-      file,
-      rule: "double-run",
-      message:
-        "triggers on both push and pull_request for overlapping branches — the push run re-tests a commit the PR already tested. If this is deliberate (e.g. no other automated gate exists for this repo), add a comment explaining why and keep this check happy by scoping push to non-overlapping branches, or ask for an exception in the ci-standards repo.",
-    });
-  }
+  if (!overlap) return;
+  // Deliberate double-runs exist. A security backstop that re-runs on push to
+  // main catches anything that reaches main without a PR, which is exactly the
+  // case branch protection can be bypassed for — scoping push to a
+  // non-overlapping branch would delete the coverage rather than the waste.
+  // Opt out in-file, same convention as continue-on-error: record the intent
+  // where the next reader will be standing.
+  //
+  //   # ci-standards: allow-double-run <reason>
+  //
+  // The old message told people to "ask for an exception in the ci-standards
+  // repo", which was never implemented, so the only way to satisfy the rule
+  // was to weaken the workflow.
+  if (/#\s*ci-standards:\s*allow-double-run\b/.test(text)) return;
+  violations.push({
+    file,
+    rule: "double-run",
+    message:
+      "triggers on both push and pull_request for overlapping branches — the push run re-tests a commit the PR already tested. Scope push to non-overlapping branches, or if the push run is a deliberate backstop, add a `# ci-standards: allow-double-run <reason>` comment to the workflow.",
+  });
 }
 
 function extractBranches(onBlock, trigger) {

@@ -175,6 +175,10 @@ repos:
         schedule: "0 10 * * *"
         reason: "consultation form follow-up"
 
+  mmm-beauty-app:
+    github_actions_crons: []
+    vercel_crons: []
+
   dd-graph:
     github_actions_crons: []
     vercel_crons: []
