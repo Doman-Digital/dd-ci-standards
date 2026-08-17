@@ -67,6 +67,23 @@ jobs:
           private-key: ${{ secrets.CI_GH_APP_PRIVATE_KEY }}
           owner: ${{ matrix.owner }}
 
+      # Every target repo here is pnpm-managed, and Renovate shells out to the
+      # package manager (e.g. `pnpm install --lockfile-only`) when it needs to
+      # regenerate a lockfile for a vulnerability-remediation branch --
+      # osvVulnerabilityAlerts in default.json makes those immediate rather
+      # than deferred, so this isn't a rare path. The runner has no pnpm by
+      # default; the first real run hit `spawn pnpm ENOENT` on every such
+      # branch, logged it as a non-fatal unhandledRejection, and then spent
+      # the rest of its 30-minute budget retrying before finally exiting --
+      # so this shows up as a near-total hang, not a fast, obvious failure.
+      # `corepack enable` (not a hardcoded pnpm/action-setup version) because
+      # Renovate clones each target repo into its own temp dir and Corepack
+      # resolves the pnpm version from *that* directory's own package.json
+      # packageManager field -- exactly what's needed across repos pinned to
+      # different pnpm majors (9.x here, 10.x there).
+      - name: Enable Corepack (pnpm via each repo's own packageManager field)
+        run: corepack enable
+
       - name: Run Renovate
         env:
           RENOVATE_TOKEN: ${{ steps.app-token.outputs.token }}
