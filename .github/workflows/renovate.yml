@@ -1,0 +1,66 @@
+name: Renovate (self-hosted)
+
+# Runs Renovate directly via GitHub Actions instead of depending on Mend's
+# hosted service. Built 2026-08-17 after the hosted onboarding flow at
+# developer.mend.io returned a 403 on "Failed to onboard organizations" for
+# at least one account (redacted) and every repo across the portfolio
+# showed zero Renovate activity days after install — a CLI dry-run against
+# Doman-Digital (see the ci-standards README) had already proven the
+# renovate.json config itself resolves correctly, so the fault was Mend's
+# onboarding backend, not this config. This workflow sidesteps it entirely.
+#
+# Lives here (Doman-Digital org) rather than on a personal account on
+# purpose: dmitridoman's personal GitHub Actions billing was blocked as of
+# 2026-08-17. The org account showed no such block.
+#
+# One job per GitHub owner, each minting its own short-lived App
+# installation token (mirrors the same actions/create-github-app-token
+# pattern already used in every repo's own ci.yml for the private dd-graph
+# dependency) and running Renovate with --autodiscover, scoped naturally to
+# whatever that installation can see.
+
+on:
+  schedule:
+    # Inside the "before 6am on monday" window set in default.json.
+    - cron: "0 5 * * 1"
+  workflow_dispatch:
+    inputs:
+      dryRun:
+        description: "Dry run (no PRs opened)"
+        required: true
+        default: true
+        type: boolean
+
+jobs:
+  renovate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        owner:
+          - dmitridoman
+          - Doman-Digital
+          - rmp474
+          - chairandblade
+          - joetardi
+          - riseandbloom
+          - sensphere
+    steps:
+      - name: Mint token for ${{ matrix.owner }}
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.CI_GH_APP_ID }}
+          private-key: ${{ secrets.CI_GH_APP_PRIVATE_KEY }}
+          owner: ${{ matrix.owner }}
+
+      - name: Run Renovate
+        env:
+          RENOVATE_TOKEN: ${{ steps.app-token.outputs.token }}
+          RENOVATE_PLATFORM: github
+          RENOVATE_AUTODISCOVER: "true"
+          RENOVATE_AUTODISCOVER_FILTER: "${{ matrix.owner }}/*"
+          RENOVATE_DRY_RUN: ${{ (github.event_name == 'workflow_dispatch' && inputs.dryRun) && 'full' || 'null' }}
+          LOG_LEVEL: info
+        run: npx --yes renovate
