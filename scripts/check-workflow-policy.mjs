@@ -125,9 +125,15 @@ function checkTimeouts(file, text) {
     const start = headers[i].index;
     const end = i + 1 < headers.length ? headers[i + 1].index : body.length;
     const block = body.slice(start, end);
-    if (/uses:\s*\S/.test(block) && /^  \S+:\s*\n\s{4}uses:/m.test(block)) {
-      // Job calls a reusable workflow (uses: at job level) — timeout lives
-      // in the called workflow, not here.
+    // Job calls a reusable workflow (uses: at job level) — timeout lives in
+    // the called workflow, not here. Match a job-level `uses:` anywhere in
+    // the block rather than only as the first key: redacted's reviewer_pr
+    // and reviewer_manual put `if:` and `needs:` ahead of it, so the old
+    // first-key-only pattern missed them and reported a missing timeout on
+    // two jobs whose reusable workflow sets timeout-minutes: 120. Four-space
+    // indent is what distinguishes a job-level `uses:` from a step's
+    // `      - uses:`.
+    if (/^ {4}uses:\s*\S/m.test(block)) {
       continue;
     }
     // Accept an expression as well as a literal — a reusable workflow sets
