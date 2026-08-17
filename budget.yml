@@ -183,6 +183,10 @@ repos:
     github_actions_crons: []
     vercel_crons: []
 
+  dd-packages:
+    github_actions_crons: []
+    vercel_crons: []
+
   dd-gbp:
     github_actions_crons: []
     vercel_crons: []
