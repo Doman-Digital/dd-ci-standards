@@ -58,6 +58,8 @@ jobs:
             repos: "redacted/redacted"
           - owner: redacted
             repos: "redacted/redacted"
+          - owner: redacted
+            repos: "redacted/redacted"
     steps:
       - name: Mint token for ${{ matrix.owner }}
         id: app-token
