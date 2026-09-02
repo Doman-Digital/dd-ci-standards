@@ -31,6 +31,10 @@ repos:
         path: /api/internal/demo-followup/dispatch
         schedule: "30 9 * * *"
         reason: "daily demo-followup dispatch"
+      - app: apps/portal
+        path: /api/internal/google-ads/upload-conversions
+        schedule: "15 2 * * *"
+        reason: "nightly sweep for conversion dispatches claimed but never confirmed — without it a lead's outcome silently never reaches Google"
 
   chair-and-blade:
     github_actions_crons: []
