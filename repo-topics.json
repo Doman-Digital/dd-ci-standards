@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "about": "The tags every Doman Digital repo must carry. Read by scripts/check-repo-metadata.mjs on every PR, and by claude-kit's daily estate audit. Add a word here before using it on a repo.",
+  "rules": {
+    "description": "Required. 350 characters at most, no em or en dashes.",
+    "kind": "Exactly one.",
+    "status": "Exactly one.",
+    "client": "client-site and client-app need exactly one client-<name> tag. Other kinds may carry one when the work is for a client.",
+    "business": "Every kind except personal and it-portfolio carries doman-digital.",
+    "stack": "Optional, from the list only."
+  },
+  "kind": ["client-site", "client-app", "sales-demo", "dd-site", "dd-tooling", "dd-product", "personal", "it-portfolio"],
+  "status": ["live", "in-use", "in-development", "concept", "demo-expired", "reference", "unverified"],
+  "business": ["doman-digital"],
+  "clientPattern": "^client-[a-z0-9]+(-[a-z0-9]+)*$",
+  "clientKinds": ["client-site", "client-app"],
+  "noBusinessKinds": ["personal", "it-portfolio"],
+  "stack": [
+    "nextjs", "typescript", "sanity", "shopify", "vercel", "clerk", "stripe", "prisma",
+    "remotion", "expo", "threejs", "cloudflare-workers", "mcp", "python", "powershell",
+    "rust", "microsoft-graph", "intune", "whisper-cpp", "ffmpeg", "claude"
+  ]
+}

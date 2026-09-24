@@ -92,6 +92,18 @@ has to pass a policy check to merge, not get caught in the next audit.
   the wait protects against someone else's release, and `@v1` stays a tag
   on purpose (see Versioning).
 
+## Repo description and tags
+
+Every repo must be identifiable from its GitHub page alone. `repo-topics.json` sets the rule:
+
+* **A description**, 350 characters at most, with no em or en dashes.
+* **Exactly one kind tag:** client-site, client-app, sales-demo, dd-site, dd-tooling, dd-product, personal or it-portfolio.
+* **Exactly one status tag:** live, in-use, in-development, concept, demo-expired, reference or unverified.
+* **A client-<name> tag** on client sites and apps, and **doman-digital** on everything except personal and it-portfolio repos.
+* **Tech tags** from the list only.
+
+It is enforced twice. The policy workflow fails any PR whose repo breaks the rule, and claude-kit's daily audit checks every repo, including the ones nobody opens a PR on and any new repo not yet registered. Add a word to `repo-topics.json` before using it anywhere.
+
 ## Versioning
 
 Everything is consumed pinned to a tag (`@v1`), not `@main`: a breaking

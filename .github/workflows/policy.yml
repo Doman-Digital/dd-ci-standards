@@ -22,7 +22,8 @@ name: ci-standards policy
 # no timeout-minutes, PR-triggered workflows with no concurrency
 # cancellation, unregistered cron schedules (GitHub Actions or Vercel), and
 # unexplained continue-on-error. See scripts/check-workflow-policy.mjs for
-# what each check actually does.
+# what each check actually does. Also fails when the repo's GitHub
+# description or tags break repo-topics.json (scripts/check-repo-metadata.mjs).
 
 on:
   workflow_call: {}
@@ -52,3 +53,12 @@ jobs:
 
       - name: Run policy check
         run: node ci-standards/scripts/check-workflow-policy.mjs repo ci-standards/budget.yml
+
+      - name: Check the repo's description and tags
+        # Reads the calling repo's live GitHub settings, so a repo with no
+        # description or no kind/status tag fails on its next PR. Rules:
+        # repo-topics.json. The same file drives claude-kit's daily audit of
+        # every repo, which also catches the ones nobody opens a PR on.
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node ci-standards/scripts/check-repo-metadata.mjs ci-standards/repo-topics.json

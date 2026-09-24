@@ -40,3 +40,11 @@ jobs:
 
       - name: Run policy check against this repo
         run: node scripts/check-workflow-policy.mjs . budget.yml
+
+      - name: Test the repo metadata rules
+        run: node --test scripts/repo-metadata-rules.test.mjs
+
+      - name: Check this repo's own description and tags
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/check-repo-metadata.mjs repo-topics.json

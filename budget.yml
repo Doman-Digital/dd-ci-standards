@@ -36,6 +36,13 @@ repos:
         schedule: "15 2 * * *"
         reason: "nightly sweep for conversion dispatches claimed but never confirmed — without it a lead's outcome silently never reaches Google"
 
+  claude-kit:
+    github_actions_crons:
+      - workflow: repo-metadata.yml
+        cron: "30 5 * * *"
+        reason: "daily audit that every repo's description and tags match claude-kit's list and repo-topics.json; API reads only, 5min cap"
+    vercel_crons: []
+
   chair-and-blade:
     github_actions_crons: []
     vercel_crons:
