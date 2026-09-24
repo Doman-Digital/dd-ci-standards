@@ -34,6 +34,10 @@ has to pass a policy check to merge, not get caught in the next audit.
     group: ${{ github.workflow }}-${{ github.ref }}
     cancel-in-progress: true
 
+  # The check only reads the repo.
+  permissions:
+    contents: read
+
   jobs:
     ci-standards-policy:
       uses: Doman-Digital/ci-standards/.github/workflows/policy.yml@v1

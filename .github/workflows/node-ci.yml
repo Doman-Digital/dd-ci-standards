@@ -71,18 +71,25 @@ on:
       PRIVATE_DEP_APP_PRIVATE_KEY:
         required: false
 
+# The job only reads the repo; the private-dependency clone uses its own
+# App token below.
+permissions:
+  contents: read
+
 jobs:
   ci:
     runs-on: ubuntu-latest
     timeout-minutes: ${{ inputs.timeout_minutes }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
         with:
           version: ${{ inputs.pnpm_version }}
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: ${{ inputs.node_version }}
           cache: "pnpm"
@@ -90,35 +97,52 @@ jobs:
       - name: Mint GitHub App token for private dependency
         if: inputs.private_dep_owner != '' && inputs.private_dep_repo != ''
         id: app-token
-        uses: actions/create-github-app-token@v3
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
           app-id: ${{ secrets.PRIVATE_DEP_APP_ID }}
           private-key: ${{ secrets.PRIVATE_DEP_APP_PRIVATE_KEY }}
           owner: ${{ inputs.private_dep_owner }}
           repositories: ${{ inputs.private_dep_repo }}
+          permission-contents: read
 
       - name: Authenticate git for private dependency
         if: inputs.private_dep_owner != '' && inputs.private_dep_repo != ''
+        # Inputs reach the script as env vars, never as ${{ }} expanded into
+        # it: an expanded value is spliced into the shell source before bash
+        # parses it, so a quote in an input would run as code (zizmor
+        # template-injection).
+        env:
+          APP_TOKEN: ${{ steps.app-token.outputs.token }}
+          DEP_OWNER: ${{ inputs.private_dep_owner }}
+          DEP_REPO: ${{ inputs.private_dep_repo }}
         run: |
           git config --global \
-            url."https://x-access-token:${{ steps.app-token.outputs.token }}@github.com/${{ inputs.private_dep_owner }}/${{ inputs.private_dep_repo }}".insteadOf \
-            "https://github.com/${{ inputs.private_dep_owner }}/${{ inputs.private_dep_repo }}"
+            url."https://x-access-token:${APP_TOKEN}@github.com/${DEP_OWNER}/${DEP_REPO}".insteadOf \
+            "https://github.com/${DEP_OWNER}/${DEP_REPO}"
 
       - name: Install
         run: pnpm install --frozen-lockfile
 
       - name: Lint
         if: inputs.run_lint
-        run: ${{ inputs.lint_command }}
+        env:
+          COMMAND: ${{ inputs.lint_command }}
+        run: bash -c "$COMMAND"
 
       - name: Typecheck
         if: inputs.run_typecheck
-        run: ${{ inputs.typecheck_command }}
+        env:
+          COMMAND: ${{ inputs.typecheck_command }}
+        run: bash -c "$COMMAND"
 
       - name: Test
         if: inputs.run_test
-        run: ${{ inputs.test_command }}
+        env:
+          COMMAND: ${{ inputs.test_command }}
+        run: bash -c "$COMMAND"
 
       - name: Build
         if: inputs.run_build
-        run: ${{ inputs.build_command }}
+        env:
+          COMMAND: ${{ inputs.build_command }}
+        run: bash -c "$COMMAND"

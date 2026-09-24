@@ -36,6 +36,11 @@ on:
         default: true
         type: boolean
 
+# Renovate acts through the App token minted per owner below, not
+# GITHUB_TOKEN, so the workflow token needs nothing beyond reading this repo.
+permissions:
+  contents: read
+
 jobs:
   renovate:
     runs-on: ubuntu-latest
@@ -61,13 +66,20 @@ jobs:
           - owner: redacted
             repos: "redacted/redacted"
     steps:
+      # Deliberately the App's full installation scope. Renovate needs write on
+      # contents, pull requests, issues (the dashboard) and workflow files (the
+      # digest pins in default.json edit .github/workflows), and the
+      # `renovate` command below already limits it to the repos listed in the
+      # matrix. Narrowing the token can't be tested before the next Monday run
+      # and a wrong scope fails silently, so it stays as-is until a dry run
+      # (workflow_dispatch, dryRun: true) proves a narrower one.
       - name: Mint token for ${{ matrix.owner }}
         id: app-token
-        uses: actions/create-github-app-token@v3
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0 # zizmor: ignore[github-app]
         with:
           app-id: ${{ secrets.CI_GH_APP_ID }}
           private-key: ${{ secrets.CI_GH_APP_PRIVATE_KEY }}
-          owner: ${{ matrix.owner }}
+          owner: ${{ matrix.owner }} # zizmor: ignore[github-app]
 
       # Every target repo here is pnpm-managed, and Renovate shells out to the
       # package manager (e.g. `pnpm install --lockfile-only`) when it needs to
