@@ -1,10 +1,11 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"],
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigestsToSemver"],
   "timezone": "Europe/London",
   "schedule": ["before 6am on monday"],
   "prConcurrentLimit": 3,
   "prHourlyLimit": 2,
+  "minimumReleaseAge": "3 days",
   "dependencyDashboard": true,
   "requiredStatusChecks": null,
   "labels": ["dependencies"],
@@ -41,6 +42,12 @@
       "matchUpdateTypes": ["patch"],
       "automerge": true,
       "platformAutomerge": true
+    },
+    {
+      "description": "Our own repos (reusable workflows, git-tag packages like drift-guards) skip the release-age wait and digest pinning. The wait protects against someone else's compromised release, not our own tags, and the timestamp-required default would hold a git tag with no release timestamp indefinitely. @v1 stays a tag, as the README intends",
+      "matchPackageNames": ["Doman-Digital/**", "dmitridoman/**", "@domandigital/**"],
+      "minimumReleaseAge": null,
+      "pinDigests": false
     }
   ]
 }

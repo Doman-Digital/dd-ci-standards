@@ -75,6 +75,16 @@ has to pass a policy check to merge, not get caught in the next audit.
   entirely (`schedule: "at any time"`, `prConcurrentLimit: 0`) — a real CVE
   gets an immediate PR, everything else stays batched.
 
+  Two supply-chain defaults sit on top. `minimumReleaseAge: "3 days"` holds
+  every third-party update until the release is three days old, long enough
+  for a compromised release (tj-actions, March 2025) to be caught and pulled
+  before it reaches us; Renovate raises security updates immediately
+  regardless. `helpers:pinGitHubActionDigestsToSemver` pins each
+  third-party action to a commit SHA with the version as a comment, so a
+  re-pointed tag can't change what runs. Our own repos are exempt from both:
+  the wait protects against someone else's release, and `@v1` stays a tag
+  on purpose (see Versioning).
+
 ## Versioning
 
 Everything is consumed pinned to a tag (`@v1`), not `@main` — a breaking
