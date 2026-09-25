@@ -43,7 +43,7 @@ has to pass a policy check to merge, not get caught in the next audit.
 
   jobs:
     ci-standards-policy:
-      uses: Doman-Digital/ci-standards/.github/workflows/policy.yml@v1
+      uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1
   ```
 
   Checks: push+pull_request double-runs on overlapping branches, jobs

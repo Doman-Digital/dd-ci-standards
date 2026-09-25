@@ -12,7 +12,7 @@ name: node-ci (reusable)
 #
 #   jobs:
 #     ci:
-#       uses: Doman-Digital/ci-standards/.github/workflows/node-ci.yml@v1
+#       uses: Doman-Digital/dd-ci-standards/.github/workflows/node-ci.yml@v1
 #       with:
 #         node_version: "22"
 #       secrets: inherit

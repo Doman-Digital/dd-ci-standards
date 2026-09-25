@@ -15,7 +15,7 @@ name: ci-standards policy
 #
 #   jobs:
 #     ci-standards-policy:
-#       uses: Doman-Digital/ci-standards/.github/workflows/policy.yml@v1
+#       uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1
 #
 # Fails the calling PR if it reintroduces the waste patterns found in the
 # 2026-08-16 portfolio CI audit: push+pull_request double-runs, jobs with
@@ -43,7 +43,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-          repository: Doman-Digital/ci-standards
+          repository: Doman-Digital/dd-ci-standards
           ref: v1
           path: ci-standards
 
