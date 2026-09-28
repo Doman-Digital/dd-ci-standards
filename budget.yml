@@ -19,6 +19,10 @@ repos:
       - workflow: ci.yml
         cron: "0 6 * * 1"
         reason: "weekly comprehensive full-suite sweep — deliberate, catches regressions on repos that haven't shipped in a week; paths-filter is intentionally bypassed on this trigger"
+      - workflow: review-calibration-weekly.yml
+        cron: "0 6 * * 1"
+        owner: "Doman Digital / Marketing Site"
+        reason: "weekly live review calibration against independent referees; records drift for Marketing Site, 120min cap"
       - workflow: security-rotation-reminder.yml
         cron: "0 9 1 1,4,7,10 *"
         reason: "quarterly secret-rotation-due check, 5min cap"
