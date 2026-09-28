@@ -110,3 +110,7 @@ Everything is consumed pinned to a tag (`@v1`), not `@main`: a breaking
 change to the reusable workflow or the policy script shouldn't silently
 break every caller at once. Bump the tag deliberately; let Renovate keep
 each repo's pin current via its own PR.
+
+### v1.0.1
+
+Registers the existing main-repository weekly review calibration job with its owner, purpose and 120-minute cap. The reusable policy checks out the matching version of its budget and scripts. Main-repository consumers can select `@v1.0.1`; no existing tag is retargeted by this release.
