@@ -23,6 +23,10 @@ repos:
         cron: "0 6 * * 1"
         owner: "Doman Digital / Marketing Site"
         reason: "weekly live review calibration against independent referees; records drift for Marketing Site, 120min cap"
+      - workflow: client-stack-weekly.yml
+        cron: "0 7 * * 1"
+        owner: "Doman Digital / Marketing Site"
+        reason: "weekly live browser capture of client sites to detect third-party stack drift; capped at 90 minutes"
       - workflow: security-rotation-reminder.yml
         cron: "0 9 1 1,4,7,10 *"
         reason: "quarterly secret-rotation-due check, 5min cap"
