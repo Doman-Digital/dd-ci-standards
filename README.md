@@ -114,3 +114,7 @@ each repo's pin current via its own PR.
 ### v1.0.1
 
 Registers the existing main-repository weekly review calibration job with its owner, purpose and 120-minute cap. The reusable policy checks out the matching version of its budget and scripts. Main-repository consumers can select `@v1.0.1`; no existing tag is retargeted by this release.
+
+### v1.0.2
+
+Registers the weekly client-stack capture cron (#11) for consumers. v1.0.1 checked out its own budget, which predates that entry, so the policy check failed on every Main-repository PR. Main-repository consumers can select `@v1.0.2`; no existing tag is retargeted by this release.
