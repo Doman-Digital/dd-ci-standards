@@ -1,7 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { planNew, addToRegistry, registryEntry, cleanVerdict } from "../lib/new.mjs";
+import { planNew, addToRegistry, registryEntry, cleanVerdict, ruleset, POLICY_CHECK } from "../lib/new.mjs";
+import { POLICY_CALLER } from "../lib/adopt.mjs";
 
 const rulebook = JSON.parse(readFileSync(new URL("../rules.json", import.meta.url), "utf8"));
 const taxonomy = JSON.parse(readFileSync(new URL("../repo-topics.json", import.meta.url), "utf8"));
@@ -62,4 +63,14 @@ test("clean means nothing failing, nothing warning and nothing exempt", () => {
   assert.equal(cleanVerdict({ findings: [{ rule: "FW-002", level: "report" }], exempted: [] }).clean, true);
   assert.equal(cleanVerdict({ findings: [{ rule: "SEC-001", level: "warn" }], exempted: [] }).clean, false);
   assert.equal(cleanVerdict({ findings: [], exempted: [{ rule: "CI-003" }] }).clean, false);
+});
+
+test("the ruleset requires the check the policy caller actually produces", () => {
+  // caller job id / called job id: ci-standards-policy (POLICY_CALLER) / check (policy.yml)
+  const callerJob = /^jobs:\n  ([\w-]+):/m.exec(POLICY_CALLER)[1];
+  const calledJob = /^jobs:\n  ([\w-]+):/m.exec(readFileSync(new URL("../.github/workflows/policy.yml", import.meta.url), "utf8"))[1];
+  assert.equal(POLICY_CHECK, `${callerJob} / ${calledJob}`);
+  const checks = ruleset().rules.find((r) => r.type === "required_status_checks").parameters.required_status_checks;
+  assert.deepEqual(checks, [{ context: POLICY_CHECK }]);
+  assert.ok(ruleset().rules.some((r) => r.type === "pull_request"));
 });

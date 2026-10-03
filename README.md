@@ -64,7 +64,16 @@ In order, and stopping at the first failure:
    bug in the starter, so nothing is made on GitHub;
 3. the repo in Doman-Digital with its description and tags (kind,
    `in-development`, `doman-digital`), and the first commit on `main`;
-4. a pull request on `Doman-Digital/dd-repo-registry` adding its entry.
+4. a ruleset on `main`: pull requests only, and the policy check
+   (`ci-standards-policy / check`) required, so a PR that breaks a rule past
+   its enforce date is blocked, not merely red. GitHub's Free plan has no
+   rulesets for private repos; there `dd new` says the repo is unprotected
+   instead of pretending;
+5. a pull request on `Doman-Digital/dd-repo-registry` adding its entry.
+
+Deleting a repo made this way needs its registry entry removed too (close
+the PR if it has not merged), or the sweep reports it every morning as
+REG-005, registered but not visible.
 
 `--dry-run` prints the plan; `--local` stops after step 2 (the nightly
 starter job in dd-packages uses it); `--create-site <cli.js>` runs a

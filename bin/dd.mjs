@@ -31,7 +31,7 @@ import { loadFsView } from "../lib/view.mjs";
 import { budgetForRepo } from "../lib/budget.mjs";
 import { runDoctor, levelOn } from "../lib/engine.mjs";
 import { planAdopt } from "../lib/adopt.mjs";
-import { planNew, addToRegistry, cleanVerdict, PR_BODY, REGISTRY_REPO } from "../lib/new.mjs";
+import { planNew, addToRegistry, cleanVerdict, ruleset, PR_BODY, REGISTRY_REPO, POLICY_CHECK } from "../lib/new.mjs";
 
 const HOME = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const rulebook = JSON.parse(readFileSync(join(HOME, "rules.json"), "utf8"));
@@ -221,6 +221,7 @@ async function newRepo(args) {
     if (!plan.local) {
       console.log(`  create   github.com/${plan.repo}, ${plan.visibility}, tags ${plan.topics.join(", ")}`);
       console.log("  push     the first commit to main");
+      console.log(`  protect  main: pull requests only, ${POLICY_CHECK} required`);
       console.log(`  open     a pull request on ${REGISTRY_REPO} adding:\n${plan.registry.trimEnd().replace(/^/gm, "           ")}`);
     }
     return 0;
@@ -294,6 +295,17 @@ async function newRepo(args) {
   step("git", ["remote", "add", "origin", `https://github.com/${plan.repo}.git`], dir);
   step("git", ["push", "-q", "-u", "origin", "main"], dir, gitAuthEnv(token));
 
+  // Blocked, not merely red: the policy check is required on main.
+  let blocking = true;
+  const rules = await api(token, "POST", `/repos/${plan.repo}/rulesets`, ruleset());
+  if (!rules.ok) {
+    blocking = false;
+    console.error(
+      `dd new: the ruleset on main was refused (HTTP ${rules.status} ${rules.json?.message || ""}). A PR that breaks a rule shows a red check but can still be merged.` +
+        (plan.visibility === "private" ? " GitHub's Free plan has no rulesets for private repos; on Team, re-run with the same token or add it by hand." : ""),
+    );
+  }
+
   // The doctor again, now that GitHub has the description and tags (REG-002).
   const meta = await readMeta(plan.repo);
   const remote = runDoctor(loadFsView(dir), rulebook, { ...ctx, meta });
@@ -305,7 +317,7 @@ async function newRepo(args) {
     console.error(`dd new: ${plan.repo} is made, but the registry PR was not: ${pr.error}. Add this to registry.yaml by hand:\n${plan.registry}`);
     return 1;
   }
-  console.log(`dd new: ${plan.repo} made. Registry PR: ${pr.url}`);
+  console.log(`dd new: ${plan.repo} made. Registry PR: ${pr.url}${blocking ? "" : ". Not protected: see above."}`);
   return remote.findings.some((f) => f.level === "enforce") ? 1 : 0;
 }
 
