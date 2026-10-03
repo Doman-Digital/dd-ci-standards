@@ -3,7 +3,8 @@
 //
 //   dd doctor [dir]   what is missing in this repo, against rules.json
 //   dd rules          the rulebook, with each rule's level today
-//   dd adopt          (phase 3) bring a repo up to the rules, as a PR
+//   dd adopt [dir]    bring a repo up to the rules: owned files written,
+//                     existing findings recorded as 60-day exemptions (lib/adopt.mjs)
 //   dd new            (phase 4) create a repo that starts compliant
 //
 // doctor options:
@@ -19,13 +20,14 @@
 // Run from a checkout: node bin/dd.mjs doctor <repo>. (npx github:... works only
 // where npm allows git packages; dd-main-01 does not.)
 
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { dirname, join, resolve, basename } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { loadFsView } from "../lib/view.mjs";
 import { budgetForRepo } from "../lib/budget.mjs";
 import { runDoctor, levelOn } from "../lib/engine.mjs";
+import { planAdopt } from "../lib/adopt.mjs";
 
 const HOME = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const rulebook = JSON.parse(readFileSync(join(HOME, "rules.json"), "utf8"));
@@ -100,20 +102,46 @@ function format(result, how, repo) {
   return lines.join("\n");
 }
 
-async function doctor(args) {
+/** The repo, its settings and the rule context, from the command line. */
+async function context(args) {
   const positional = args.filter((a, i) => !a.startsWith("--") && !(i > 0 && args[i - 1].startsWith("--")));
   const dir = resolve(positional[0] || ".");
   const repo = opt(args, "--repo") || process.env.GITHUB_REPOSITORY || repoFromGit(dir);
   const today = opt(args, "--today") || new Date().toISOString().slice(0, 10);
-  const how = opt(args, "--format") || "text";
   const meta = await readMeta(repo);
   const kind = opt(args, "--kind") || (meta?.topics || []).find((t) => taxonomy.kind.includes(t)) || null;
   const visibility = opt(args, "--visibility") || (meta ? (meta.private ? "private" : "public") : null);
   const repoName = repo ? repo.split("/")[1] : basename(dir);
   const budget = budgetForRepo(readFileSync(join(HOME, "budget.yml"), "utf8"), repoName);
-  const result = runDoctor(loadFsView(dir), rulebook, { today, kind, visibility, repoName, budget, meta, taxonomy });
-  console.log(format(result, how, repo));
+  return { dir, repo, ctx: { today, kind, visibility, repoName, budget, meta, taxonomy } };
+}
+
+async function doctor(args) {
+  const { dir, repo, ctx } = await context(args);
+  const result = runDoctor(loadFsView(dir), rulebook, ctx);
+  console.log(format(result, opt(args, "--format") || "text", repo));
   return result.findings.some((f) => f.level === "enforce") ? 1 : 0;
+}
+
+async function adopt(args) {
+  const { dir, repo, ctx } = await context(args);
+  if (!ctx.kind) {
+    console.error("dd adopt: the repo's kind is unknown. Tag the repo on GitHub (repo-topics.json) or pass --kind.");
+    return 2;
+  }
+  const { writes, summary, before, after } = planAdopt(loadFsView(dir), rulebook, ctx);
+  const count = (r, l) => r.findings.filter((f) => f.level === l).length;
+  console.log(`dd adopt${repo ? ` (${repo})` : ""}: before, ${count(before, "enforce")} failing and ${count(before, "warn")} warning.`);
+  if (!summary.length) console.log("  nothing to change.");
+  for (const s of summary) console.log(`  ${s}`);
+  if (!args.includes("--dry-run")) {
+    for (const [path, text] of Object.entries(writes)) {
+      mkdirSync(dirname(join(dir, path)), { recursive: true });
+      writeFileSync(join(dir, path), text);
+    }
+  }
+  console.log(`after: ${count(after, "enforce")} failing, ${count(after, "warn")} warning, ${after.exempted.length} exempt.${args.includes("--dry-run") ? " (dry run, nothing written)" : ""}`);
+  return count(after, "enforce") ? 1 : 0;
 }
 
 function rules(args) {
@@ -128,11 +156,12 @@ export async function main(argv) {
   const [cmd, ...args] = argv;
   if (cmd === "doctor") return doctor(args);
   if (cmd === "rules") return rules(args);
-  if (cmd === "adopt" || cmd === "new") {
-    console.error(`dd ${cmd} is not built yet (DD Framework phase ${cmd === "adopt" ? 3 : 4}).`);
+  if (cmd === "adopt") return adopt(args);
+  if (cmd === "new") {
+    console.error("dd new is not built yet (DD Framework phase 4).");
     return 2;
   }
-  console.error("usage: dd doctor [dir] [--kind k] [--visibility private|public] [--today YYYY-MM-DD] [--format text|github|json]\n       dd rules");
+  console.error("usage: dd doctor [dir] [--kind k] [--visibility private|public] [--today YYYY-MM-DD] [--format text|github|json]\n       dd adopt [dir] [--kind k] [--dry-run]\n       dd rules");
   return 2;
 }
 
