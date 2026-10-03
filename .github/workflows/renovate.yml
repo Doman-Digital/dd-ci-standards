@@ -26,8 +26,12 @@ name: Renovate (self-hosted)
 
 on:
   schedule:
-    # Inside the "before 6am on monday" window set in default.json.
-    - cron: "0 5 * * 1"
+    # Mondays. Off the top of the hour, where GitHub delays scheduled runs
+    # most: the 05:00 run started between 09:58 and 11:29 UTC from 7 to 28
+    # September 2026, outside the old "before 6am on monday" window in
+    # default.json, so Renovate opened no routine update anywhere for a month.
+    # default.json now says "on monday".
+    - cron: "17 4 * * 1"
   workflow_dispatch:
     inputs:
       dryRun:
@@ -48,11 +52,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # Every in-scope repo that carries a renovate.json, checked against
+        # dd-repo-registry on 2026-10-03. Before that the list still named
+        # dmitridoman/Doman-Digital (moved to the organisation) and three
+        # archived repos, and left out the monorepo, dd-relay and
+        # mmm-beauty-app. Framework phase 3 generates this list from the
+        # register.
         include:
           - owner: dmitridoman
-            repos: "dmitridoman/Doman-Digital dmitridoman/verqan-api"
+            repos: "dmitridoman/verqan-api"
           - owner: Doman-Digital
-            repos: "Doman-Digital/dd-graph Doman-Digital/dd-gbp Doman-Digital/dd-seo"
+            repos: "Doman-Digital/Doman-Digital Doman-Digital/dd-relay Doman-Digital/dd-ci-standards"
           - owner: rmp474
             repos: "rmp474/RMP-Electrical"
           - owner: chairandblade
@@ -64,7 +74,7 @@ jobs:
           - owner: sensphere
             repos: "sensphere/sen-sphere"
           - owner: Megameehunnah
-            repos: "Megameehunnah/MMM-Beauty"
+            repos: "Megameehunnah/MMM-Beauty Megameehunnah/mmm-beauty-app"
     steps:
       # Deliberately the App's full installation scope. Renovate needs write on
       # contents, pull requests, issues (the dashboard) and workflow files (the

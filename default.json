@@ -2,7 +2,7 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended", "helpers:pinGitHubActionDigestsToSemver"],
   "timezone": "Europe/London",
-  "schedule": ["before 6am on monday"],
+  "schedule": ["on monday"],
   "prConcurrentLimit": 3,
   "prHourlyLimit": 2,
   "minimumReleaseAge": "3 days",
@@ -11,7 +11,7 @@
   "labels": ["dependencies"],
   "lockFileMaintenance": {
     "enabled": true,
-    "schedule": ["before 6am on the first day of the month"]
+    "schedule": ["on monday"]
   },
   "osvVulnerabilityAlerts": true,
   "vulnerabilityAlerts": {
