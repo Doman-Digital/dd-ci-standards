@@ -16,7 +16,8 @@
 // Exit: 0 when nothing fails today, 1 when a rule at its enforce date fails,
 // 2 on a usage error. Warnings and reports never fail.
 //
-// Run from anywhere: npx github:Doman-Digital/dd-ci-standards#v1 doctor
+// Run from a checkout: node bin/dd.mjs doctor <repo>. (npx github:... works only
+// where npm allows git packages; dd-main-01 does not.)
 
 import { readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";

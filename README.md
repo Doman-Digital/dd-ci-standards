@@ -17,7 +17,7 @@ same way in three places.
 
 | Where | How |
 | --- | --- |
-| On your machine | `npx github:Doman-Digital/dd-ci-standards#v1 doctor` in any repo |
+| On your machine | `node <dd-ci-standards checkout>/bin/dd.mjs doctor <repo>` (npx from GitHub is blocked where npm has `allow-git` off, as on dd-main-01) |
 | On every PR | `policy.yml` (below), which runs the `doctor` action |
 | Daily, every repo | the estate sweep in `Doman-Digital/dd-repo-registry` |
 
@@ -34,6 +34,8 @@ same way in three places.
 - **`bin/dd.mjs`**: the command. `dd doctor` today; `dd adopt` and `dd new`
   are the framework's next phases.
 - **`doctor/action.yml`**: the same command as a GitHub Action.
+- **`lib/view-github.mjs`**: the same repo view read through the API, which
+  the estate sweep uses, so it runs exactly these rules.
 
 Kinds come from `repo-topics.json`. Organisation sites, products and tooling
 and client sites and apps get every rule; `sales-demo` gets the light set;

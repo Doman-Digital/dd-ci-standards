@@ -2,7 +2,7 @@
   "name": "dd-ci-standards",
   "version": "1.0.0",
   "private": true,
-  "description": "The DD Framework rulebook and the dd command. Run with: npx github:Doman-Digital/dd-ci-standards#v1 doctor",
+  "description": "The DD Framework rulebook and the dd command. Run with: node bin/dd.mjs doctor <repo>",
   "type": "module",
   "bin": {
     "dd": "bin/dd.mjs"
