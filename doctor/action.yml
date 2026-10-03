@@ -1,0 +1,29 @@
+name: dd doctor
+description: |
+  Run the DD Framework rulebook (rules.json) against a checked-out repo.
+  The code that runs is whatever ref `uses:` named, so the policy check, the
+  local `dd doctor` and the estate sweep run the same rules at the same
+  version. Fails only on rules past their enforce date; warnings are
+  annotations.
+
+inputs:
+  path:
+    description: Path to the checked-out repo
+    default: "."
+  token:
+    description: Token that can read the repo's settings (kind tag, visibility, description)
+    default: ${{ github.token }}
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      with:
+        node-version: "22"
+
+    - name: dd doctor
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        DD_PATH: ${{ inputs.path }}
+      run: node "$GITHUB_ACTION_PATH/../bin/dd.mjs" doctor "$DD_PATH" --format github

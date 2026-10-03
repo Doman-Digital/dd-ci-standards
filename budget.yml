@@ -45,10 +45,25 @@ repos:
         reason: "nightly sweep for conversion dispatches claimed but never confirmed — without it a lead's outcome silently never reaches Google"
 
   dd-claude-kit:
+    # repo-metadata.yml was removed on 2026-10-03; the estate sweep in
+    # dd-repo-registry replaced it.
+    github_actions_crons: []
+    vercel_crons: []
+
+  dd-repo-registry:
     github_actions_crons:
-      - workflow: repo-metadata.yml
-        cron: "30 5 * * *"
-        reason: "daily audit that every repo's description and tags match dd-claude-kit's list and repo-topics.json; API reads only, 5min cap"
+      - workflow: sweep.yml
+        cron: "15 6 * * *"
+        owner: "DD Framework"
+        reason: "daily estate sweep: every repo the GitHub App can see, against the register; API reads only, about a minute, 10min cap"
+    vercel_crons: []
+
+  dd-ci-standards:
+    github_actions_crons:
+      - workflow: renovate.yml
+        cron: "17 4 * * 1"
+        owner: "DD Framework"
+        reason: "weekly self-hosted Renovate across the portfolio. Unregistered until 2026-10-03: the old cron check read only the first cron line and missed it"
     vercel_crons: []
 
   chair-and-blade:

@@ -1,0 +1,48 @@
+name: release
+
+# Every merge to main is a release: tag v1.0.<next> and move v1 to it, so
+# every repo calling policy.yml@v1 runs the new rules on its next PR. Until
+# 2026-10-03 tags were cut by hand and v1 was never moved: it sat at
+# 2026-09-25 while v1.0.2 carried a fix the callers never got.
+#
+# A rule that is new is safe to release this way: it warns until its
+# enforce_from date (rules.json). Tests run first; a red test releases nothing.
+# A breaking change to the workflow interface needs v2, not a v1 move.
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+
+      - name: Test
+        run: node --test test/*.test.mjs scripts/*.test.mjs
+
+      - name: Tag and move v1
+        run: |
+          set -euo pipefail
+          last=$(git tag -l 'v1.0.*' | sed 's/^v1\.0\.//' | sort -n | tail -1)
+          next="v1.0.$(( ${last:-0} + 1 ))"
+          git tag "$next" "$GITHUB_SHA"
+          git tag -f v1 "$GITHUB_SHA"
+          git push origin "$next"
+          git push -f origin v1
+          echo "Released $next; v1 now $(git rev-parse --short v1)" | tee -a "$GITHUB_STEP_SUMMARY"

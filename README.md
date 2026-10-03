@@ -6,8 +6,59 @@ because both Renovate's cross-owner `extends` and GitHub's cross-owner
 reusable workflows require it. Nothing in here is a secret: callers pass
 their own via `secrets: inherit`.
 
-**Status:** in use, consumed by tag (`@v1`).
-**Used by:** every repo whose CI calls `policy.yml` or whose Renovate config extends `default.json`.
+**Status:** in use, consumed by tag (`@v1`, which moves with every release since 2026-10-03).
+**Used by:** every repo whose CI calls `policy.yml` or whose Renovate config extends `default.json`, the `dd` command, and the estate sweep in `dd-repo-registry`.
+
+## The DD Framework rulebook
+
+Since 3 October 2026 this repo is the rulebook of the DD Framework: one
+versioned set of rules that every Doman Digital repo is checked against, the
+same way in three places.
+
+| Where | How |
+| --- | --- |
+| On your machine | `npx github:Doman-Digital/dd-ci-standards#v1 doctor` in any repo |
+| On every PR | `policy.yml` (below), which runs the `doctor` action |
+| Daily, every repo | the estate sweep in `Doman-Digital/dd-repo-registry` |
+
+- **`rules.json`**: each rule's id, the incident it came from, the repo kinds
+  it applies to, and two dates. From `warn_from` it is reported; from
+  `enforce_from` it fails. The two are at most 90 days apart, so a new rule
+  warns everyone first and nothing warns forever. `dd rules` lists them with
+  today's level.
+- **`lib/rules.mjs`**: the checks. **`lib/engine.mjs`**: which rules apply to
+  a repo's kind and visibility on a date, and exemptions.
+- **`test/fixtures.mjs`**: a failing and a passing example of every rule. The
+  tests fail if a rule has none, so no rule ships that has not been seen to
+  catch its own target.
+- **`bin/dd.mjs`**: the command. `dd doctor` today; `dd adopt` and `dd new`
+  are the framework's next phases.
+- **`doctor/action.yml`**: the same command as a GitHub Action.
+
+Kinds come from `repo-topics.json`. Organisation sites, products and tooling
+and client sites and apps get every rule; `sales-demo` gets the light set;
+`personal` and `it-portfolio` repos are outside the framework.
+
+### Exemptions
+
+An exemption is written where the next reader is standing, with a reason and
+an end date at most 180 days away:
+
+```yaml
+# dd: allow CI-005 until=2027-01-31 secret-scan backstop that must re-run on main
+```
+
+or, for a repo-wide one, in `.github/dd.json`:
+
+```json
+{ "exempt": [{ "rule": "CI-001", "file": ".github/workflows/sweep.yml", "until": "2027-01-31", "reason": "needs pipx" }] }
+```
+
+An exemption with no date, no reason, or a date too far out does not count.
+When it expires the finding comes back. FW-002 reports exemptions that are
+invalid or expire within 14 days. The old
+`# ci-standards: allow-double-run <reason>` comment still works, and is
+reported as undated.
 
 This exists because CI cost across the portfolio grew unchecked until it
 tripped a billing block, with 400+ Actions runs/month in two repos, an 18-PR
@@ -102,19 +153,36 @@ Every repo must be identifiable from its GitHub page alone. `repo-topics.json` s
 * **A client-<name> tag** on client sites and apps, and **doman-digital** on everything except personal and it-portfolio repos.
 * **Tech tags** from the list only.
 
-It is enforced twice. The policy workflow fails any PR whose repo breaks the rule, and claude-kit's daily audit checks every repo, including the ones nobody opens a PR on and any new repo not yet registered. Add a word to `repo-topics.json` before using it anywhere.
+It is enforced twice. The policy workflow fails any PR whose repo breaks the rule (REG-002), and the estate sweep in dd-repo-registry checks every repo daily, including the ones nobody opens a PR on and any new repo not yet registered. Add a word to `repo-topics.json` before using it anywhere.
 
 ## Versioning
 
-Everything is consumed pinned to a tag (`@v1`), not `@main`: a breaking
-change to the reusable workflow or the policy script shouldn't silently
-break every caller at once. Bump the tag deliberately; let Renovate keep
-each repo's pin current via its own PR.
+Callers use `@v1`. Every merge to `main` is a release: `release.yml` runs the
+tests, tags `v1.0.<next>` and moves `v1` to it, so every caller runs the new
+rules on its next PR. A new rule is safe to release this way because it only
+warns until its `enforce_from` date. A breaking change to how callers call
+`policy.yml` needs `v2`.
+
+This replaces the earlier rule here, "bump the tag deliberately; no existing
+tag is retargeted". Under it `v1` sat at 2026-09-25 while `v1.0.1` and
+`v1.0.2` carried fixes most callers never received, and Renovate, which was
+meant to bump the pins, opened no routine update anywhere for a month
+(`renovate.yml` explains why). Decided 2026-10-03 with the DD Framework plan.
 
 ### v1.0.1
 
-Registers the existing main-repository weekly review calibration job with its owner, purpose and 120-minute cap. The reusable policy checks out the matching version of its budget and scripts. Main-repository consumers can select `@v1.0.1`; no existing tag is retargeted by this release.
+Registers the existing main-repository weekly review calibration job with its owner, purpose and 120-minute cap.
 
 ### v1.0.2
 
-Registers the weekly client-stack capture cron (#11) for consumers. v1.0.1 checked out its own budget, which predates that entry, so the policy check failed on every Main-repository PR. Main-repository consumers can select `@v1.0.2`; no existing tag is retargeted by this release.
+Registers the weekly client-stack capture cron (#11) for consumers.
+
+### v1.0.3
+
+The rulebook (`rules.json`), `dd doctor`, the `doctor` action, `release.yml`.
+The six original checks keep their behaviour and gain ids (CI-003 to CI-007,
+CI-011), with one fix: the cron check read only the first cron under
+`schedule:`, which hid this repo's own Renovate cron and one in sen-sphere.
+New rules, warning until 31 December 2026: CI-001, CI-008, CI-009, SEC-001,
+SEC-002, SEC-003, REG-003. CI-002 (self-hosted runners in a public repo)
+fails from the start.
