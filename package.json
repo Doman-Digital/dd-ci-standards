@@ -1,0 +1,17 @@
+{
+  "name": "dd-ci-standards",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The DD Framework rulebook and the dd command. Run with: npx github:Doman-Digital/dd-ci-standards#v1 doctor",
+  "type": "module",
+  "bin": {
+    "dd": "bin/dd.mjs"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs scripts/*.test.mjs",
+    "doctor": "node bin/dd.mjs doctor ."
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

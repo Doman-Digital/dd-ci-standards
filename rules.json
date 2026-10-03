@@ -1,0 +1,148 @@
+{
+  "version": 1,
+  "about": "The DD Framework rulebook. Each rule has an id, the incident or source it comes from, the repo kinds it applies to, and two dates: from warn_from it is reported, from enforce_from it fails. enforce_from is at most 90 days after warn_from, so nothing warns forever. lib/rules.mjs holds the checks; test/fixtures.mjs holds a failing and a passing example of every rule, and the tests fail if a rule has none. Exemptions: README, 'Exemptions'.",
+  "kinds": {
+    "full": ["dd-site", "dd-product", "dd-tooling", "client-site", "client-app"],
+    "light": ["sales-demo"]
+  },
+  "rules": [
+    {
+      "id": "CI-001",
+      "title": "A job in a private repo names a GitHub-hosted runner directly",
+      "why": "2 October 2026: twelve jobs hard-coded to ubuntu-latest used the organisation's hosted minutes and could not move to the self-hosted VM. Use runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}.",
+      "applies": "full",
+      "visibility": "private",
+      "warn_from": "2026-10-03",
+      "enforce_from": "2026-12-31"
+    },
+    {
+      "id": "CI-002",
+      "title": "A public repo runs jobs on the self-hosted runners",
+      "why": "GitHub: never use self-hosted runners with public repositories; a fork's pull request could run code on the VM.",
+      "applies": "full",
+      "visibility": "public",
+      "warn_from": "2026-10-03",
+      "enforce_from": "2026-10-03"
+    },
+    {
+      "id": "CI-003",
+      "title": "A job has no timeout-minutes",
+      "why": "2026-08-16 portfolio audit (was missing-timeout).",
+      "legacy": "missing-timeout",
+      "applies": "all",
+      "warn_from": "2026-08-16",
+      "enforce_from": "2026-08-16"
+    },
+    {
+      "id": "CI-004",
+      "title": "A pull_request workflow has no concurrency group that cancels superseded runs",
+      "why": "2026-08-16 portfolio audit (was missing-concurrency).",
+      "legacy": "missing-concurrency",
+      "applies": "all",
+      "warn_from": "2026-08-16",
+      "enforce_from": "2026-08-16"
+    },
+    {
+      "id": "CI-005",
+      "title": "A workflow runs on both push and pull_request for the same branches",
+      "why": "2026-08-16 portfolio audit (was double-run).",
+      "legacy": "double-run",
+      "applies": "full",
+      "warn_from": "2026-08-16",
+      "enforce_from": "2026-08-16"
+    },
+    {
+      "id": "CI-006",
+      "title": "continue-on-error: true with no comment saying why",
+      "why": "2026-08-16 portfolio audit: three permanently red jobs ran unnoticed for months (was unexplained-continue-on-error).",
+      "legacy": "unexplained-continue-on-error",
+      "applies": "full",
+      "warn_from": "2026-08-16",
+      "enforce_from": "2026-08-16"
+    },
+    {
+      "id": "CI-007",
+      "title": "A scheduled workflow is not registered in budget.yml",
+      "why": "2026-08-16 portfolio audit (was unregistered-cron). Fixed 2026-10-03: only the first cron under schedule: was ever read.",
+      "legacy": "unregistered-cron",
+      "applies": "full",
+      "warn_from": "2026-08-16",
+      "enforce_from": "2026-08-16"
+    },
+    {
+      "id": "CI-008",
+      "title": "An artifact upload can fail the job when the storage quota is full",
+      "why": "2 October 2026: a 360 MB build uploaded on every run used the organisation's artifact storage for the month, and every PR failed at the upload. Pass builds between jobs another way; mark diagnostic uploads continue-on-error with a comment.",
+      "applies": "full",
+      "warn_from": "2026-10-03",
+      "enforce_from": "2026-12-31"
+    },
+    {
+      "id": "CI-009",
+      "title": "A self-hosted job uses a fixed port without the runner's port offset",
+      "why": "2 October 2026: two jobs on one VM both started a server on port 3000; one tested the other's build. Add CI_PORT_OFFSET.",
+      "applies": "full",
+      "warn_from": "2026-10-03",
+      "enforce_from": "2026-12-31"
+    },
+    {
+      "id": "CI-011",
+      "title": "A vercel.json cron is not registered in budget.yml",
+      "why": "2026-08-16 portfolio audit (was unregistered-vercel-cron).",
+      "legacy": "unregistered-vercel-cron",
+      "applies": "full",
+      "warn_from": "2026-08-16",
+      "enforce_from": "2026-08-16"
+    },
+    {
+      "id": "SEC-001",
+      "title": "A third-party action is not pinned to a full commit SHA",
+      "why": "tj-actions/changed-files, March 2025: a re-pointed tag ran code that dumped CI secrets. GitHub: a full SHA is the only immutable reference. First-party Doman-Digital actions stay on tags.",
+      "applies": "full",
+      "warn_from": "2026-10-03",
+      "enforce_from": "2026-12-31"
+    },
+    {
+      "id": "SEC-002",
+      "title": "A pnpm repo is missing install protections",
+      "why": "The 2025 npm worms spread through install scripts and fresh releases. pnpm 10 and later block dependency install scripts unless listed; this rule requires minimumReleaseAge and forbids dangerouslyAllowAllBuilds.",
+      "applies": "full",
+      "warn_from": "2026-10-03",
+      "enforce_from": "2026-12-31"
+    },
+    {
+      "id": "SEC-003",
+      "title": "No dependency updates configured",
+      "why": "Security fixes reach a repo only through Renovate (extending this repo's default.json) or Dependabot.",
+      "applies": "all",
+      "warn_from": "2026-10-03",
+      "enforce_from": "2026-12-31"
+    },
+    {
+      "id": "REG-002",
+      "title": "The repo's description or tags break repo-topics.json",
+      "why": "Every repo must be identifiable from its GitHub page alone, and its kind tag decides which rules apply (was the repo metadata check, enforced since September 2026).",
+      "legacy": "repo metadata",
+      "applies": "all",
+      "warn_from": "2026-09-24",
+      "enforce_from": "2026-09-24"
+    },
+    {
+      "id": "REG-003",
+      "title": "The repo has workflows but none calls the policy check",
+      "why": "3 October 2026: 14 of 48 repos with workflows were checked by nothing.",
+      "applies": "full",
+      "warn_from": "2026-10-03",
+      "enforce_from": "2026-12-31"
+    },
+    {
+      "id": "FW-002",
+      "title": "An exemption expires within 14 days, or is invalid",
+      "why": "Exemptions expire so ignored debt comes back as a finding instead of a forgotten note.",
+      "applies": "all",
+      "warn_from": "2026-10-03",
+      "enforce_from": "2026-10-03",
+      "report_only": true
+    }
+  ]
+}
