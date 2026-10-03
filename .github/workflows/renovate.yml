@@ -21,8 +21,9 @@ name: Renovate (self-hosted)
 # App's installation could see under each owner, including repos that were
 # never part of this rollout and were never onboarded (e.g. Doman-Digital's
 # own dd-library, StarrLuxury) -- those failed at initRepo, harmlessly under
-# --dry-run, but it's the wrong blast radius for a real run. List only the
-# repos that actually carry a renovate.json from this rollout.
+# --dry-run, but it's the wrong blast radius for a real run. 2026-10-03:
+# autodiscover again, with requireConfig "required" and onboarding off, which
+# skips exactly those repos; the hand-kept list it replaced had drifted.
 
 on:
   schedule:
@@ -52,35 +53,29 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Every in-scope repo that carries a renovate.json, checked against
-        # dd-repo-registry on 2026-10-03. Before that the list still named
-        # dmitridoman/Doman-Digital (moved to the organisation) and three
-        # archived repos, and left out the monorepo, dd-relay and
-        # mmm-beauty-app. Framework phase 3 generates this list from the
-        # register.
-        include:
-          - owner: dmitridoman
-            repos: "dmitridoman/verqan-api"
-          - owner: Doman-Digital
-            repos: "Doman-Digital/Doman-Digital Doman-Digital/dd-relay Doman-Digital/dd-ci-standards"
-          - owner: rmp474
-            repos: "rmp474/RMP-Electrical"
-          - owner: chairandblade
-            repos: "chairandblade/chair-and-blade"
-          - owner: joetardi
-            repos: "joetardi/Tardi-Group"
-          - owner: riseandbloom
-            repos: "riseandbloom/Rise-and-bloom"
-          - owner: sensphere
-            repos: "sensphere/sen-sphere"
-          - owner: Megameehunnah
-            repos: "Megameehunnah/MMM-Beauty Megameehunnah/mmm-beauty-app"
+        # One job per account the App is installed on. Which repos: every one
+        # under that account that carries a Renovate config, found by
+        # autodiscover with requireConfig "required" (below), so a repo joins
+        # by having renovate.json (dd adopt writes one) and leaves by losing
+        # it. Until 2026-10-03 this was a hand-kept list; it still named
+        # dmitridoman/Doman-Digital after the move and three archived repos,
+        # and left out the monorepo, dd-relay and mmm-beauty-app.
+        owner:
+          - dmitridoman
+          - Doman-Digital
+          - rmp474
+          - chairandblade
+          - joetardi
+          - riseandbloom
+          - sensphere
+          - Megameehunnah
+          - harrison-jamesltd
     steps:
       # Deliberately the App's full installation scope. Renovate needs write on
       # contents, pull requests, issues (the dashboard) and workflow files (the
-      # digest pins in default.json edit .github/workflows), and the
-      # `renovate` command below already limits it to the repos listed in the
-      # matrix. Narrowing the token can't be tested before the next Monday run
+      # digest pins in default.json edit .github/workflows), and requireConfig
+      # below limits it to repos that carry a Renovate config. Narrowing the
+      # token can't be tested before the next Monday run
       # and a wrong scope fails silently, so it stays as-is until a dry run
       # (workflow_dispatch, dryRun: true) proves a narrower one.
       - name: Mint token for ${{ matrix.owner }}
@@ -108,10 +103,17 @@ jobs:
       - name: Enable Corepack (pnpm via each repo's own packageManager field)
         run: corepack enable
 
+      # Autodiscover is safe now where it was not on 2026-08-17: with
+      # requireConfig "required" and onboarding off, a repo with no Renovate
+      # config is skipped, not onboarded or failed at initRepo.
       - name: Run Renovate
         env:
           RENOVATE_TOKEN: ${{ steps.app-token.outputs.token }}
           RENOVATE_PLATFORM: github
+          RENOVATE_AUTODISCOVER: "true"
+          RENOVATE_AUTODISCOVER_FILTER: ${{ matrix.owner }}/*
+          RENOVATE_REQUIRE_CONFIG: required
+          RENOVATE_ONBOARDING: "false"
           RENOVATE_DRY_RUN: ${{ (github.event_name == 'workflow_dispatch' && inputs.dryRun) && 'full' || 'null' }}
           LOG_LEVEL: debug
-        run: npx --yes renovate ${{ matrix.repos }}
+        run: npx --yes renovate
