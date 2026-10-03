@@ -31,8 +31,23 @@ same way in three places.
 - **`test/fixtures.mjs`**: a failing and a passing example of every rule. The
   tests fail if a rule has none, so no rule ships that has not been seen to
   catch its own target.
-- **`bin/dd.mjs`**: the command. `dd doctor` today; `dd adopt` and `dd new`
-  are the framework's next phases.
+- **`bin/dd.mjs`**: the command. `dd doctor` reports; `dd adopt` brings a
+  repo up to the rules (`lib/adopt.mjs`); `dd new` is the framework's next
+  phase.
+
+### Adopting a repo
+
+`dd adopt <repo checkout>` makes one reviewable change:
+
+- writes the files the framework owns: the policy check caller
+  (`.github/workflows/ci-standards-policy.yml`) and a `renovate.json`
+  extending the shared preset, or corrects one that uses the old name;
+- records everything else the doctor finds in `.github/dd.json` as
+  exemptions that expire in 60 days.
+
+So the adopting PR is green on arrival, and every piece of existing debt has
+a line in the repo and a date. When the date passes the finding fails again.
+A second run changes nothing. `--dry-run` prints the plan.
 - **`doctor/action.yml`**: the same command as a GitHub Action.
 - **`lib/view-github.mjs`**: the same repo view read through the API, which
   the estate sweep uses, so it runs exactly these rules.
@@ -178,6 +193,14 @@ Registers the existing main-repository weekly review calibration job with its ow
 ### v1.0.2
 
 Registers the weekly client-stack capture cron (#11) for consumers.
+
+### v1.0.5
+
+`dd adopt` (`lib/adopt.mjs`).
+
+### v1.0.4
+
+The repo view through the API (`lib/view-github.mjs`), used by the estate sweep.
 
 ### v1.0.3
 
