@@ -32,8 +32,8 @@ same way in three places.
   tests fail if a rule has none, so no rule ships that has not been seen to
   catch its own target.
 - **`bin/dd.mjs`**: the command. `dd doctor` reports; `dd adopt` brings a
-  repo up to the rules (`lib/adopt.mjs`); `dd new` is the framework's next
-  phase.
+  repo up to the rules (`lib/adopt.mjs`); `dd new` makes a repo that starts
+  compliant (`lib/new.mjs`).
 
 ### Adopting a repo
 
@@ -48,6 +48,42 @@ same way in three places.
 So the adopting PR is green on arrival, and every piece of existing debt has
 a line in the repo and a date. When the date passes the finding fails again.
 A second run changes nothing. `--dry-run` prints the plan.
+### Making a repo
+
+```sh
+node <dd-ci-standards checkout>/bin/dd.mjs new --kind dd-site dd-example \
+  --description "What the repo is, in a sentence." --answers answers.json
+```
+
+In order, and stopping at the first failure:
+
+1. `create-next-app` (or `create-astro` with `--framework astro`), `pnpm
+   install`, then `@domandigital/create-site` with the repo's visibility;
+2. `dd adopt`, then `dd doctor`, which must be clean: nothing failing,
+   warning or exempt. A starter that needs an exemption on its first day is a
+   bug in the starter, so nothing is made on GitHub;
+3. the repo in Doman-Digital with its description and tags (kind,
+   `in-development`, `doman-digital`), and the first commit on `main`;
+4. a ruleset on `main`: pull requests only, and the policy check
+   (`ci-standards-policy / check`) required, so a PR that breaks a rule past
+   its enforce date is blocked, not merely red. GitHub's Free plan has no
+   rulesets for private repos; there `dd new` says the repo is unprotected
+   instead of pretending;
+5. a pull request on `Doman-Digital/dd-repo-registry` adding its entry.
+
+Deleting a repo made this way needs its registry entry removed too (close
+the PR if it has not merged), or the sweep reports it every morning as
+REG-005, registered but not visible.
+
+`--dry-run` prints the plan; `--local` stops after step 2 (the nightly
+starter job in dd-packages uses it); `--create-site <cli.js>` runs a
+create-site build instead of the published one. It needs a token that can
+create repos in the organisation (`GH_TOKEN`, or `gh auth login`).
+
+It refuses `client-site` and `client-app`: client repos are pushed and merged
+by the Doman Digital GitHub App, from the client work's own tooling. It also
+refuses `personal` and `it-portfolio` (outside the framework) and any owner
+but Doman-Digital (personal-account repos cannot run Actions).
 - **`doctor/action.yml`**: the same command as a GitHub Action.
 - **`lib/view-github.mjs`**: the same repo view read through the API, which
   the estate sweep uses, so it runs exactly these rules.
@@ -193,6 +229,10 @@ Registers the existing main-repository weekly review calibration job with its ow
 ### v1.0.2
 
 Registers the weekly client-stack capture cron (#11) for consumers.
+
+### v1.0.6
+
+`dd new` (`lib/new.mjs`). budget.yml registers dd-packages' nightly starter check.
 
 ### v1.0.5
 
