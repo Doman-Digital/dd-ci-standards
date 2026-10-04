@@ -119,6 +119,30 @@
       "enforce_from": "2026-12-31"
     },
     {
+      "id": "SEC-004",
+      "title": "A file of secrets is tracked by git",
+      "why": "4 October 2026: a Vercel env pull with 66 production values sat on a client repo's main branch for six months. The CI secret scan only read each push's own commits, so nothing ever looked at it.",
+      "applies": "all",
+      "warn_from": "2026-10-04",
+      "enforce_from": "2026-10-18"
+    },
+    {
+      "id": "SEC-005",
+      "title": ".gitignore does not cover env and token files",
+      "why": "4 October 2026: 12 repos had no .env rule and most client repos did not ignore .doppler-token, while dd-bot push --all stages everything.",
+      "applies": "all",
+      "warn_from": "2026-10-04",
+      "enforce_from": "2026-12-31"
+    },
+    {
+      "id": "SEC-006",
+      "title": "Nothing scans pull requests for secrets",
+      "why": "4 October 2026: GitHub secret scanning is a paid add-on for private repos and was off everywhere; a live Stripe key reached a pushed branch the same day.",
+      "applies": "full",
+      "warn_from": "2026-10-04",
+      "enforce_from": "2026-12-31"
+    },
+    {
       "id": "REG-002",
       "title": "The repo's description or tags break repo-topics.json",
       "why": "Every repo must be identifiable from its GitHub page alone, and its kind tag decides which rules apply (was the repo metadata check, enforced since September 2026).",
