@@ -187,7 +187,8 @@ async function newRepo(args) {
   const positional = args.filter((a, i) => !a.startsWith("--") && !(i > 0 && args[i - 1].startsWith("--") && !["--dry-run", "--local"].includes(args[i - 1])));
   const siteArgs = [];
   for (const flag of ["--answers", "--client", "--trading-name", "--site-url", "--sector"]) {
-    if (opt(args, flag)) siteArgs.push(flag, opt(args, flag));
+    // --answers is a file: absolute, because create-site runs inside the new repo's folder.
+    if (opt(args, flag)) siteArgs.push(flag, flag === "--answers" ? resolve(opt(args, flag)) : opt(args, flag));
   }
   if (opt(args, "--description")) siteArgs.push("--description", opt(args, "--description"));
   const today = opt(args, "--today") || new Date().toISOString().slice(0, 10);
