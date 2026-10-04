@@ -218,7 +218,11 @@ repos:
     vercel_crons: []
 
   dd-packages:
-    github_actions_crons: []
+    github_actions_crons:
+      - workflow: starters.yml
+        cron: "43 3 * * *"
+        owner: "DD Framework"
+        reason: "nightly starter check: makes the Next.js and Astro starters from scratch with dd new --local, builds them and runs dd doctor; red goes to Slack. GitHub-hosted (public repo), about 5 minutes per starter, 20min cap"
     vercel_crons: []
 
   dd-gbp:
