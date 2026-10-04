@@ -105,7 +105,7 @@
     {
       "id": "SEC-002",
       "title": "A pnpm repo is missing install protections",
-      "why": "The 2025 npm worms spread through install scripts and fresh releases. pnpm 10 and later block dependency install scripts unless listed; this rule requires minimumReleaseAge and forbids dangerouslyAllowAllBuilds.",
+      "why": "The 2025 npm worms spread through install scripts and fresh releases. pnpm 10 and later block dependency install scripts unless listed; this rule requires minimumReleaseAge and forbids dangerouslyAllowAllBuilds. Exclude @domandigital/* from the wait (minimumReleaseAgeExclude): the delay guards against other people's releases, and our own come from our trusted-publishing workflow, as default.json already treats them for Renovate.",
       "applies": "full",
       "warn_from": "2026-10-03",
       "enforce_from": "2026-12-31"
