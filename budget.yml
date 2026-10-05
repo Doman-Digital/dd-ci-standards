@@ -118,7 +118,11 @@ repos:
 
   Rise-and-bloom:
     github_actions_crons: []
-    vercel_crons: []
+    vercel_crons:
+      - app: root
+        path: /api/cron/lulu-unpaid
+        schedule: "0 8 * * *"
+        reason: "daily check for print orders left unpaid at Lulu; emails the team when one is waiting, since an unpaid order is never printed"
 
   MMM-Beauty:
     github_actions_crons:
