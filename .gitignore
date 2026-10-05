@@ -1,0 +1,9 @@
+node_modules
+
+# secrets: never tracked (SEC-005)
+.env
+.env.*
+!.env.example
+!.env.*.example
+.dev.vars
+.doppler-token

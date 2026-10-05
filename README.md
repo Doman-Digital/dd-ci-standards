@@ -66,7 +66,7 @@ In order, and stopping at the first failure:
    `in-development`, `doman-digital`), and the first commit on `main`;
 4. a ruleset on `main`: pull requests only, and the policy check
    (`ci-standards-policy / check`) required, so a PR that breaks a rule past
-   its enforce date is blocked, not merely red. GitHub's Free plan has no
+   its enforce date cannot merge. GitHub's Free plan has no
    rulesets for private repos; there `dd new` says the repo is unprotected
    instead of pretending;
 5. a pull request on `Doman-Digital/dd-repo-registry` adding its entry.
@@ -107,7 +107,7 @@ or, for a repo-wide one, in `.github/dd.json`:
 { "exempt": [{ "rule": "CI-001", "file": ".github/workflows/sweep.yml", "until": "2027-01-31", "reason": "needs pipx" }] }
 ```
 
-An exemption with no date, no reason, or a date too far out does not count.
+An exemption counts only with a reason and a date inside the limit.
 When it expires the finding comes back. FW-002 reports exemptions that are
 invalid or expire within 14 days. The old
 `# ci-standards: allow-double-run <reason>` comment still works, and is
@@ -249,5 +249,6 @@ The six original checks keep their behaviour and gain ids (CI-003 to CI-007,
 CI-011), with one fix: the cron check read only the first cron under
 `schedule:`, which hid this repo's own Renovate cron and one in sen-sphere.
 New rules, warning until 31 December 2026: CI-001, CI-008, CI-009, SEC-001,
-SEC-002, SEC-003, REG-003. CI-002 (self-hosted runners in a public repo)
+SEC-002, SEC-003, SEC-005, SEC-006, REG-003. SEC-004 (a tracked file of
+secrets) enforces from 18 October 2026. CI-002 (self-hosted runners in a public repo)
 fails from the start.
