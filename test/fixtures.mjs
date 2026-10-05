@@ -78,6 +78,19 @@ export const FIXTURES = {
     fail: view({ files: { "renovate.json": '{ "extends": ["github>Doman-Digital/ci-standards:default"] }' } }),
     pass: view({ files: { "renovate.json": '{ "extends": ["github>Doman-Digital/dd-ci-standards:default"] }' } }),
   },
+  "SEC-004": {
+    fail: view({ paths: ["package.json", ".env.example", "apps/web/.env.migrate"] }),
+    pass: view({ paths: ["package.json", ".env.example", "apps/web/.env.local.example", ".dev.vars.example", "src/env.ts"] }),
+  },
+  "SEC-005": {
+    // .env.migrate named on its own leaves every other env file unignored.
+    fail: view({ files: { ".gitignore": "node_modules\n.env*.local\n.env.migrate\n" } }),
+    pass: view({ files: { ".gitignore": "node_modules\n.env\n.env.*\n!.env.example\n.dev.vars\n.doppler-token\n" } }),
+  },
+  "SEC-006": {
+    fail: wf("on:\n  pull_request:\njobs:\n  test:\n    steps:\n      - run: npm test\n"),
+    pass: { workflows: [{ path: ".github/workflows/policy.yml", text: "jobs:\n  p:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1\n" }], vercel: [], files: {} },
+  },
   "REG-002": {
     ctx: { meta: { description: "", topics: ["dd-tooling"] } },
     fail: view({}),

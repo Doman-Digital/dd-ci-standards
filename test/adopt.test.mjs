@@ -20,6 +20,7 @@ test("adopt writes the owned files and leaves nothing failing", () => {
   assert.ok(before.findings.some((f) => f.level === "enforce"), "the example should start with a failure");
   assert.equal(writes[".github/workflows/ci-standards-policy.yml"], POLICY_CALLER);
   assert.match(writes["renovate.json"], /dd-ci-standards/);
+  assert.match(writes[".gitignore"], /^\.doppler-token$/m);
   assert.deepEqual(after.findings.filter((f) => f.level !== "report"), []);
 });
 
@@ -33,7 +34,7 @@ test("the debt it cannot fix is dated, not hidden: exemptions expire in 60 days"
   const adopted = {
     workflows: [...messy.workflows, { path: ".github/workflows/ci-standards-policy.yml", text: POLICY_CALLER }],
     vercel: [],
-    files: { ...messy.files, "renovate.json": writes["renovate.json"], ".github/dd.json": writes[".github/dd.json"] },
+    files: { ...messy.files, "renovate.json": writes["renovate.json"], ".github/dd.json": writes[".github/dd.json"], ".gitignore": writes[".gitignore"] },
   };
   const later = runDoctor(adopted, rulebook, { ...ctx, today: "2027-03-17" });
   assert.ok(later.findings.some((f) => f.rule === "CI-003" && f.level === "enforce"));
@@ -44,7 +45,7 @@ test("adopt is idempotent: a second run changes nothing", () => {
   const adopted = {
     workflows: [...messy.workflows, { path: ".github/workflows/ci-standards-policy.yml", text: POLICY_CALLER }],
     vercel: [],
-    files: { ...messy.files, "renovate.json": writes["renovate.json"], ".github/dd.json": writes[".github/dd.json"] },
+    files: { ...messy.files, "renovate.json": writes["renovate.json"], ".github/dd.json": writes[".github/dd.json"], ".gitignore": writes[".gitignore"] },
   };
   assert.deepEqual(planAdopt(adopted, rulebook, ctx).writes, {});
 });
