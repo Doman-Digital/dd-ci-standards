@@ -1,4 +1,4 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>Doman-Digital/dd-ci-standards//default.json#v1"]
+  "extends": ["github>Doman-Digital/dd-ci-standards//default.json#v1.0.11"]
 }
