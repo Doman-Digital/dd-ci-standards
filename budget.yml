@@ -91,15 +91,29 @@ repos:
         reason: "daily GDPR data retention sweep"
 
   sen-sphere:
-    github_actions_crons: []
+    github_actions_crons:
+      - workflow: scheduled-sweeps.yml
+        cron: "0 7 * * 1"
+        reason: "weekly drift sweeps for things no commit triggers: CMS copy, GA4 collection, legal page dates"
     vercel_crons:
+      - app: apps/portal
+        path: /api/portal/cron/retention
+        schedule: "0 6 * * *"
+        reason: "daily data retention run in the portal"
       - app: apps/portal
         path: /api/portal/cron/notifications
         schedule: "0 7 * * *"
         reason: "daily portal notification dispatch"
+      - app: apps/portal
+        path: /api/portal/cron/marketing-audience
+        schedule: "0 8 * * *"
+        reason: "daily marketing audience sync from the portal"
 
   RMP-Electrical:
-    github_actions_crons: []
+    github_actions_crons:
+      - workflow: deploy-astro.yml
+        cron: "17 3 * * *"
+        reason: "daily rebuild of the Astro site so Google reviews and the footer year stay current"
     vercel_crons: []
 
   Rise-and-bloom:
