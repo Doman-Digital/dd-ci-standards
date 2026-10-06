@@ -26,15 +26,20 @@ name: ci-standards policy
 # It reads the calling repo's .gitleaks.toml if there is one. The binary is
 # fetched at a fixed version and checked against its published sha256.
 #
-# GitHub-hosted on purpose: callers include public repos and client repos in
-# other accounts, which cannot use the organisation's self-hosted runners.
+# Both jobs run on the caller's own CI_RUNNER, with GitHub-hosted as the
+# fallback. A reusable workflow's jobs read the calling repo's variables, so a
+# private Doman-Digital repo (CI_RUNNER=dd-ci) runs them on the self-hosted VM,
+# while public repos and client repos in other accounts cannot see that
+# variable and stay GitHub-hosted. Until 2026-10-06 both were hard-coded to
+# ubuntu-latest, and when the organisation's GitHub payment failed every
+# private PR lost its policy check while CI itself ran on the VM.
 
 on:
   workflow_call: {}
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 5
     steps:
       - name: Checkout calling repo
@@ -48,7 +53,7 @@ jobs:
           path: repo
 
   secrets:
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 5
     env:
       GITLEAKS_VERSION: "8.30.1"

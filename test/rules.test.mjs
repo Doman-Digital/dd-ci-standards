@@ -67,6 +67,18 @@ test("out-of-scope kinds are not checked; sales-demo gets the light profile", ()
   assert.ok(ids(runDoctor(FIXTURES["CI-003"].fail, rulebook, { ...base, kind: "sales-demo" })).includes("CI-003"));
 });
 
+test("CI-002 lets a call-only workflow use the CI_RUNNER fallback, and nothing looser (2026-10-06)", () => {
+  const pub = { ...base, visibility: "public" };
+  const reusable = (on, runsOn) => ({ workflows: [{ path: ".github/workflows/policy.yml", text: `${on}\njobs:\n  check:\n    runs-on: ${runsOn}\n    timeout-minutes: 5\n    steps:\n      - run: x\n` }], vercel: [], files: {} });
+  const FALLBACK = "${{ vars.CI_RUNNER || 'ubuntu-latest' }}";
+  assert.ok(!ids(runDoctor(reusable("on:\n  workflow_call: {}", FALLBACK), rulebook, pub)).includes("CI-002"));
+  assert.ok(!ids(runDoctor(reusable("on: workflow_call", FALLBACK), rulebook, pub)).includes("CI-002"));
+  // Another trigger beside workflow_call runs in this public repo, so it still fails.
+  assert.ok(ids(runDoctor(reusable("on:\n  workflow_call: {}\n  pull_request:", FALLBACK), rulebook, pub)).includes("CI-002"));
+  // A call-only workflow naming the VM outright still fails.
+  assert.ok(ids(runDoctor(reusable("on:\n  workflow_call: {}", "dd-ci"), rulebook, pub)).includes("CI-002"));
+});
+
 test("scheduleCrons reads every cron, past comments (the 2026-10-03 fix)", () => {
   const text = 'on:\n  schedule:\n    - cron: "0 3 * * *"\n    # and weekly\n    - cron: "0 6 * * 1"\n  push:\n';
   assert.deepEqual(scheduleCrons(text).map((c) => c.cron), ["0 3 * * *", "0 6 * * 1"]);
