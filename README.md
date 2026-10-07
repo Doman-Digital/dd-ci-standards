@@ -63,7 +63,8 @@ In order, and stopping at the first failure:
    warning or exempt. A starter that needs an exemption on its first day is a
    bug in the starter, so nothing is made on GitHub;
 3. the repo in Doman-Digital with its description and tags (kind,
-   `in-development`, `doman-digital`), and the first commit on `main`;
+   `in-development`, `doman-digital`), auto-merge and delete-branch-on-merge
+   turned on (REG-004), and the first commit on `main`;
 4. a ruleset on `main`: pull requests only, and the policy check
    (`ci-standards-policy / check`) required, so a PR that breaks a rule past
    its enforce date cannot merge. GitHub's Free plan has no
