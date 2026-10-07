@@ -71,3 +71,12 @@ test("scheduleCrons reads every cron, past comments (the 2026-10-03 fix)", () =>
   const text = 'on:\n  schedule:\n    - cron: "0 3 * * *"\n    # and weekly\n    - cron: "0 6 * * 1"\n  push:\n';
   assert.deepEqual(scheduleCrons(text).map((c) => c.cron), ["0 3 * * *", "0 6 * * 1"]);
 });
+
+test("CI-001 checks only repos the organisation owns, since only they can use its runners", () => {
+  const fail = FIXTURES["CI-001"].fail;
+  const owned = (login) => ({ ...base, meta: { owner: { login } } });
+  assert.ok(ids(runDoctor(fail, rulebook, owned("Doman-Digital"))).includes("CI-001"));
+  assert.ok(ids(runDoctor(fail, rulebook, base)).includes("CI-001"), "owner unknown: still checked");
+  assert.ok(!ids(runDoctor(fail, rulebook, owned("sensphere"))).includes("CI-001"), "client account: nowhere else to run");
+  assert.ok(!ids(runDoctor(fail, rulebook, { ...owned("dmitridoman"), kind: "dd-site" })).includes("CI-001"), "personal account");
+});
