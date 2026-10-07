@@ -8,8 +8,8 @@
   "rules": [
     {
       "id": "CI-001",
-      "title": "A job in a private repo names a GitHub-hosted runner directly",
-      "why": "2 October 2026: twelve jobs hard-coded to ubuntu-latest used the organisation's hosted minutes and could not move to the self-hosted VM. Use runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}.",
+      "title": "A job in a private Doman-Digital repo names a GitHub-hosted runner directly",
+      "why": "2 October 2026: twelve jobs hard-coded to ubuntu-latest used the organisation's hosted minutes and could not move to the self-hosted VM. Use runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}. Only repos owned by Doman-Digital are checked: the runners are registered to the organisation, so a repo in a client's or a personal account cannot use them.",
       "applies": "full",
       "visibility": "private",
       "warn_from": "2026-10-03",
