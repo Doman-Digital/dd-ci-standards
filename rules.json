@@ -170,7 +170,7 @@
     {
       "id": "REG-004",
       "title": "Auto-merge or delete-branch-on-merge is off",
-      "why": "7 October 2026: pull requests are assessed and merged by agents, with the required checks as the only gate (DOM-443). Auto-merge lets a PR merge itself the moment its checks pass, and deleting the branch on merge stops merged branches piling up. Both are repo settings, read from GitHub; when the settings cannot be read, nothing is checked.",
+      "why": "7 October 2026: pull requests are assessed and merged by agents, with the required checks as the only gate (DOM-443). Auto-merge lets a PR merge itself the moment its checks pass, and deleting the branch on merge stops merged branches piling up. Both are repo settings, read from GitHub; when the settings cannot be read, nothing is checked. Auto-merge is not required on a private repo in a personal account, where GitHub's Free plan ignores it; delete-branch-on-merge still is.",
       "applies": "all",
       "warn_from": "2026-10-07",
       "enforce_from": "2026-11-06"
