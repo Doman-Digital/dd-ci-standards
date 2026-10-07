@@ -13,7 +13,7 @@
       "applies": "full",
       "visibility": "private",
       "warn_from": "2026-10-03",
-      "enforce_from": "2026-12-31"
+      "enforce_from": "2026-10-19"
     },
     {
       "id": "CI-002",
