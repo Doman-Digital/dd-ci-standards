@@ -101,6 +101,13 @@ export const FIXTURES = {
     fail: wf(JOB("${{ vars.CI_RUNNER || 'ubuntu-latest' }}")),
     pass: { workflows: [{ path: ".github/workflows/policy.yml", text: "jobs:\n  p:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1\n" }], vercel: [], files: {} },
   },
+  "REG-004": {
+    // Settings, not files: the view is empty and the settings come in the context.
+    fail: view({}),
+    pass: view({}),
+    ctx: { meta: { full_name: "Doman-Digital/demo", allow_auto_merge: false, delete_branch_on_merge: true } },
+    passCtx: { meta: { full_name: "Doman-Digital/demo", allow_auto_merge: true, delete_branch_on_merge: true } },
+  },
   "FW-002": {
     // An exemption with no expiry does not count, and says so.
     fail: wf("on:\n  push:\n    branches: [main]\n  pull_request:\n    branches: [main]\n# dd: allow CI-005 a backstop with no date\njobs: {}\n"),
