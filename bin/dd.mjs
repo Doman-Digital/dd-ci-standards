@@ -282,6 +282,7 @@ async function newRepo(args) {
     private: plan.visibility === "private",
     has_wiki: false,
     has_projects: false,
+    allow_auto_merge: true,
     delete_branch_on_merge: true,
   });
   if (!created.ok) {

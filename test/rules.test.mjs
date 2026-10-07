@@ -72,6 +72,14 @@ test("scheduleCrons reads every cron, past comments (the 2026-10-03 fix)", () =>
   assert.deepEqual(scheduleCrons(text).map((c) => c.cron), ["0 3 * * *", "0 6 * * 1"]);
 });
 
+test("REG-004 says nothing when the token cannot read the merge settings", () => {
+  const unread = { ...base, meta: { full_name: "Doman-Digital/demo" } };
+  assert.ok(!ids(runDoctor(FIXTURES["REG-004"].fail, rulebook, unread)).includes("REG-004"));
+  assert.ok(!ids(runDoctor(FIXTURES["REG-004"].fail, rulebook, base)).includes("REG-004"), "no settings read at all");
+  const both = runDoctor(FIXTURES["REG-004"].fail, rulebook, { ...base, meta: { full_name: "x/y", allow_auto_merge: false, delete_branch_on_merge: false } });
+  assert.match(both.findings.find((f) => f.rule === "REG-004").message, /^auto-merge and delete branch on merge are off/);
+});
+
 test("CI-001 checks only repos the organisation owns, since only they can use its runners", () => {
   const fail = FIXTURES["CI-001"].fail;
   const owned = (login) => ({ ...base, meta: { owner: { login } } });
