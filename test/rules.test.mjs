@@ -80,6 +80,15 @@ test("REG-004 says nothing when the token cannot read the merge settings", () =>
   assert.match(both.findings.find((f) => f.rule === "REG-004").message, /^auto-merge and delete branch on merge are off/);
 });
 
+test("REG-004 does not require auto-merge on a private personal-account repo, but still wants delete-on-merge", () => {
+  const fail = FIXTURES["REG-004"].fail;
+  const m = (over) => ({ ...base, meta: { full_name: "sensphere/x", private: true, owner: { type: "User" }, allow_auto_merge: false, delete_branch_on_merge: true, ...over } });
+  assert.ok(!ids(runDoctor(fail, rulebook, m({}))).includes("REG-004"));
+  assert.match(runDoctor(fail, rulebook, m({ delete_branch_on_merge: false })).findings.find((f) => f.rule === "REG-004").message, /^delete branch on merge is off/);
+  assert.ok(ids(runDoctor(fail, rulebook, m({ owner: { type: "Organization" } }))).includes("REG-004"), "org repos still need it");
+  assert.ok(ids(runDoctor(fail, rulebook, m({ private: false }))).includes("REG-004"), "public repos still need it");
+});
+
 test("CI-001 checks only repos the organisation owns, since only they can use its runners", () => {
   const fail = FIXTURES["CI-001"].fail;
   const owned = (login) => ({ ...base, meta: { owner: { login } } });
