@@ -143,6 +143,14 @@
       "enforce_from": "2026-12-31"
     },
     {
+      "id": "SEC-007",
+      "title": "A Cloudflare deploy reads its token from a GitHub secret",
+      "why": "6 and 7 October 2026: the security review found broad, non-expiring Cloudflare tokens hand-copied into repo secrets, where nothing rotates or audits them. Sites deploy through Cloudflare's GitHub app (Workers Builds), which leaves no token with us; Workers with extra deploy steps fetch a narrow, expiring token from Doppler with the repo's GitHub identity.",
+      "applies": "all",
+      "warn_from": "2026-10-07",
+      "enforce_from": "2026-12-31"
+    },
+    {
       "id": "REG-002",
       "title": "The repo's description or tags break repo-topics.json",
       "why": "Every repo must be identifiable from its GitHub page alone, and its kind tag decides which rules apply (was the repo metadata check, enforced since September 2026).",

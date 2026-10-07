@@ -88,3 +88,17 @@ test("CI-001 checks only repos the organisation owns, since only they can use it
   assert.ok(!ids(runDoctor(fail, rulebook, owned("sensphere"))).includes("CI-001"), "client account: nowhere else to run");
   assert.ok(!ids(runDoctor(fail, rulebook, { ...owned("dmitridoman"), kind: "dd-site" })).includes("CI-001"), "personal account");
 });
+
+test("SEC-007 catches the shapes in the estate and leaves non-deploys alone", () => {
+  const run = (text) => ids(runDoctor({ workflows: [{ path: ".github/workflows/deploy-astro.yml", text }], vercel: [], files: {} }, rulebook, base)).filter((id) => id === "SEC-007");
+  // RMP: the token set in the workflow env, the deploy further down.
+  assert.deepEqual(run("env:\n  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}\njobs:\n  deploy:\n    steps:\n      - run: pnpm exec wrangler deploy\n"), ["SEC-007"]);
+  // The wrangler action takes it as an input.
+  assert.deepEqual(run("jobs:\n  deploy:\n    steps:\n      - uses: cloudflare/wrangler-action@0000000000000000000000000000000000000000\n        with:\n          apiToken: ${{ secrets.CF_TOKEN }}\n"), ["SEC-007"]);
+  // A dry run does not need the token, so a secret passed to it is still flagged.
+  assert.deepEqual(run("jobs:\n  check:\n    steps:\n      - run: npx wrangler deploy --dry-run\n        env:\n          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}\n"), ["SEC-007"]);
+  // Doppler run with the token from Doppler: no Cloudflare secret in GitHub.
+  assert.deepEqual(run("jobs:\n  deploy:\n    steps:\n      - run: doppler run -- pnpm exec wrangler deploy\n        env:\n          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}\n"), []);
+  // A token secret in a workflow that never deploys to Cloudflare.
+  assert.deepEqual(run("jobs:\n  dns:\n    steps:\n      - run: node scripts/dns.mjs\n        env:\n          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}\n"), []);
+});
