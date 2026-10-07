@@ -39,8 +39,8 @@ for (const rule of rulebook.rules) {
 test("a rule warns before its enforce date and fails after it", () => {
   const ci001 = rulebook.rules.find((r) => r.id === "CI-001");
   assert.equal(levelOn(ci001, "2026-10-02"), "off");
-  assert.equal(levelOn(ci001, "2026-11-01"), "warn");
-  assert.equal(levelOn(ci001, "2026-12-31"), "enforce");
+  assert.equal(levelOn(ci001, "2026-10-18"), "warn");
+  assert.equal(levelOn(ci001, "2026-10-19"), "enforce");
 });
 
 test("an exemption with a date and a reason exempts; expired, undated or too long does not", () => {
