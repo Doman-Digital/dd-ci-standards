@@ -178,6 +178,38 @@ has to pass a policy check to merge, not get caught in the next audit.
   shouldn't be swapped blind while Actions billing is blocked and no run
   can verify the migration). Adopt one repo at a time once that clears.
 
+- **`.github/workflows/post-deploy-checks.yml`**: reusable workflow (DD
+  Checks C29). After a successful production deploy it calls `POST /run` on
+  `checks.domandigital.co.uk`, so the client's `http`, `domain`, `form` and
+  `browser` checks run now rather than at their next slot (Schedule A s.2,
+  "after any platform change"), and it lists each check with its dashboard
+  link in the job summary. Call it as the job after the deploy:
+
+  ```yaml
+  checks:
+    needs: deploy
+    uses: Doman-Digital/dd-ci-standards/.github/workflows/post-deploy-checks.yml@v1
+    with:
+      client: rmp-electrical   # the slug in config/clients.registry.json
+    secrets:
+      ADMIN_RUN_TOKEN: ${{ secrets.ADMIN_RUN_TOKEN }}
+  ```
+
+  A host that deploys outside Actions (Vercel) triggers the caller on
+  `deployment_status` and gates the job on `state == 'success'` and
+  `environment == 'Production'`. Inputs: `check` (one check id), `delay_seconds`
+  (default 30, so the release is serving), `runner`.
+
+  `ADMIN_RUN_TOKEN` is Doppler `dd-checks`/`prd`. Set it as a secret on the
+  calling repo; client repos sit in their own GitHub accounts, so an
+  organisation secret does not reach them. It is never a `with:` input and
+  never in this repo. The token goes to curl on stdin, and the response is
+  read field by field into the summary, never printed. The run never fails the
+  deploy: a missing token, a refused call or a failing check is a warning
+  annotation and a summary line, and the alert for a failing check goes
+  through dd-relay as for any scheduled run. A form check withheld for want
+  of a client's `syntheticSignOff` cannot be forced from here.
+
 - **`default.json`**: shared Renovate preset. Weekly Monday-morning window,
   concurrency caps, majors grouped by manager (the fix for an 18-PR fan-out
   where individually-grouped minors still let every major land separately),

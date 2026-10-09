@@ -1,0 +1,120 @@
+name: post-deploy-checks (reusable)
+
+# After a successful production deploy, ask DD Checks to run that client's
+# checks now (Schedule A s.2: "checked ... after any platform change"). It
+# calls POST /run on checks.domandigital.co.uk: `http` and `domain` checks
+# answer at once, `form` and `browser` checks are queued and their result
+# lands on the dashboard. The job summary links each one.
+#
+# It never fails the deploy. A refused or unreachable /run is a warning
+# annotation and a line in the summary, and the job still passes; a failing
+# check raises its alert through the normal path (evaluator -> dd-relay).
+#
+# Call it as the job after the deploy, passing the client's registry slug:
+#
+#   jobs:
+#     deploy:
+#       ...
+#     checks:
+#       needs: deploy
+#       uses: Doman-Digital/dd-ci-standards/.github/workflows/post-deploy-checks.yml@v1
+#       with:
+#         client: rmp-electrical
+#       secrets:
+#         ADMIN_RUN_TOKEN: ${{ secrets.ADMIN_RUN_TOKEN }}
+#
+# For a host that deploys outside Actions (Vercel), trigger the caller on
+# `deployment_status` and gate the job on a successful Production deployment:
+#
+#   on:
+#     deployment_status:
+#   jobs:
+#     checks:
+#       if: github.event.deployment_status.state == 'success' && github.event.deployment.environment == 'Production'
+#       uses: ...
+#
+# ADMIN_RUN_TOKEN is Doppler `dd-checks`/`prd`. It is a secret of the calling
+# repo (or of its organisation: client repos live in their own accounts, so
+# they need it set per repo). Never put it in this repo or in a `with:` input.
+# A caller without it gets a warning and no run, not a failed deploy.
+#
+# The token reaches curl through stdin and the environment, never an argument
+# or an expression spliced into the script, and the response is read field by
+# field into the summary: the body is never printed.
+
+on:
+  workflow_call:
+    inputs:
+      client:
+        description: The client's slug in config/clients.registry.json (what `pnpm checks run --client` takes).
+        type: string
+        required: true
+      check:
+        description: Run only this check id. Empty runs every check for the client.
+        type: string
+        default: ""
+      delay_seconds:
+        description: Wait before calling, so the new release is serving. 0 to skip.
+        type: number
+        default: 30
+      runner:
+        description: Runner label. Leave unset in public repos.
+        type: string
+        default: ubuntu-latest
+    secrets:
+      ADMIN_RUN_TOKEN:
+        description: Bearer token for POST /run (Doppler dd-checks/prd).
+        required: false
+
+# Reads nothing from the repo.
+permissions: {}
+
+jobs:
+  run:
+    runs-on: ${{ inputs.runner }}
+    timeout-minutes: 5
+    steps:
+      - name: Run the client's checks
+        env:
+          ADMIN_RUN_TOKEN: ${{ secrets.ADMIN_RUN_TOKEN }}
+          CLIENT: ${{ inputs.client }}
+          CHECK: ${{ inputs.check }}
+          DELAY: ${{ inputs.delay_seconds }}
+          HOST: checks.domandigital.co.uk
+        run: |
+          set +x
+          summary() { printf '%s\n' "$1" >> "$GITHUB_STEP_SUMMARY"; }
+          skip() { echo "::warning title=DD Checks::$1"; summary "### DD Checks: not run"; summary "$1"; exit 0; }
+
+          [ -n "$ADMIN_RUN_TOKEN" ] || skip "ADMIN_RUN_TOKEN is not set on this repo, so no post-deploy run was requested. Set it from Doppler dd-checks/prd."
+          printf '%s' "$CLIENT" | grep -Eq '^[a-z0-9][a-z0-9-]*$' || skip "client '$CLIENT' is not a registry slug."
+
+          case "$DELAY" in ''|*[!0-9]*) DELAY=0 ;; esac
+          [ "$DELAY" -gt 0 ] && sleep "$DELAY"
+
+          body=$(jq -cn --arg client "$CLIENT" --arg check "$CHECK" '{client: $client} + (if $check == "" then {} else {check: $check} end)')
+          out=$(mktemp)
+          # The header comes from stdin, so the token is in no process argument list.
+          code=$(printf 'header = "Authorization: Bearer %s"\n' "$ADMIN_RUN_TOKEN" |
+            curl --silent --show-error --config - --max-time 60 --retry 2 --retry-connrefused \
+              --request POST --header 'Content-Type: application/json' --data "$body" \
+              --output "$out" --write-out '%{http_code}' "https://$HOST/run" 2>/dev/null) || code=000
+
+          if [ "$code" != 200 ]; then
+            reason=$(jq -r '.error // empty' "$out" 2>/dev/null | head -c 120)
+            skip "POST /run was refused or unreachable (HTTP $code${reason:+, $reason}). The deploy is unaffected; run \`pnpm checks run --client $CLIENT\` by hand."
+          fi
+
+          summary "### DD Checks: post-deploy run for \`$CLIENT\`"
+          summary ""
+          summary "| Check | Result | Link |"
+          summary "| --- | --- | --- |"
+          jq -r '.runs[] | "| `\(.checkId)` | \(if .how == "inline" then (.status // "?") + (if .code then " (" + .code + ")" else "" end) else .how end) | [dashboard](\(.url)) |"' "$out" >> "$GITHUB_STEP_SUMMARY"
+          summary ""
+          summary "Queued form and browser checks report on the dashboard in a few minutes: $(jq -r '.dashboard' "$out")"
+
+          bad=$(jq -r '[.runs[] | select(.status == "fail" or .status == "error")] | length' "$out")
+          if [ "$bad" -gt 0 ]; then
+            echo "::warning title=DD Checks::$bad check(s) failed straight after the deploy for $CLIENT. The alert goes out through dd-relay."
+          fi
+          exit 0
