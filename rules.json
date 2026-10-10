@@ -78,14 +78,6 @@
       "enforce_from": "2026-12-31"
     },
     {
-      "id": "CI-009",
-      "title": "A self-hosted job uses a fixed port without the runner's port offset",
-      "why": "2 October 2026: two jobs on one VM both started a server on port 3000; one tested the other's build. Add CI_PORT_OFFSET.",
-      "applies": "full",
-      "warn_from": "2026-10-03",
-      "enforce_from": "2026-12-31"
-    },
-    {
       "id": "CI-011",
       "title": "A vercel.json cron is not registered in budget.yml",
       "why": "2026-08-16 portfolio audit (was unregistered-vercel-cron).",
