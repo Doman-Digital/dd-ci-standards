@@ -281,7 +281,7 @@ The rulebook (`rules.json`), `dd doctor`, the `doctor` action, `release.yml`.
 The six original checks keep their behaviour and gain ids (CI-003 to CI-007,
 CI-011), with one fix: the cron check read only the first cron under
 `schedule:`, which hid this repo's own Renovate cron and one in sen-sphere.
-New rules, warning until 31 December 2026: CI-001, CI-008, CI-009, SEC-001,
+New rules, warning until 31 December 2026: CI-001, CI-008, SEC-001,
 SEC-002, SEC-003, SEC-005, SEC-006, REG-003. SEC-004 (a tracked file of
 secrets) enforces from 18 October 2026. CI-002 (self-hosted runners in a public repo)
 fails from the start.
