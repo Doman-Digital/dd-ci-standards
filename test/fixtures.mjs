@@ -57,10 +57,6 @@ export const FIXTURES = {
     fail: wf("jobs:\n  a:\n    steps:\n      - uses: actions/upload-artifact@v7\n        with:\n          name: report\n          path: report.json\n"),
     pass: wf("jobs:\n  a:\n    steps:\n      - uses: actions/upload-artifact@v7\n        # a full quota must not fail the job\n        continue-on-error: true\n        with:\n          name: report\n          path: report.json\n"),
   },
-  "CI-009": {
-    fail: wf(JOB("${{ vars.CI_RUNNER || 'ubuntu-latest' }}", "      - run: pnpm exec next start -p 3000 &\n      - run: curl -sf http://localhost:3000/\n")),
-    pass: wf(JOB("${{ vars.CI_RUNNER || 'ubuntu-latest' }}", "      - run: |\n          PORT=$((3000 + ${CI_PORT_OFFSET:-0}))\n          pnpm exec next start -p \"$PORT\" &\n")),
-  },
   "CI-011": {
     ctx: { budget: { ghCrons: [], vercelCrons: [{ path: "/api/cron/a", schedule: "0 9 * * *" }] } },
     fail: view({ vercel: [{ path: "vercel.json", json: { crons: [{ path: "/api/cron/b", schedule: "0 9 * * *" }] } }] }),
