@@ -59,7 +59,7 @@ jobs:
           persist-credentials: false
           path: repo
 
-      - uses: Doman-Digital/dd-ci-standards/doctor@v1.0.13
+      - uses: Doman-Digital/dd-ci-standards/doctor@v1.0.22
         with:
           path: repo
 
