@@ -45,12 +45,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: node bin/dd.mjs doctor . --format github
 
-      # The deploy tip guard from this PR's code: an old commit is not
-      # deployed, the tip is.
+      # The deploy tip guard from this PR's code: a commit that is not the tip
+      # of main (this PR's head) is not deployed, the tip is.
       - id: old
         uses: ./.github/actions/deploy-tip
         with:
-          sha: a27250481db3fa5534a743bfbeaa73e67749037f # an old commit on main
+          sha: ${{ github.event.pull_request.head.sha }}
           branch: main
       - id: tip
         uses: ./.github/actions/deploy-tip
