@@ -44,3 +44,21 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: node bin/dd.mjs doctor . --format github
+
+      # The deploy tip guard from this PR's code: an old commit is not
+      # deployed, the tip is.
+      - id: old
+        uses: ./.github/actions/deploy-tip
+        with:
+          sha: a27250481db3fa5534a743bfbeaa73e67749037f # an old commit on main
+          branch: main
+      - id: tip
+        uses: ./.github/actions/deploy-tip
+        with:
+          sha: ${{ steps.old.outputs.tip }}
+          branch: main
+      - name: The guard said no to the old commit and yes to the tip
+        env:
+          OLD: ${{ steps.old.outputs.deploy }}
+          TIP: ${{ steps.tip.outputs.deploy }}
+        run: test "$OLD" = false && test "$TIP" = true
