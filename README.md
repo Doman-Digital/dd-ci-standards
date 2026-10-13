@@ -210,6 +210,60 @@ has to pass a policy check to merge, not get caught in the next audit.
   through dd-relay as for any scheduled run. A form check withheld for want
   of a client's `syntheticSignOff` cannot be forced from here.
 
+- **Deploying a Worker** (DOM-776, 13 October 2026). Every Cloudflare
+  Worker has one deploy path, and **`deploys.json`** lists them all: the
+  Worker, its account, its repo and config, and the path. CF-001 fails a repo
+  with a wrangler config that is not listed, or deployed both ways.
+
+  | Path | For | How |
+  | --- | --- | --- |
+  | `actions` | every internal Worker, and anything with checks, migrations, secrets or several Workers to deploy | `.github/workflows/cloudflare-deploy.yml` after CI passes on main |
+  | `workers-builds` | a simple client static site, nothing to gate | Cloudflare's GitHub app builds main |
+  | `manual` | none by choice: listed so it is visible, and moved to `actions` | `wrangler deploy` from a workstation |
+  | `retired` | a Worker that no longer serves anything | nothing |
+
+  The shared workflow ships only the commit CI tested, and only while it is
+  still the tip of main (CI-014). It fetches the deploy token from Doppler
+  `dd-deploy/<config>` with the repo's GitHub identity, so no Cloudflare
+  token is stored in GitHub (SEC-007), and deploys of one repo queue rather
+  than cancel (CI-013). Main CI is never cancelled by a newer push (CI-012):
+  each run finishes, and the guard lets only the newest one deploy, so a
+  burst of merges ends with the newest commit live.
+
+  ```yaml
+  on:
+    workflow_run:
+      workflows: [CI]
+      types: [completed]
+      branches: [main]
+    workflow_dispatch:
+  permissions:
+    contents: read
+  jobs:
+    deploy:
+      permissions:
+        contents: read
+        id-token: write
+      uses: Doman-Digital/dd-ci-standards/.github/workflows/cloudflare-deploy.yml@v1
+      with:
+        doppler-config: relay          # Doppler dd-deploy/relay holds CLOUDFLARE_DEPLOY_VALUE
+        configs: |
+          wrangler.jsonc
+        pre-deploy: node scripts/check-migrations.mjs   # optional
+  ```
+
+  Setting up a repo for it, once: a deploy token in Doppler
+  `dd-deploy/<config>` as `CLOUDFLARE_DEPLOY_VALUE` (Workers Scripts edit
+  only, on that one account, with an expiry date), a Doppler service account
+  identity that trusts the repo's default branch, and the repo variable
+  `DOPPLER_IDENTITY_ID`. `tokens.json` records every Cloudflare deploy token
+  by name, account, scope and expiry: never a value.
+
+  A deploy that has its own workflow (a monorepo service with staging first)
+  keeps it, with the same three properties: the
+  `.github/actions/deploy-tip` step first, the tested commit checked out,
+  and `cancel-in-progress: false`.
+
 - **`default.json`**: shared Renovate preset. Weekly Monday-morning window,
   concurrency caps, majors grouped by manager (the fix for an 18-PR fan-out
   where individually-grouped minors still let every major land separately),
@@ -254,6 +308,12 @@ tag is retargeted". Under it `v1` sat at 2026-09-25 while `v1.0.1` and
 `v1.0.2` carried fixes most callers never received, and Renovate, which was
 meant to bump the pins, opened no routine update anywhere for a month
 (`renovate.yml` explains why). Decided 2026-10-03 with the DD Framework plan.
+
+Never pin a caller to a release (`@v1.0.22`, `#v1.0.13`): a pinned caller
+stops getting rules. Renovate did exactly that to several callers, and
+`policy.yml` itself ran `doctor@v1.0.13` until 13 October 2026, so every PR
+gate ran 5 October's rules. `default.json` now leaves this repo alone, and
+FW-003 fails a pin.
 
 ### v1.0.1
 

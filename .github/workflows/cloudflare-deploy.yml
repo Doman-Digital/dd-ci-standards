@@ -1,0 +1,225 @@
+name: cloudflare-deploy (reusable)
+
+# The one way a Worker is deployed from Actions (CF-001, CI-013, CI-014, SEC-007).
+# deploys.json lists every Worker and the path that deploys it.
+#
+# What it does, in order:
+#   1. Ships only the commit CI tested (the CI run's head_sha after
+#      workflow_run), and only while it is still the tip of the default
+#      branch. After a burst of merges every CI run finishes and calls this;
+#      the older ones stop here, and the newest one deploys.
+#   2. Installs, runs the caller's checks (pre-deploy, and on a manual run
+#      the manual-check too), builds.
+#   3. Fetches the Cloudflare deploy token from Doppler `dd-deploy/<config>`
+#      with the repo's GitHub identity (OIDC). No Cloudflare token is stored
+#      in GitHub, and Doppler only trusts that identity on the default branch.
+#   4. Optionally copies runtime secrets from a Doppler config into one
+#      Worker, then runs `wrangler deploy` for each config listed.
+#
+# Deploys of one repo queue rather than cancel each other: a deploy stopped
+# halfway can leave one Worker new and the next one old.
+#
+# The CI workflow it follows must run on every push to main, with no paths:
+# filter. A tip commit that CI skipped has no run to deploy it, and the guard
+# stops the run for the commit before it, so nothing ships (CI-014).
+#
+# Call it from a workflow that runs after CI on main:
+#
+#   on:
+#     workflow_run:
+#       workflows: [CI]
+#       types: [completed]
+#       branches: [main]
+#     workflow_dispatch:
+#   permissions:
+#     contents: read
+#   jobs:
+#     deploy:
+#       permissions:
+#         contents: read
+#         id-token: write # signs in to Doppler
+#       uses: Doman-Digital/dd-ci-standards/.github/workflows/cloudflare-deploy.yml@v1
+#       with:
+#         doppler-config: relay
+#         configs: |
+#           wrangler.jsonc
+#           workers/email-in/wrangler.jsonc
+#
+# The repo needs the variable DOPPLER_IDENTITY_ID (its Doppler service
+# account identity, trusting this repo's default branch) and a deploy token
+# in Doppler `dd-deploy/<config>` as CLOUDFLARE_DEPLOY_VALUE: Workers Scripts
+# edit only, on the one account, with an expiry. See "Deploying a Worker" in
+# the README.
+#
+# On a client account's runner, pass `runner: dd-client`.
+
+on:
+  workflow_call:
+    inputs:
+      doppler-config:
+        description: The config in Doppler project `dd-deploy` that holds this repo's CLOUDFLARE_DEPLOY_VALUE.
+        type: string
+        required: true
+      doppler-project:
+        description: The Doppler project holding the deploy token.
+        type: string
+        default: dd-deploy
+      configs:
+        description: Wrangler configs to deploy, one per line, in order. Empty deploys the default config.
+        type: string
+        default: ""
+      working-directory:
+        description: Where package.json and the wrangler configs are.
+        type: string
+        default: "."
+      node-version:
+        type: string
+        default: 22.x
+      pre-deploy:
+        description: A command run before the token is fetched, on every deploy (e.g. `node scripts/check-migrations.mjs`).
+        type: string
+        default: ""
+      manual-check:
+        description: A command run only on a manual run, which has no CI run behind it (e.g. `pnpm run typecheck && pnpm test`).
+        type: string
+        default: ""
+      build:
+        description: A build command run before deploying (e.g. `pnpm run build` for a Worker that serves static assets).
+        type: string
+        default: ""
+      sync-secrets-to:
+        description: A wrangler config whose Worker gets every secret of the Doppler config behind DOPPLER_RUNTIME_TOKEN before it deploys. Empty syncs nothing.
+        type: string
+        default: ""
+      runner:
+        description: Runner label. Defaults to the CI_RUNNER variable, then ubuntu-latest.
+        type: string
+        default: ""
+    secrets:
+      DOPPLER_RUNTIME_TOKEN:
+        description: A read-only Doppler service token for the Worker's runtime secrets. Needed only with sync-secrets-to.
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    # A workflow_run deploy runs only for a CI run that passed and that a push to this repo's default branch started,
+    # whatever the fork or branch that triggered CI; a manual run only from the default branch. After workflow_run,
+    # github.sha is the tip of the default branch when CI finished: a run for an older commit is skipped here, before
+    # it waits for a VM, and the tip guard below catches a merge that lands while it waits.
+    if: >-
+      (github.event_name == 'workflow_dispatch' && github.ref_name == github.event.repository.default_branch) ||
+      (github.event_name == 'push' && github.ref_name == github.event.repository.default_branch) ||
+      (github.event_name == 'workflow_run' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      github.event.workflow_run.head_sha == github.sha)
+    runs-on: ${{ inputs.runner || vars.CI_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+    concurrency:
+      group: cloudflare-deploy-${{ github.repository }}
+      cancel-in-progress: false
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    steps:
+      - id: tip
+        uses: Doman-Digital/dd-ci-standards/.github/actions/deploy-tip@v1
+        with:
+          sha: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        if: steps.tip.outputs.deploy == 'true'
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        if: steps.tip.outputs.deploy == 'true'
+        with:
+          node-version: ${{ inputs.node-version }}
+      - name: Install
+        id: install
+        if: steps.tip.outputs.deploy == 'true'
+        run: |
+          set -euo pipefail
+          if [ -f pnpm-lock.yaml ]; then
+            corepack enable
+            pnpm install --frozen-lockfile
+            echo "wrangler=pnpm exec wrangler" >> "$GITHUB_OUTPUT"
+          elif [ -f package-lock.json ]; then
+            npm ci
+            echo "wrangler=npx --no-install wrangler" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::No pnpm-lock.yaml or package-lock.json in ${PWD}: wrangler must be a pinned dependency."
+            exit 1
+          fi
+      - name: Manual run checks (no CI run behind it)
+        if: steps.tip.outputs.deploy == 'true' && github.event_name == 'workflow_dispatch' && inputs.manual-check != ''
+        env:
+          CMD: ${{ inputs.manual-check }}
+        run: bash -euo pipefail -c "$CMD"
+      - name: Pre-deploy check
+        if: steps.tip.outputs.deploy == 'true' && inputs.pre-deploy != ''
+        env:
+          CMD: ${{ inputs.pre-deploy }}
+        run: bash -euo pipefail -c "$CMD"
+      - name: Build
+        if: steps.tip.outputs.deploy == 'true' && inputs.build != ''
+        env:
+          CMD: ${{ inputs.build }}
+        run: bash -euo pipefail -c "$CMD"
+      - name: Fetch the Cloudflare deploy token from Doppler
+        id: doppler
+        if: steps.tip.outputs.deploy == 'true'
+        uses: dopplerhq/secrets-fetch-action@451892f16195f9ac360e1a5bcbf0b5fd0e957534 # v2.0.0
+        with:
+          auth-method: oidc
+          doppler-identity-id: ${{ vars.DOPPLER_IDENTITY_ID }}
+          doppler-project: ${{ inputs.doppler-project }}
+          doppler-config: ${{ inputs.doppler-config }}
+      - name: Install Doppler CLI
+        if: steps.tip.outputs.deploy == 'true' && inputs.sync-secrets-to != ''
+        uses: dopplerhq/cli-action@014df23b1329b615816a38eb5f473bb9000700b1 # v3
+      - name: Sync runtime secrets from Doppler to the Worker
+        if: steps.tip.outputs.deploy == 'true' && inputs.sync-secrets-to != ''
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_RUNTIME_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ steps.doppler.outputs.CLOUDFLARE_DEPLOY_VALUE }}
+          WRANGLER: ${{ steps.install.outputs.wrangler }}
+          CONFIG: ${{ inputs.sync-secrets-to }}
+        run: |
+          set -euo pipefail
+          if [ -z "$DOPPLER_TOKEN" ]; then
+            echo "::error::sync-secrets-to is set but DOPPLER_RUNTIME_TOKEN was not passed."
+            exit 1
+          fi
+          doppler secrets download --no-file --format json | $WRANGLER secret bulk --config "$CONFIG"
+      - name: Deploy
+        if: steps.tip.outputs.deploy == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ steps.doppler.outputs.CLOUDFLARE_DEPLOY_VALUE }}
+          WRANGLER: ${{ steps.install.outputs.wrangler }}
+          CONFIGS: ${{ inputs.configs }}
+          FROM: ${{ inputs.doppler-project }}/${{ inputs.doppler-config }}
+        run: |
+          set -euo pipefail
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::error::Doppler ${FROM} has no CLOUDFLARE_DEPLOY_VALUE."
+            exit 1
+          fi
+          if [ -z "${CONFIGS//[[:space:]]/}" ]; then
+            $WRANGLER deploy
+          else
+            while IFS= read -r c; do
+              c="${c#"${c%%[![:space:]]*}"}"; c="${c%"${c##*[![:space:]]}"}"
+              [ -n "$c" ] || continue
+              echo "::group::wrangler deploy --config $c"
+              $WRANGLER deploy --config "$c"
+              echo "::endgroup::"
+            done <<< "$CONFIGS"
+          fi

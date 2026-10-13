@@ -111,3 +111,36 @@ test("SEC-007 catches the shapes in the estate and leaves non-deploys alone", ()
   // A token secret in a workflow that never deploys to Cloudflare.
   assert.deepEqual(run("jobs:\n  dns:\n    steps:\n      - run: node scripts/dns.mjs\n        env:\n          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}\n"), []);
 });
+
+test("CI-012 looks only at runs a push to main starts, and lets a per-run group cancel", () => {
+  const run = (text) => ids(runDoctor({ workflows: [{ path: ".github/workflows/ci.yml", text }], vercel: [], files: {} }, rulebook, base)).filter((id) => id === "CI-012");
+  const conc = (group, cancel) => `concurrency:\n  group: ${group}\n  cancel-in-progress: ${cancel}\njobs: {}\n`;
+  assert.deepEqual(run("on:\n  pull_request:\n" + conc("ci-${{ github.ref }}", "true")), [], "pull requests only");
+  assert.deepEqual(run("on:\n  push:\n    tags: ['v*']\n" + conc("rel", "true")), [], "tags only");
+  assert.deepEqual(run("on:\n  push:\n    branches: [develop]\n" + conc("ci", "true")), [], "not main");
+  assert.deepEqual(run("on:\n  push:\n" + conc("ci-${{ github.head_ref || github.run_id }}", "true")), [], "a group per run never cancels another");
+  assert.deepEqual(run("on: [push, pull_request]\n" + conc("ci-${{ github.ref }}", "true")), ["CI-012"], "list form, no branch filter");
+  assert.deepEqual(run("on:\n  push:\n    branches:\n      - main\njobs:\n  test:\n    concurrency:\n      group: t-${{ github.ref }}\n      cancel-in-progress: true\n"), ["CI-012"], "job-level group");
+});
+
+test("CI-014 wants the tip guard on push deploys too, and the tested commit after workflow_run", () => {
+  const run = (text) => runDoctor({ workflows: [{ path: ".github/workflows/deploy.yml", text }], vercel: [], files: {} }, rulebook, base).findings.filter((f) => f.rule === "CI-014");
+  const push = "on:\n  push:\n    branches: [main]\nconcurrency:\n  group: d\n  cancel-in-progress: false\njobs:\n  d:\n    steps:\n      - run: pnpm exec wrangler deploy\n";
+  assert.equal(run(push).length, 1);
+  assert.match(run(push)[0].message, /tip of main/);
+  const wr = "on:\n  workflow_run:\n    workflows: [CI]\njobs:\n  d:\n    steps:\n      - uses: actions/checkout@v4\n      - run: npx wrangler deploy\n";
+  assert.equal(run(wr).length, 2, "untested commit and no guard");
+  // A manual run deploys the branch it is started on: limited to main, it is fine; unguarded, any branch ships.
+  assert.equal(run("on:\n  workflow_dispatch:\n  schedule:\n    - cron: '0 3 * * *'\njobs:\n  d:\n    if: github.ref == 'refs/heads/main'\n    steps:\n      - run: npx wrangler deploy\n").length, 0);
+  assert.match(run("on:\n  workflow_dispatch:\njobs:\n  d:\n    steps:\n      - run: npx wrangler deploy\n")[0].message, /any branch/);
+  // The CI run a deploy follows must exist for every push to main.
+  const deployAfterCi = { path: ".github/workflows/deploy.yml", text: "on:\n  workflow_run:\n    workflows:\n      - CI\n    types: [completed]\njobs:\n  deploy:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/cloudflare-deploy.yml@v1\n" };
+  const ci = (push) => ({ path: ".github/workflows/ci.yml", text: `name: CI\non:\n  pull_request:\n  push:\n    branches: [main]\n${push}jobs: {}\n` });
+  const both = (push) => runDoctor({ workflows: [deployAfterCi, ci(push)], vercel: [], files: {} }, rulebook, base).findings.filter((f) => f.rule === "CI-014");
+  assert.deepEqual(both("    paths: ['src/**']\n").map((f) => f.file), [".github/workflows/ci.yml"]);
+  assert.equal(both("").length, 0);
+  // The shared deploy workflow has the guard inside it, so a caller has nothing to flag.
+  assert.equal(run("on:\n  workflow_run:\n    workflows: [CI]\n  workflow_dispatch:\njobs:\n  deploy:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/cloudflare-deploy.yml@v1\n").length, 0);
+  // A commented-out deploy is not a deploy.
+  assert.equal(run("on:\n  push:\n    branches: [main]\njobs:\n  d:\n    steps:\n      # - run: npx wrangler deploy\n      - run: echo\n").length, 0);
+});
