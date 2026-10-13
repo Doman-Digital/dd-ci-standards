@@ -1,35 +1,36 @@
 name: deploy tip guard
-description: |
-  Says whether the commit about to be deployed is still the tip of the branch
-  (CI-014). Main CI is never cancelled (CI-012), so after a burst of merges
-  several runs finish, in any order, and each starts a deploy. Each deploy
-  asks this first and deploys only when its commit is the tip: an older
-  commit is never deployed over a newer one, and the newest tested commit is
-  always the last one deployed.
+description: Says whether the commit about to be deployed is still the tip of the branch (CI-014).
 
-  Use it as the first step of the deploy job and gate every later step on its
-  output:
-
-    - id: tip
-      uses: Doman-Digital/dd-ci-standards/.github/actions/deploy-tip@v1
-      with:
-        sha: ${{ github.event.workflow_run.head_sha || github.sha }}
-    - uses: actions/checkout@...
-      if: steps.tip.outputs.deploy == 'true'
-      with:
-        ref: ${{ github.event.workflow_run.head_sha || github.sha }}
-
-  Reads one ref through the API with the job's token (contents: read is
-  enough). A commit that is not the tip is a notice and deploy=false, not a
-  failure. When the tip cannot be read the step fails, so a re-run decides
-  rather than a guess.
+# Says whether the commit about to be deployed is still the tip of the branch
+# (CI-014). Main CI is never cancelled (CI-012), so after a burst of merges
+# several runs finish, in any order, and each starts a deploy. Each deploy
+# asks this first and deploys only when its commit is the tip: an older
+# commit is never deployed over a newer one, and the newest tested commit is
+# always the last one deployed.
+#
+# Use it as the first step of the deploy job and gate every later step on its
+# output:
+#
+#   - id: tip
+#     uses: Doman-Digital/dd-ci-standards/.github/actions/deploy-tip@v1
+#     with:
+#       sha: ${{ github.event.workflow_run.head_sha || github.sha }}
+#   - uses: actions/checkout@...
+#     if: steps.tip.outputs.deploy == 'true'
+#     with:
+#       ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+#
+# Reads one ref through the API with the job's token (contents: read is
+# enough). A commit that is not the tip is a notice and deploy=false, not a
+# failure. When the tip cannot be read the step fails, so a re-run decides
+# rather than a guess.
 
 inputs:
   sha:
     description: The commit the deploy would ship (the CI run's head_sha after workflow_run)
     required: true
   branch:
-    description: The branch whose tip it must be (default: the repo's default branch)
+    description: The branch whose tip it must be. Empty means the repo's default branch.
     default: ""
   token:
     description: Token that can read the repo's refs
