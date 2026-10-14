@@ -13,32 +13,9 @@ repos:
       - workflow: stale.yml
         cron: "30 1 * * *"
         reason: "daily stale issue/PR sweep, no checkout, near-zero cost"
-      - workflow: coverage-audit.yml
-        cron: "0 5 * * 1"
-        reason: "weekly content coverage crawl of production, 15min cap"
-      - workflow: ci.yml
-        cron: "0 6 * * 1"
-        reason: "weekly comprehensive full-suite sweep — deliberate, catches regressions on repos that haven't shipped in a week; paths-filter is intentionally bypassed on this trigger"
-      - workflow: review-calibration-weekly.yml
-        cron: "0 6 * * 1"
-        owner: "Doman Digital / Marketing Site"
-        reason: "weekly live review calibration against independent referees; records drift for Marketing Site, 120min cap"
-      - workflow: client-stack-weekly.yml
-        cron: "0 7 * * 1"
-        owner: "Doman Digital / Marketing Site"
-        reason: "weekly live browser capture of client sites to detect third-party stack drift; capped at 90 minutes"
-      - workflow: client-screenshots-weekly.yml
-        cron: "30 7 * * 1"
-        owner: "Doman Digital / Marketing Site"
-        reason: "weekly live re-capture of the client screenshots on the site, opening a review PR when a client site has changed; capped at 90 minutes"
-      - workflow: security-rotation-reminder.yml
-        cron: "0 9 1 1,4,7,10 *"
-        reason: "quarterly secret-rotation-due check, 5min cap"
-      # DOM-776 (Doman-Digital #1104): the same schedules off the hour (CI-018)
-      # and spread across the week. The entries above go when #1104 merges.
       - workflow: ci.yml
         cron: "43 4 * * 1"
-        reason: "weekly comprehensive full-suite sweep, as above, now Monday 04:43"
+        reason: "weekly full-suite sweep, Monday 04:43; catches regressions on repos that have not shipped in a week, and bypasses the paths filter on this trigger"
       - workflow: coverage-audit.yml
         cron: "17 4 * * 2"
         reason: "weekly content coverage crawl of production, 15min cap, now Tuesday"
@@ -151,10 +128,7 @@ repos:
         reason: "daily check for print orders left unpaid at Lulu; emails the team when one is waiting, since an unpaid order is never printed"
 
   MMM-Beauty:
-    github_actions_crons:
-      - workflow: lighthouse.yml
-        cron: "0 3 * * 1"
-        reason: "weekly Lighthouse run — moved off every-PR after it became the single most expensive part of CI"
+    github_actions_crons: []
     # 23 Vercel crons registered on apps/portal as of 2026-08-16, ~2,180
     # invocations/day, dominated by process-jobs running every minute
     # (1,440/day alone). Flagged in the audit as a Phase 4 follow-up —
