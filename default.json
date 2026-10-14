@@ -48,6 +48,11 @@
       "matchPackageNames": ["Doman-Digital/**", "dmitridoman/**", "@domandigital/**"],
       "minimumReleaseAge": null,
       "pinDigests": false
+    },
+    {
+      "description": "Never update dd-ci-standards itself. Callers use @v1 (and #v1 for this preset), which moves with every release; Renovate rewrote it to fixed releases (v1.0.13, v1.0.22), and a pinned caller stops getting new rules (FW-003, 13 October 2026)",
+      "matchPackageNames": ["Doman-Digital/dd-ci-standards"],
+      "enabled": false
     }
   ]
 }

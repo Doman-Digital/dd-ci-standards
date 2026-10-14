@@ -20,22 +20,32 @@ name: ci-standards policy
 # Runs `dd doctor` (bin/dd.mjs, rules in rules.json) against the calling
 # repo. A rule past its enforce date fails the PR; a newer rule only warns
 # until its date. `@v1` moves with every release (release.yml), so a new rule
-# reaches every caller at once, as a warning first.
+# reaches every caller at once, as a warning first. The doctor runs from the
+# same release (doctor@v1): until 13 October 2026 it was pinned to v1.0.13,
+# so every caller ran 5 October's rules while v1 moved on (FW-003).
 #
-# The secrets job runs gitleaks over the commits the pull request adds (SEC-006).
-# It reads the calling repo's .gitleaks.toml if there is one. The binary is
-# fetched at a fixed version and checked against its published sha256.
+# The same job then runs gitleaks over the commits the pull request adds
+# (SEC-006). It reads the calling repo's .gitleaks.toml if there is one. The
+# binary is fetched at a fixed version and checked against its published
+# sha256.
 #
-# GitHub-hosted by default: callers include public repos and client repos in
-# other accounts, which cannot use the organisation's self-hosted runners. A
-# private Doman-Digital repo passes its own runner instead, so the gate keeps
-# running when GitHub-hosted minutes are unavailable (2026-10-06: a billing
-# hold stopped both jobs from starting, and they are required on the
-# monorepo's main):
+# One job, not two (13 October 2026, DOM-776): every job is a fresh VM on a
+# host that runs six at once for the whole estate, and this gate runs on every
+# pull request in every repo, so a second job for a 20-second scan cost a VM
+# boot and a checkout per PR. The `secrets` job stays as a skipped job, which
+# takes no runner and still satisfies rulesets that require
+# `<caller> / secrets`; drop it once no ruleset names it.
+#
+# GitHub-hosted by default: callers include public repos. A private repo
+# passes its own runner, so the gate keeps running when GitHub-hosted minutes
+# are unavailable (2026-10-06: a billing hold stopped the gate from starting,
+# and it is required on the monorepo's main). Org repos pass the org's
+# variable; client repos pass their scale set, so the gate does not spend the
+# client's own Free-plan minutes:
 #
 #       uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1
 #       with:
-#         runner: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+#         runner: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}   # or dd-client
 #
 # Never pass a self-hosted runner from a public repo: a fork's pull request
 # would run on it.
@@ -44,28 +54,14 @@ on:
   workflow_call:
     inputs:
       runner:
-        description: Runner label for both jobs. Leave unset in public repos.
+        description: Runner label for the job. Leave unset in public repos.
         type: string
         default: ubuntu-latest
 
 jobs:
   check:
     runs-on: ${{ inputs.runner }}
-    timeout-minutes: 5
-    steps:
-      - name: Checkout calling repo
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          path: repo
-
-      - uses: Doman-Digital/dd-ci-standards/doctor@v1.0.13
-        with:
-          path: repo
-
-  secrets:
-    runs-on: ${{ inputs.runner }}
-    timeout-minutes: 5
+    timeout-minutes: 8
     env:
       GITLEAKS_VERSION: "8.30.1"
       GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
@@ -75,6 +71,11 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
+          path: repo
+
+      - uses: Doman-Digital/dd-ci-standards/doctor@v1
+        with:
+          path: repo
 
       - name: Install gitleaks
         run: |
@@ -84,6 +85,7 @@ jobs:
           echo "$RUNNER_TEMP/gitleaks" >> "$GITHUB_PATH"
 
       - name: Scan the commits this pull request adds
+        working-directory: repo
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
@@ -94,3 +96,12 @@ jobs:
             range="HEAD~1..HEAD"
           fi
           gitleaks git --log-opts="$range" --redact --no-banner .
+
+  # Kept for rulesets that require `<caller> / secrets`: a skipped job takes no
+  # runner and counts as passed. The scan runs in `check` above.
+  secrets:
+    if: ${{ false }}
+    runs-on: ${{ inputs.runner }}
+    timeout-minutes: 1
+    steps:
+      - run: echo "The secret scan runs in the check job."
