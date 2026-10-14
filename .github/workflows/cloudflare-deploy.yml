@@ -48,8 +48,9 @@ name: cloudflare-deploy (reusable)
 # The repo needs the variable DOPPLER_IDENTITY_ID (its Doppler service
 # account identity, trusting this repo's default branch) and a deploy token
 # in Doppler `dd-deploy/<config>` as CLOUDFLARE_DEPLOY_VALUE: Workers Scripts
-# edit only, on the one account, with an expiry. See "Deploying a Worker" in
-# the README.
+# edit only, on the one account, with an expiry. The variable
+# CLOUDFLARE_ACCOUNT_ID names the account when the token can see more than
+# one. See "Deploying a Worker" in the README.
 #
 # On a client account's runner, pass `runner: dd-client`.
 
@@ -190,6 +191,7 @@ jobs:
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_RUNTIME_TOKEN }}
           CLOUDFLARE_API_TOKEN: ${{ steps.doppler.outputs.CLOUDFLARE_DEPLOY_VALUE }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           WRANGLER: ${{ steps.install.outputs.wrangler }}
           CONFIG: ${{ inputs.sync-secrets-to }}
         run: |
@@ -203,6 +205,7 @@ jobs:
         if: steps.tip.outputs.deploy == 'true'
         env:
           CLOUDFLARE_API_TOKEN: ${{ steps.doppler.outputs.CLOUDFLARE_DEPLOY_VALUE }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           WRANGLER: ${{ steps.install.outputs.wrangler }}
           CONFIGS: ${{ inputs.configs }}
           FROM: ${{ inputs.doppler-project }}/${{ inputs.doppler-config }}

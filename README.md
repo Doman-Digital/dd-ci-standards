@@ -219,8 +219,9 @@ has to pass a policy check to merge, not get caught in the next audit.
   | --- | --- | --- |
   | `actions` | every internal Worker, and anything with checks, migrations, secrets or several Workers to deploy | `.github/workflows/cloudflare-deploy.yml` after CI passes on main |
   | `workers-builds` | a simple client static site, nothing to gate | Cloudflare's GitHub app builds main |
-  | `manual` | none by choice: listed so it is visible, and moved to `actions` | `wrangler deploy` from a workstation |
-  | `retired` | a Worker that no longer serves anything | nothing |
+  | `manual` | none by choice: listed so it is visible, with the path it moves to in `target` | `wrangler deploy` from a workstation |
+  | `retired` | a Worker that no longer serves anything; deleting it is the founder's call | nothing |
+  | `not-deployed` | a wrangler config with no Worker in any account (a template or a spike) | nothing |
 
   The shared workflow ships only the commit CI tested, and only while it is
   still the tip of main (CI-014). It fetches the deploy token from Doppler
@@ -256,8 +257,10 @@ has to pass a policy check to merge, not get caught in the next audit.
   `dd-deploy/<config>` as `CLOUDFLARE_DEPLOY_VALUE` (Workers Scripts edit
   only, on that one account, with an expiry date), a Doppler service account
   identity that trusts the repo's default branch, and the repo variable
-  `DOPPLER_IDENTITY_ID`. `tokens.json` records every Cloudflare deploy token
-  by name, account, scope and expiry: never a value.
+  `DOPPLER_IDENTITY_ID`, plus `CLOUDFLARE_ACCOUNT_ID` when the token can see
+  more than one account. `tokens.json` records every Cloudflare token by
+  name, account, observed scope, where it is stored and a verdict (keep,
+  narrow or retire): never a value.
 
   A deploy that has its own workflow (a monorepo service with staging first)
   keeps it, with the same three properties: the

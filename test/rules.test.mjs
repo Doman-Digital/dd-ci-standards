@@ -144,3 +144,31 @@ test("CI-014 wants the tip guard on push deploys too, and the tested commit afte
   // A commented-out deploy is not a deploy.
   assert.equal(run("on:\n  push:\n    branches: [main]\njobs:\n  d:\n    steps:\n      # - run: npx wrangler deploy\n      - run: echo\n").length, 0);
 });
+
+test("deploys.json lists each Worker once per account, with a known path", () => {
+  const reg = JSON.parse(readFileSync(new URL("../deploys.json", import.meta.url), "utf8"));
+  const paths = new Set(["actions", "workers-builds", "manual", "retired", "not-deployed"]);
+  const seen = new Set();
+  for (const w of reg.workers) {
+    assert.ok(w.worker && typeof w.repo === "string", `entry without a worker or repo: ${JSON.stringify(w)}`);
+    assert.ok(paths.has(w.path), `${w.worker}: unknown path ${w.path}`);
+    if (w.target) assert.ok(paths.has(w.target) && w.path === "manual", `${w.worker}: target is only for manual Workers`);
+    const key = `${w.account}/${w.worker}`;
+    assert.ok(!seen.has(key), `${key} is listed twice`);
+    seen.add(key);
+  }
+});
+
+test("tokens.json records names and scopes, never a value", () => {
+  const text = readFileSync(new URL("../tokens.json", import.meta.url), "utf8");
+  const reg = JSON.parse(text);
+  for (const tk of reg.tokens) assert.ok(tk.name && tk.observed_scope && tk.verdict, `incomplete entry: ${tk.name}`);
+  // A Cloudflare API token is 40 URL-safe characters; nothing that long may appear.
+  assert.ok(!/[A-Za-z0-9_-]{40}/.test(text), "tokens.json holds something shaped like a token value");
+});
+
+test("CF-001 ignores registry entries with no repo", () => {
+  const ctx = { repo: "Doman-Digital/demo", deploys: { workers: [{ worker: "orphan", repo: "", path: "retired" }, { worker: "demo-site", repo: "Doman-Digital/demo", path: "manual" }] } };
+  const r = runDoctor({ workflows: [], vercel: [], files: {}, wrangler: [{ path: "wrangler.jsonc", name: "demo-site" }] }, rulebook, { ...base, ...ctx });
+  assert.ok(!ids(r).includes("CF-001"));
+});
