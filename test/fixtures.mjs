@@ -100,6 +100,8 @@ export const FIXTURES = {
     fail: wf("on:\n  pull_request:\njobs:\n  visual:\n    runs-on: x\n    continue-on-error: true\n    steps:\n      - run: pnpm test:visual\n"),
     // The same advisory job, run on a schedule.
     pass: wf("on:\n  schedule:\n    - cron: '17 3 * * 1'\njobs:\n  visual:\n    runs-on: x\n    continue-on-error: true\n    steps:\n      - run: pnpm test:visual\n"),
+    // A PR workflow whose advisory job only runs on its schedule.
+    passAlso: wf("on:\n  pull_request:\n  schedule:\n    - cron: '17 3 * * 1'\njobs:\n  visual:\n    if: github.event_name != 'pull_request'\n    runs-on: x\n    continue-on-error: true\n    steps:\n      - run: pnpm test:visual\n"),
   },
   "CI-018": {
     fail: wf("on:\n  schedule:\n    - cron: '0 6 * * 1'\njobs: {}\n"),
