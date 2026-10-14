@@ -112,8 +112,8 @@
     },
     {
       "id": "CI-015",
-      "title": "A repo that calls the policy check runs its own secret scan on every push",
-      "why": "13 October 2026 (DOM-776 audit): the monorepo's secret-scan job and beautyops' gitleaks.yml each scanned the same commits as the policy check, a full-history clone and another VM for a one-second scan. The monorepo's alone was about 1,350 VM-minutes a month, on a pool of six VMs.",
+      "title": "A repo that calls the policy check runs its own secret scan on every pull request",
+      "why": "13 October 2026 (DOM-776 audit): the monorepo's secret-scan job, beautyops' gitleaks.yml, Tardi-Group's gitleaks job and MMM-Beauty's TruffleHog each scanned the same commits as the policy check, a full-history clone and another VM for a one-second scan. The monorepo's alone was about 1,350 VM-minutes a month, on a pool of six VMs.",
       "applies": "full",
       "warn_from": "2026-10-14",
       "enforce_from": "2026-11-14"
