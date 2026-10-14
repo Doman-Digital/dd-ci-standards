@@ -34,6 +34,32 @@ repos:
       - workflow: security-rotation-reminder.yml
         cron: "0 9 1 1,4,7,10 *"
         reason: "quarterly secret-rotation-due check, 5min cap"
+      # DOM-776 (Doman-Digital #1104): the same schedules off the hour (CI-018)
+      # and spread across the week. The entries above go when #1104 merges.
+      - workflow: ci.yml
+        cron: "43 4 * * 1"
+        reason: "weekly comprehensive full-suite sweep, as above, now Monday 04:43"
+      - workflow: coverage-audit.yml
+        cron: "17 4 * * 2"
+        reason: "weekly content coverage crawl of production, 15min cap, now Tuesday"
+      - workflow: review-calibration-weekly.yml
+        cron: "23 5 * * 3"
+        owner: "Doman Digital / Marketing Site"
+        reason: "weekly live review calibration against independent referees, 120min cap, now Wednesday"
+      - workflow: client-stack-weekly.yml
+        cron: "37 4 * * 4"
+        owner: "Doman Digital / Marketing Site"
+        reason: "weekly live browser capture of client sites for stack drift, 90min cap, now Thursday"
+      - workflow: client-screenshots-weekly.yml
+        cron: "47 4 * * 5"
+        owner: "Doman Digital / Marketing Site"
+        reason: "weekly live re-capture of the client screenshots, 90min cap, now Friday"
+      - workflow: secret-scan.yml
+        cron: "17 3 * * 6"
+        reason: "weekly full-history gitleaks scan, moved out of ci.yml so pull requests rely on the policy check's scan (CI-015)"
+      - workflow: security-rotation-reminder.yml
+        cron: "13 9 1 1,4,7,10 *"
+        reason: "quarterly secret-rotation-due check, 5min cap, off the hour"
     vercel_crons:
       - app: apps/marketing
         path: /api/cron/churn-followup

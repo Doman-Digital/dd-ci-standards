@@ -211,3 +211,7 @@ test("an OpenNext deploy counts as a production deploy (CI-013, SEC-007)", () =>
   const r = runDoctor({ workflows: [{ path: ".github/workflows/deploy.yml", text }], vercel: [], files: {} }, rulebook, base);
   assert.ok(ids(r).includes("CI-013") && ids(r).includes("SEC-007"), ids(r).join(", "));
 });
+
+test("CI-017 leaves a job alone when its if: keeps it off pull requests", () => {
+  assert.ok(!ids(runDoctor(FIXTURES["CI-017"].passAlso, rulebook, base)).includes("CI-017"));
+});
