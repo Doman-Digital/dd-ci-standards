@@ -153,6 +153,7 @@ test("deploys.json lists each Worker once per account, with a known path", () =>
     assert.ok(w.worker && typeof w.repo === "string", `entry without a worker or repo: ${JSON.stringify(w)}`);
     assert.ok(paths.has(w.path), `${w.worker}: unknown path ${w.path}`);
     if (w.target) assert.ok(paths.has(w.target) && w.path === "manual", `${w.worker}: target is only for manual Workers`);
+    if (w.workflow) assert.ok(/^\.github\/workflows\/[\w.-]+\.ya?ml$/.test(w.workflow), `${w.worker}: workflow must be a .github/workflows/ path`);
     const key = `${w.account}/${w.worker}`;
     assert.ok(!seen.has(key), `${key} is listed twice`);
     seen.add(key);
@@ -195,4 +196,12 @@ test("CI-005 accepts push and pull_request on a CI that a workflow_run deploy wa
   const deploy = { path: ".github/workflows/deploy.yml", text: "on:\n  workflow_run:\n    workflows: [CI]\n    types: [completed]\n    branches: [main]\njobs:\n  deploy:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/cloudflare-deploy.yml@v1\n" };
   assert.ok(!ids(runDoctor({ workflows: [ci, deploy], vercel: [], files: {} }, rulebook, base)).includes("CI-005"));
   assert.ok(ids(runDoctor({ workflows: [ci], vercel: [], files: {} }, rulebook, base)).includes("CI-005"));
+});
+
+test("CF-001 accepts an Actions deploy that runs wrangler inside a script, when deploys.json names its workflow", () => {
+  const deploys = { workers: [{ worker: "demo-site", repo: "Doman-Digital/demo", path: "actions", workflow: ".github/workflows/deploy-sites.yml" }] };
+  const wf = { path: ".github/workflows/deploy-sites.yml", text: "on:\n  workflow_dispatch:\njobs:\n  deploy:\n    steps:\n      - run: node tools/deploy.mjs\n" };
+  const v = (workflows) => ({ workflows, vercel: [], files: {}, wrangler: [{ path: "wrangler.jsonc", name: "demo-site" }] });
+  assert.ok(!ids(runDoctor(v([wf]), rulebook, { ...base, repo: "Doman-Digital/demo", deploys })).includes("CF-001"));
+  assert.ok(ids(runDoctor(v([]), rulebook, { ...base, repo: "Doman-Digital/demo", deploys })).includes("CF-001"));
 });
