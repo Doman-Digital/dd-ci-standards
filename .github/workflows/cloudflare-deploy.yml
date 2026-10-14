@@ -118,6 +118,7 @@ jobs:
       github.event.workflow_run.event == 'push' &&
       github.event.workflow_run.head_repository.full_name == github.repository &&
       github.event.workflow_run.head_sha == github.sha)
+    # dd: allow CI-002 until=2027-03-31 reusable workflow: runs on the caller's runner, defaults to GitHub-hosted, caller repos pass their own runner
     runs-on: ${{ inputs.runner || vars.CI_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 15
     permissions:
