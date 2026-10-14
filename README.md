@@ -215,7 +215,10 @@ has to pass a policy check to merge, not get caught in the next audit.
 - **Deploying a Worker** (DOM-776, 13 October 2026). Every Cloudflare
   Worker has one deploy path, and **`deploys.json`** lists them all: the
   Worker, its account, its repo and config, and the path. CF-001 fails a repo
-  with a wrangler config that is not listed, or deployed both ways.
+  with a wrangler config that is not listed, or deployed both ways. When an
+  Actions deploy runs wrangler inside a script (client-previews'
+  `deploy-sites.yml`), the entry's `workflow` field names that workflow, so
+  CF-001 can see it.
 
   | Path | For | How |
   | --- | --- | --- |
