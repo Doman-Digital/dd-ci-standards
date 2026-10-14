@@ -1,0 +1,711 @@
+{
+  "$comment": "Every Cloudflare Worker and the one way it is deployed (CF-001, DOM-776). path is how it deploys today: actions (cloudflare-deploy.yml or a reviewed deploy workflow), workers-builds (Cloudflare's GitHub app, simple client static sites only), manual (by hand: listed so it is visible, and moved to target), retired (serves nothing; deletion is the founder's call) or not-deployed (a config with no Worker). Collected 13 October 2026 from all eight accounts. Account ids are identifiers, not secrets.",
+  "updated": "2026-10-14",
+  "accounts": {
+    "Doman Digital": "30515e0503d5fe494460233cc3535d74",
+    "sen-sphere": "27afd0d63cc551836017345fba42762d",
+    "Tardi": "4777a254228d942d3300385aa72c6407",
+    "Rise and Bloom": "6a030a56610cd333052118f39c784809",
+    "RMP Electrical": "711edb77af8819fc8fc66d2b9b0bef3c",
+    "Chair and Blade": "7bfddf590378bd94de48e6f6e551a072",
+    "MMM Beauty": "97d2f96737243566437318a7e7d274b8",
+    "Harrison James": "c1df12ab3f8e21a03fe6566a1e3f62ee"
+  },
+  "workers": [
+    {
+      "worker": "dd-relay",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/dd-relay",
+      "config": "wrangler.jsonc",
+      "path": "actions",
+      "note": "deploy.yml after CI on main; Doppler dd-deploy/relay"
+    },
+    {
+      "worker": "dd-email-in",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/dd-relay",
+      "config": "workers/email-in/wrangler.jsonc",
+      "path": "actions",
+      "note": "same deploy as dd-relay"
+    },
+    {
+      "worker": "dd-seo-mcp",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/dd-seo-mcp",
+      "config": "wrangler.jsonc",
+      "path": "actions",
+      "note": "deploy.yml after CI on main; Doppler dd-deploy/seo-mcp"
+    },
+    {
+      "worker": "dd-checks",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/Doman-Digital",
+      "config": "services/checks/wrangler.jsonc",
+      "path": "actions",
+      "note": "dd-checks-deploy.yml, staging first; token still a GitHub secret (SEC-007)"
+    },
+    {
+      "worker": "dd-checks-staging",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/Doman-Digital",
+      "config": "services/checks/wrangler.jsonc (env staging)",
+      "path": "actions",
+      "note": "deployed before dd-checks by dd-checks-deploy.yml"
+    },
+    {
+      "worker": "meridian-api-cf",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/osint-engine",
+      "config": "deploy/cloudflare (cf deploy, Containers)",
+      "path": "actions",
+      "note": "deploy-api.yml, dispatch only; token still a GitHub secret (SEC-007), no CI gate"
+    },
+    {
+      "worker": "chair-and-blade-astro",
+      "account": "Chair and Blade",
+      "repo": "chairandblade/chair-and-blade",
+      "config": "astro/wrangler.jsonc",
+      "path": "actions",
+      "note": "deploy-astro.yml on push and Sanity dispatch; token from the client's Doppler"
+    },
+    {
+      "worker": "rmp-electrical-astro",
+      "account": "Doman Digital",
+      "repo": "rmp474/RMP-Electrical",
+      "config": "astro/wrangler.jsonc",
+      "path": "actions",
+      "note": "deploy-astro.yml on dispatch and cron, no push trigger; token is a user token in a GitHub secret (SEC-007)"
+    },
+    {
+      "worker": "bellerose-plumbing",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/bellerose-plumbing",
+      "config": "wrangler.jsonc",
+      "path": "workers-builds",
+      "note": "master; demo expired: archive or move to actions so the org app can go"
+    },
+    {
+      "worker": "sensphere-web-astro",
+      "account": "sen-sphere",
+      "repo": "sensphere/sen-sphere",
+      "config": "astro/wrangler.jsonc",
+      "path": "workers-builds",
+      "note": "main, root astro; Sanity deploy hook"
+    },
+    {
+      "worker": "tardi-web",
+      "account": "Tardi",
+      "repo": "joetardi/Tardi-Group",
+      "config": "astro/wrangler.jsonc (env)",
+      "path": "workers-builds",
+      "note": "main; trigger created 13 Oct"
+    },
+    {
+      "worker": "rise-and-bloom-astro",
+      "account": "Rise and Bloom",
+      "repo": "riseandbloom/Rise-and-bloom",
+      "config": "astro/wrangler.jsonc",
+      "path": "workers-builds",
+      "note": "main; Stripe checkout in the Worker, build runs lint, typecheck and test"
+    },
+    {
+      "worker": "rise-and-bloom-astro-staging",
+      "account": "Rise and Bloom",
+      "repo": "riseandbloom/Rise-and-bloom",
+      "config": "astro/wrangler.jsonc (env staging)",
+      "path": "workers-builds",
+      "note": "built from main, the same commit as production"
+    },
+    {
+      "worker": "mmm-beauty-astro",
+      "account": "MMM Beauty",
+      "repo": "Megameehunnah/MMM-Beauty",
+      "config": "astro/wrangler.jsonc",
+      "path": "workers-builds",
+      "note": "main; the sanity-publish hook targets feat/astro-port, not main"
+    },
+    {
+      "worker": "harrison-james-astro",
+      "account": "Harrison James",
+      "repo": "harrison-jamesltd/Harrison-james",
+      "config": "astro/wrangler.jsonc",
+      "path": "workers-builds",
+      "note": "main; Sanity deploy hook"
+    },
+    {
+      "worker": "harrisons-beauty-astro",
+      "account": "Harrison James",
+      "repo": "harrison-jamesltd/HJ-Beauty",
+      "config": "astro/wrangler.jsonc (env production)",
+      "path": "workers-builds",
+      "note": "main; Shopify webhook deploy hook"
+    },
+    {
+      "worker": "harrisons-beauty-astro-test",
+      "account": "Harrison James",
+      "repo": "harrison-jamesltd/HJ-Beauty",
+      "config": "astro/wrangler.jsonc",
+      "path": "workers-builds",
+      "note": "disconnect its trigger after cutover"
+    },
+    {
+      "worker": "verqan-web-cf",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/Verqan-Platform",
+      "config": "apps/web/wrangler.jsonc",
+      "path": "manual",
+      "target": "actions",
+      "note": "live; pnpm cf:deploy (OpenNext) from a workstation; needs PR CI first"
+    },
+    {
+      "worker": "verqan-dashboard-cf",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/Verqan-Platform",
+      "config": "apps/dashboard/wrangler.jsonc",
+      "path": "manual",
+      "target": "actions",
+      "note": "live; pnpm cf:deploy (OpenNext) from a workstation; needs PR CI first"
+    },
+    {
+      "worker": "verqan-docs-cf",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/Verqan-Platform",
+      "config": "apps/docs/wrangler.jsonc",
+      "path": "manual",
+      "target": "actions",
+      "note": "live; pnpm cf:deploy (OpenNext) from a workstation; needs PR CI first"
+    },
+    {
+      "worker": "beautyops-app",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/beautyops",
+      "config": "wrangler.jsonc",
+      "path": "manual",
+      "target": "actions",
+      "note": "live (app.beautyops.co.uk); scripts/cf-deploy.sh from a workstation"
+    },
+    {
+      "worker": "dd-rebuild-relay",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/dd-rebuild-relay",
+      "config": "wrangler.jsonc",
+      "path": "manual",
+      "target": "actions",
+      "note": "drives chair-and-blade and RMP rebuilds; holds the DD Rebuild app key"
+    },
+    {
+      "worker": "market-probability-engine",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/Market-probability-engine",
+      "config": "wrangler.jsonc",
+      "path": "manual",
+      "target": "actions",
+      "note": "OpenNext; pnpm cf:deploy by hand"
+    },
+    {
+      "worker": "meridian-web",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/osint-engine",
+      "config": "website/apps/web/wrangler.jsonc",
+      "path": "manual",
+      "target": "actions",
+      "note": "deployed by hand on 6 Oct"
+    },
+    {
+      "worker": "proteam-electrical-astro",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/proteam-electrical",
+      "config": "wrangler.jsonc",
+      "path": "manual",
+      "target": "actions",
+      "note": "private preview; npm run deploy by hand. Actions, so the org needs no Cloudflare app"
+    },
+    {
+      "worker": "beautyops-web",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/client-previews",
+      "config": "workers/beautyops/wrangler.jsonc",
+      "path": "manual",
+      "target": "actions",
+      "note": "live; tools/deploy-beautyops.mjs"
+    },
+    {
+      "worker": "beautyops-apex-redirect",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/client-previews",
+      "config": "workers/beautyops/wrangler.apex.jsonc",
+      "path": "manual",
+      "target": "actions",
+      "note": "live redirect"
+    },
+    {
+      "worker": "dmitridoman",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/client-previews",
+      "config": "workers/dmitridoman/wrangler.jsonc",
+      "path": "manual",
+      "target": "actions",
+      "note": "live; dmitridoman.co.uk"
+    },
+    {
+      "worker": "persona-7",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/client-previews",
+      "config": "workers/persona-7/wrangler.jsonc",
+      "path": "manual",
+      "target": "actions",
+      "note": "production Worker for persona7.co.uk; Doman-Digital/Persona-7 on Vercel is the other path, pick one"
+    },
+    {
+      "worker": "persona-7-www-redirect",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/client-previews",
+      "config": "workers/persona-7/wrangler.www.jsonc",
+      "path": "manual",
+      "target": "actions",
+      "note": "redirect"
+    },
+    {
+      "worker": "dd-ambersun-preview",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/client-previews",
+      "config": "sites/ambersun (tools/batch.mjs)",
+      "path": "manual",
+      "target": "actions",
+      "note": "gated preview; deploy-sites.yml exists but never ran a deploy"
+    },
+    {
+      "worker": "dd-bbtn-studio-preview",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/client-previews",
+      "config": "sites/bbtn-studio (tools/batch.mjs)",
+      "path": "manual",
+      "target": "actions",
+      "note": "gated preview; deploy-sites.yml exists but never ran a deploy"
+    },
+    {
+      "worker": "dd-beautique-brackley-preview",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/client-previews",
+      "config": "sites/beautique-brackley (tools/batch.mjs)",
+      "path": "manual",
+      "target": "actions",
+      "note": "gated preview; deploy-sites.yml exists but never ran a deploy"
+    },
+    {
+      "worker": "dd-beautyops-preview",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/client-previews",
+      "config": "sites/beautyops (tools/batch.mjs)",
+      "path": "manual",
+      "target": "actions",
+      "note": "gated preview; deploy-sites.yml exists but never ran a deploy"
+    },
+    {
+      "worker": "dd-brackley-wellbeing-preview",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/client-previews",
+      "config": "sites/brackley-wellbeing (tools/batch.mjs)",
+      "path": "manual",
+      "target": "actions",
+      "note": "gated preview; deploy-sites.yml exists but never ran a deploy"
+    },
+    {
+      "worker": "dd-candy-aesthetics-preview",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/client-previews",
+      "config": "sites/candy-aesthetics (tools/batch.mjs)",
+      "path": "manual",
+      "target": "actions",
+      "note": "gated preview; deploy-sites.yml exists but never ran a deploy"
+    },
+    {
+      "worker": "dd-colucci-preview",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/client-previews",
+      "config": "sites/colucci (tools/batch.mjs)",
+      "path": "manual",
+      "target": "actions",
+      "note": "gated preview; deploy-sites.yml exists but never ran a deploy"
+    },
+    {
+      "worker": "dd-dunhams-preview",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/client-previews",
+      "config": "sites/dunhams (tools/batch.mjs)",
+      "path": "manual",
+      "target": "actions",
+      "note": "gated preview; deploy-sites.yml exists but never ran a deploy"
+    },
+    {
+      "worker": "dd-groom-preview",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/client-previews",
+      "config": "sites/groom (tools/batch.mjs)",
+      "path": "manual",
+      "target": "actions",
+      "note": "gated preview; deploy-sites.yml exists but never ran a deploy"
+    },
+    {
+      "worker": "dd-meridian-preview",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/client-previews",
+      "config": "sites/meridian (tools/batch.mjs)",
+      "path": "manual",
+      "target": "actions",
+      "note": "gated preview; deploy-sites.yml exists but never ran a deploy"
+    },
+    {
+      "worker": "dd-olivetree-preview",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/client-previews",
+      "config": "sites/olivetree (tools/batch.mjs)",
+      "path": "manual",
+      "target": "actions",
+      "note": "gated preview; deploy-sites.yml exists but never ran a deploy"
+    },
+    {
+      "worker": "dd-otwithshelly-preview",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/client-previews",
+      "config": "sites/otwithshelly (tools/batch.mjs)",
+      "path": "manual",
+      "target": "actions",
+      "note": "gated preview; deploy-sites.yml exists but never ran a deploy"
+    },
+    {
+      "worker": "dd-persona-7-preview",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/client-previews",
+      "config": "sites/persona-7 (tools/batch.mjs)",
+      "path": "manual",
+      "target": "actions",
+      "note": "gated preview; deploy-sites.yml exists but never ran a deploy"
+    },
+    {
+      "worker": "dd-pw-brackley-preview",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/client-previews",
+      "config": "sites/pw-brackley (tools/batch.mjs)",
+      "path": "manual",
+      "target": "actions",
+      "note": "gated preview; deploy-sites.yml exists but never ran a deploy"
+    },
+    {
+      "worker": "dd-starr-preview",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/client-previews",
+      "config": "sites/starr (tools/batch.mjs)",
+      "path": "manual",
+      "target": "actions",
+      "note": "gated preview; deploy-sites.yml exists but never ran a deploy"
+    },
+    {
+      "worker": "dd-totteridge-academy-preview",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/client-previews",
+      "config": "sites/totteridge-academy (tools/batch.mjs)",
+      "path": "manual",
+      "target": "actions",
+      "note": "gated preview; deploy-sites.yml exists but never ran a deploy"
+    },
+    {
+      "worker": "dd-portal",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/Doman-Digital",
+      "config": "apps/portal/wrangler.jsonc",
+      "path": "manual",
+      "target": "actions",
+      "note": "live DD portal; cf:deploy by hand"
+    },
+    {
+      "worker": "dd-marketing",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/Doman-Digital",
+      "config": "apps/marketing/wrangler.jsonc",
+      "path": "manual",
+      "target": "actions",
+      "note": "live site; by hand"
+    },
+    {
+      "worker": "dd-site-preview",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/Doman-Digital",
+      "config": "apps/site/wrangler.jsonc",
+      "path": "manual",
+      "target": "actions",
+      "note": "preview; by hand"
+    },
+    {
+      "worker": "dd-cron",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/Doman-Digital",
+      "config": "services/dd-cron/wrangler.jsonc",
+      "path": "manual",
+      "target": "actions",
+      "note": "arms the dd-work-01 watchdog; untested and by hand"
+    },
+    {
+      "worker": "dd-contracts",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/Doman-Digital",
+      "config": "services/contracts (cf deploy, Containers)",
+      "path": "manual",
+      "target": "actions",
+      "note": "by hand on 4 Oct"
+    },
+    {
+      "worker": "dd-relay-rotator-staging",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/dd-relay",
+      "config": "wrangler.rotator-staging.jsonc",
+      "path": "manual",
+      "note": "staging; CI dry-runs it"
+    },
+    {
+      "worker": "dd-rotator-staging",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/dd-relay",
+      "config": "workers/rotator/wrangler.staging.jsonc",
+      "path": "manual",
+      "note": "staging; CI dry-runs it"
+    },
+    {
+      "worker": "verqan-api-cf",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/verqan-api",
+      "config": "deploy/cloudflare (cf deploy, Containers)",
+      "path": "manual",
+      "target": "actions",
+      "note": "live API; deploy.sh by hand"
+    },
+    {
+      "worker": "mmm-portal",
+      "account": "MMM Beauty",
+      "repo": "Megameehunnah/MMM-Beauty",
+      "config": "apps/portal/wrangler.jsonc",
+      "path": "manual",
+      "target": "actions",
+      "note": "live payments portal; cf-deploy.mjs from a workstation; migrations run separately on push"
+    },
+    {
+      "worker": "mmm-portal-staging",
+      "account": "MMM Beauty",
+      "repo": "Megameehunnah/MMM-Beauty",
+      "config": "apps/portal/wrangler.jsonc (env staging)",
+      "path": "manual",
+      "target": "actions"
+    },
+    {
+      "worker": "mmm-portal-admin",
+      "account": "MMM Beauty",
+      "repo": "Megameehunnah/MMM-Beauty",
+      "config": "apps/portal/wrangler.admin.jsonc",
+      "path": "manual",
+      "target": "actions",
+      "note": "live"
+    },
+    {
+      "worker": "mmm-portal-admin-staging",
+      "account": "MMM Beauty",
+      "repo": "Megameehunnah/MMM-Beauty",
+      "config": "apps/portal/wrangler.admin.jsonc (env staging)",
+      "path": "manual",
+      "target": "actions"
+    },
+    {
+      "worker": "mmm-cron-dispatcher",
+      "account": "MMM Beauty",
+      "repo": "Megameehunnah/MMM-Beauty",
+      "config": "apps/cron-dispatcher/wrangler.jsonc",
+      "path": "manual",
+      "target": "actions"
+    },
+    {
+      "worker": "mmm-beauty-web",
+      "account": "MMM Beauty",
+      "repo": "Megameehunnah/MMM-Beauty",
+      "config": "apps/web/wrangler.jsonc",
+      "path": "manual",
+      "target": "retired",
+      "note": "Next rollback since the 8 Oct cutover; retire about 22 Oct"
+    },
+    {
+      "worker": "mmm-ar-nails",
+      "account": "Doman Digital",
+      "repo": "Megameehunnah/mmm-ar-nails",
+      "config": "wrangler.jsonc",
+      "path": "manual",
+      "target": "actions",
+      "note": "in the DD account, not MMM's; npm run cf:deploy by hand"
+    },
+    {
+      "worker": "sensphere-web-astro-staging",
+      "account": "sen-sphere",
+      "repo": "sensphere/sen-sphere",
+      "config": "astro/wrangler.jsonc (deployed by name)",
+      "path": "manual",
+      "note": "staging"
+    },
+    {
+      "worker": "tardi-portal-preview",
+      "account": "Tardi",
+      "repo": "joetardi/Tardi-Group",
+      "config": "wrangler.jsonc",
+      "path": "manual",
+      "note": "OpenNext trial of the portal; the live portal is on Vercel"
+    },
+    {
+      "worker": "rmp-electrical-staging",
+      "account": "Doman Digital",
+      "repo": "rmp474/RMP-Electrical",
+      "config": "astro/wrangler.jsonc (by name)",
+      "path": "manual",
+      "note": "staging"
+    },
+    {
+      "worker": "old-demo-redirects",
+      "account": "Doman Digital",
+      "repo": "",
+      "config": "",
+      "path": "manual",
+      "note": "no repo found; check whether its routes still matter"
+    },
+    {
+      "worker": "tardi-web-astro",
+      "account": "Doman Digital",
+      "repo": "joetardi/Tardi-Group",
+      "config": "astro/wrangler.jsonc (top-level name)",
+      "path": "retired",
+      "note": "delete pending (founder): old name in the wrong account; superseded by tardi-web"
+    },
+    {
+      "worker": "chair-and-blade-astro-staging",
+      "account": "Doman Digital",
+      "repo": "chairandblade/chair-and-blade",
+      "config": "",
+      "path": "retired",
+      "note": "delete pending (founder): duplicate in the DD account"
+    },
+    {
+      "worker": "rise-and-bloom-launch-worker",
+      "account": "Rise and Bloom",
+      "repo": "riseandbloom/Rise-and-bloom",
+      "config": "workers/launch-worker/wrangler.jsonc",
+      "path": "retired",
+      "note": "delete pending (founder): last deploy 23 Aug"
+    },
+    {
+      "worker": "meridian-app",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/osint-engine",
+      "config": "not on the default branch",
+      "path": "retired",
+      "note": "delete pending (founder): retire unless the private-app branch lands"
+    },
+    {
+      "worker": "meridian-admin",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/osint-engine",
+      "config": "not on the default branch",
+      "path": "retired",
+      "note": "delete pending (founder): retire unless the private-app branch lands"
+    },
+    {
+      "worker": "beep-test",
+      "account": "Doman Digital",
+      "repo": "",
+      "config": "",
+      "path": "retired",
+      "note": "delete pending (founder): a test"
+    },
+    {
+      "worker": "mpe-egress-probe",
+      "account": "Doman Digital",
+      "repo": "",
+      "config": "",
+      "path": "retired",
+      "note": "delete pending (founder): one-off upload on 8 Oct"
+    },
+    {
+      "worker": "verqan-cron-worker",
+      "account": "Doman Digital",
+      "repo": "",
+      "config": "",
+      "path": "retired",
+      "note": "delete pending (founder): last deploy 11 Aug"
+    },
+    {
+      "worker": "dd-halfspace-astro-preview",
+      "account": "Doman Digital",
+      "repo": "",
+      "config": "",
+      "path": "retired",
+      "note": "delete pending (founder): no repo"
+    },
+    {
+      "worker": "dd-blossom-outreach-pilot",
+      "account": "Doman Digital",
+      "repo": "",
+      "config": "",
+      "path": "retired",
+      "note": "delete pending (founder): no repo"
+    },
+    {
+      "worker": "chair-and-blade-astro",
+      "account": "Doman Digital",
+      "repo": "chairandblade/chair-and-blade",
+      "config": "",
+      "path": "retired",
+      "note": "delete pending (founder): stale duplicate in the DD account; the live one is in the Chair and Blade account"
+    },
+    {
+      "worker": "dd-checks-spike",
+      "account": "",
+      "repo": "Doman-Digital/Doman-Digital",
+      "config": "services/checks/spike/wrangler.jsonc",
+      "path": "not-deployed",
+      "note": "a config with no Worker in any account"
+    },
+    {
+      "worker": "dd-portal-secrets-staging",
+      "account": "",
+      "repo": "Doman-Digital/Doman-Digital",
+      "config": "apps/portal/wrangler.secrets-staging.jsonc",
+      "path": "not-deployed",
+      "note": "a config with no Worker in any account"
+    },
+    {
+      "worker": "dd-gate-template",
+      "account": "",
+      "repo": "Doman-Digital/client-previews",
+      "config": "gate-worker/wrangler.jsonc",
+      "path": "not-deployed",
+      "note": "a config with no Worker in any account"
+    },
+    {
+      "worker": "meridian-marketing",
+      "account": "",
+      "repo": "Doman-Digital/client-previews",
+      "config": "workers/meridian/wrangler.jsonc",
+      "path": "not-deployed",
+      "note": "a config with no Worker in any account"
+    },
+    {
+      "worker": "harrisons-beauty-cron",
+      "account": "",
+      "repo": "harrison-jamesltd/HJ-Beauty",
+      "config": "infra/cloudflare-cron/wrangler.toml",
+      "path": "not-deployed",
+      "note": "a config with no Worker in any account"
+    },
+    {
+      "worker": "tardi-portal",
+      "account": "",
+      "repo": "joetardi/Tardi-Group",
+      "config": "wrangler.jsonc (env)",
+      "path": "not-deployed",
+      "note": "a config with no Worker in any account"
+    }
+  ]
+}

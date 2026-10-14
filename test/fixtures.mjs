@@ -62,6 +62,50 @@ export const FIXTURES = {
     fail: view({ vercel: [{ path: "vercel.json", json: { crons: [{ path: "/api/cron/b", schedule: "0 9 * * *" }] } }] }),
     pass: view({ vercel: [{ path: "vercel.json", json: { crons: [{ path: "/api/cron/a", schedule: "0 9 * * *" }] } }] }),
   },
+  "CI-012": {
+    // dd-relay, 13 October 2026: every merge cancelled the main run before it.
+    fail: wf("on:\n  pull_request:\n  push:\n    branches: [main]\nconcurrency:\n  group: ci-${{ github.ref }}\n  cancel-in-progress: true\njobs: {}\n"),
+    pass: wf("on:\n  pull_request:\n  push:\n    branches: [main]\nconcurrency:\n  group: ci-${{ github.ref }}\n  cancel-in-progress: ${{ github.event_name == 'pull_request' }}\njobs: {}\n"),
+  },
+  "CI-013": {
+    fail: wf("on:\n  push:\n    branches: [main]\nconcurrency:\n  group: deploy\n  cancel-in-progress: true\njobs:\n  deploy:\n    steps:\n      - run: npx wrangler deploy\n", ".github/workflows/deploy.yml"),
+    // A dry run is not a deploy, and a preview on pull_request may be cancelled.
+    pass: { workflows: [
+      { path: ".github/workflows/deploy.yml", text: "on:\n  push:\n    branches: [main]\nconcurrency:\n  group: deploy-production\n  cancel-in-progress: false\njobs:\n  deploy:\n    steps:\n      - run: npx wrangler deploy\n" },
+      { path: ".github/workflows/ci.yml", text: "on:\n  push:\n    branches: [main]\njobs:\n  check:\n    steps:\n      - run: npx wrangler deploy --dry-run\n" },
+      { path: ".github/workflows/preview.yml", text: "on:\n  pull_request:\nconcurrency:\n  group: preview-${{ github.ref }}\n  cancel-in-progress: true\njobs:\n  preview:\n    steps:\n      - run: npx wrangler deploy --env preview\n" },
+    ], vercel: [], files: {} },
+  },
+  "CI-014": {
+    fail: wf("on:\n  workflow_run:\n    workflows: [CI]\n    types: [completed]\n    branches: [main]\nconcurrency:\n  group: deploy-production\n  cancel-in-progress: false\njobs:\n  deploy:\n    steps:\n      - uses: actions/checkout@v4\n      - run: npx wrangler deploy\n", ".github/workflows/deploy.yml"),
+    pass: wf("on:\n  workflow_run:\n    workflows: [CI]\n    types: [completed]\n    branches: [main]\nconcurrency:\n  group: deploy-production\n  cancel-in-progress: false\njobs:\n  deploy:\n    steps:\n      - uses: Doman-Digital/dd-ci-standards/.github/actions/deploy-tip@v1\n        id: tip\n        with:\n          sha: ${{ github.event.workflow_run.head_sha }}\n      - uses: actions/checkout@v4\n        with:\n          ref: ${{ github.event.workflow_run.head_sha }}\n      - run: npx wrangler deploy\n", ".github/workflows/deploy.yml"),
+  },
+  "CI-015": {
+    // beautyops' gitleaks.yml beside the policy caller; a weekly full-history sweep is fine.
+    fail: { workflows: [
+      { path: ".github/workflows/ci-standards-policy.yml", text: "on:\n  pull_request:\njobs:\n  policy:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1\n" },
+      { path: ".github/workflows/gitleaks.yml", text: "on:\n  pull_request:\n  push:\n    branches: [main]\njobs:\n  scan:\n    steps:\n      - uses: gitleaks/gitleaks-action@0000000000000000000000000000000000000000\n" },
+    ], vercel: [], files: {} },
+    pass: { workflows: [
+      { path: ".github/workflows/ci-standards-policy.yml", text: "on:\n  pull_request:\njobs:\n  policy:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1\n" },
+      { path: ".github/workflows/gitleaks.yml", text: "on:\n  schedule:\n    - cron: '17 3 * * 1'\njobs:\n  scan:\n    steps:\n      - uses: gitleaks/gitleaks-action@0000000000000000000000000000000000000000\n" },
+    ], vercel: [], files: {} },
+  },
+  "CI-016": {
+    fail: wf("jobs:\n  e2e:\n    steps:\n      - name: Runner port offset\n        run: echo \"CI_PORT_OFFSET=${RUNNER_NAME##*-}\" >> \"$GITHUB_ENV\"\n"),
+    // A comment about the old runners is not a step.
+    pass: wf("jobs:\n  e2e:\n    steps:\n      # was: CI_PORT_OFFSET from runner.name\n      - run: pnpm test\n"),
+  },
+  "CF-001": {
+    ctx: { repo: "Doman-Digital/demo", deploys: { workers: [{ worker: "demo-site", repo: "Doman-Digital/demo", path: "workers-builds" }] } },
+    // An unregistered Worker, and an Actions deploy beside the app's build.
+    fail: { workflows: [{ path: ".github/workflows/deploy.yml", text: "on:\n  push:\n    branches: [main]\njobs:\n  d:\n    steps:\n      - run: npx wrangler deploy\n" }], vercel: [], files: {}, wrangler: [{ path: "wrangler.jsonc", name: "demo-site" }, { path: "worker/wrangler.toml", name: "demo-cron" }] },
+    pass: { workflows: [{ path: ".github/workflows/ci.yml", text: "on:\n  pull_request:\njobs:\n  b:\n    steps:\n      - run: npx wrangler deploy --dry-run\n" }], vercel: [], files: {}, wrangler: [{ path: "wrangler.jsonc", name: "demo-site" }] },
+  },
+  "FW-003": {
+    fail: { workflows: [{ path: ".github/workflows/ci-standards-policy.yml", text: "jobs:\n  p:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1.0.22\n" }], vercel: [], files: { "renovate.json": '{ "extends": ["github>Doman-Digital/dd-ci-standards//default.json#v1.0.13"] }' } },
+    pass: { workflows: [{ path: ".github/workflows/ci-standards-policy.yml", text: "jobs:\n  p:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1\n" }], vercel: [], files: { "renovate.json": '{ "extends": ["github>Doman-Digital/dd-ci-standards//default.json#v1"] }' } },
+  },
   "SEC-001": {
     fail: wf("jobs:\n  a:\n    steps:\n      - uses: tj-actions/changed-files@v45\n"),
     pass: wf("jobs:\n  a:\n    steps:\n      - uses: tj-actions/changed-files@48d8f15b2aaa3d255ca5af3eba4870f807ce6b3c # v45\n      - uses: Doman-Digital/dd-ci-standards/doctor@v1\n      - uses: ./.github/actions/setup\n"),

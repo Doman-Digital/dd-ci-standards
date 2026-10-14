@@ -117,7 +117,7 @@ async function context(args) {
   const visibility = opt(args, "--visibility") || (meta ? (meta.private ? "private" : "public") : null);
   const repoName = repo ? repo.split("/")[1] : basename(dir);
   const budget = budgetForRepo(readFileSync(join(HOME, "budget.yml"), "utf8"), repoName);
-  return { dir, repo, ctx: { today, kind, visibility, repoName, budget, meta, taxonomy } };
+  return { dir, repo, ctx: { today, kind, visibility, repo, repoName, budget, meta, taxonomy } };
 }
 
 async function doctor(args) {
