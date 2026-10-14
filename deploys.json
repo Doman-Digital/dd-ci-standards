@@ -153,54 +153,48 @@
       "account": "Doman Digital",
       "repo": "Doman-Digital/Verqan-Platform",
       "config": "apps/web/wrangler.jsonc",
-      "path": "manual",
-      "target": "actions",
-      "note": "live; pnpm cf:deploy (OpenNext) from a workstation; needs PR CI first"
+      "path": "actions",
+      "note": "deploy.yml after CI on main (opennextjs-cloudflare deploy, build values from verqan-web/prd); Doppler dd-deploy/verqan-platform. First Actions deploy 14 Oct 2026"
     },
     {
       "worker": "verqan-dashboard-cf",
       "account": "Doman Digital",
       "repo": "Doman-Digital/Verqan-Platform",
       "config": "apps/dashboard/wrangler.jsonc",
-      "path": "manual",
-      "target": "actions",
-      "note": "live; pnpm cf:deploy (OpenNext) from a workstation; needs PR CI first"
+      "path": "actions",
+      "note": "deploy.yml after CI on main (opennextjs-cloudflare deploy, build values from verqan-dashboard/prd); Doppler dd-deploy/verqan-platform. First Actions deploy 14 Oct 2026"
     },
     {
       "worker": "verqan-docs-cf",
       "account": "Doman Digital",
       "repo": "Doman-Digital/Verqan-Platform",
       "config": "apps/docs/wrangler.jsonc",
-      "path": "manual",
-      "target": "actions",
-      "note": "live; pnpm cf:deploy (OpenNext) from a workstation; needs PR CI first"
+      "path": "actions",
+      "note": "deploy.yml after CI on main (opennextjs-cloudflare deploy, build values from verqan-docs/prd); Doppler dd-deploy/verqan-platform. First Actions deploy 14 Oct 2026"
     },
     {
       "worker": "beautyops-app",
       "account": "Doman Digital",
       "repo": "Doman-Digital/beautyops",
       "config": "wrangler.jsonc",
-      "path": "manual",
-      "target": "actions",
-      "note": "live (app.beautyops.co.uk); scripts/cf-deploy.sh from a workstation"
+      "path": "actions",
+      "note": "deploy.yml after CI on main (build values from beautyops/prd, Sentry release); Doppler dd-deploy/beautyops. Merged 14 Oct 2026; the first deploy waits for a green main CI (e2e Lighthouse performance on / fails on busy runners)"
     },
     {
       "worker": "dd-rebuild-relay",
       "account": "Doman Digital",
       "repo": "Doman-Digital/dd-rebuild-relay",
       "config": "wrangler.jsonc",
-      "path": "manual",
-      "target": "actions",
-      "note": "drives chair-and-blade and RMP rebuilds; holds the DD Rebuild app key"
+      "path": "actions",
+      "note": "deploy.yml after CI on main (cloudflare-deploy.yml); Doppler dd-deploy/rebuild-relay. First Actions deploy 14 Oct 2026"
     },
     {
       "worker": "market-probability-engine",
       "account": "Doman Digital",
       "repo": "Doman-Digital/Market-probability-engine",
       "config": "wrangler.jsonc",
-      "path": "manual",
-      "target": "actions",
-      "note": "OpenNext; pnpm cf:deploy by hand"
+      "path": "actions",
+      "note": "deploy.yml after CI on main (cloudflare-deploy.yml, OpenNext); Doppler dd-deploy/mpe. First Actions deploy 14 Oct 2026"
     },
     {
       "worker": "meridian-web",
