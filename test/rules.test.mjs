@@ -205,3 +205,9 @@ test("CF-001 accepts an Actions deploy that runs wrangler inside a script, when 
   assert.ok(!ids(runDoctor(v([wf]), rulebook, { ...base, repo: "Doman-Digital/demo", deploys })).includes("CF-001"));
   assert.ok(ids(runDoctor(v([]), rulebook, { ...base, repo: "Doman-Digital/demo", deploys })).includes("CF-001"));
 });
+
+test("an OpenNext deploy counts as a production deploy (CI-013, SEC-007)", () => {
+  const text = "on:\n  push:\n    branches: [main]\njobs:\n  deploy:\n    steps:\n      - run: pnpm exec opennextjs-cloudflare deploy\n        env:\n          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}\n";
+  const r = runDoctor({ workflows: [{ path: ".github/workflows/deploy.yml", text }], vercel: [], files: {} }, rulebook, base);
+  assert.ok(ids(r).includes("CI-013") && ids(r).includes("SEC-007"), ids(r).join(", "));
+});
