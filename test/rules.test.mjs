@@ -172,3 +172,27 @@ test("CF-001 ignores registry entries with no repo", () => {
   const r = runDoctor({ workflows: [], vercel: [], files: {}, wrangler: [{ path: "wrangler.jsonc", name: "demo-site" }] }, rulebook, { ...base, ...ctx });
   assert.ok(!ids(r).includes("CF-001"));
 });
+
+test("FW-002 reports an exemption that exempts nothing, and one for a rule that does not exist", () => {
+  const text = "on:\n  pull_request:\n# dd: allow CI-005 until=2027-03-01 backstop\n# dd: allow CI-099 until=2027-03-01 typo\njobs: {}\n";
+  const r = runDoctor({ workflows: [{ path: ".github/workflows/ci.yml", text }], vercel: [], files: {} }, rulebook, base);
+  const fw = r.findings.filter((f) => f.rule === "FW-002").map((f) => f.message);
+  assert.ok(fw.some((m) => /CI-005 exempts nothing/.test(m)), fw.join(" | "));
+  assert.ok(fw.some((m) => /CI-099, which is not a rule/.test(m)), fw.join(" | "));
+  // One that still exempts a finding is not reported as stale.
+  const live = runDoctor(FIXTURES["FW-002"].pass, rulebook, base);
+  assert.ok(!live.findings.some((f) => f.rule === "FW-002" && /exempts nothing/.test(f.message)));
+});
+
+test("FW-002 does not call an exemption stale when its check could not run", () => {
+  const v = { workflows: [], vercel: [], files: { ".github/dd.json": JSON.stringify({ exempt: [{ rule: "REG-004", until: "2027-03-01", reason: "settings owned by the client" }] }) } };
+  const r = runDoctor(v, rulebook, { ...base, meta: null });
+  assert.ok(!r.findings.some((f) => f.rule === "FW-002" && /exempts nothing/.test(f.message)));
+});
+
+test("CI-005 accepts push and pull_request on a CI that a workflow_run deploy waits for", () => {
+  const ci = { path: ".github/workflows/ci.yml", text: "name: CI\non:\n  push:\n    branches: [main]\n  pull_request:\n    branches: [main]\njobs: {}\n" };
+  const deploy = { path: ".github/workflows/deploy.yml", text: "on:\n  workflow_run:\n    workflows: [CI]\n    types: [completed]\n    branches: [main]\njobs:\n  deploy:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/cloudflare-deploy.yml@v1\n" };
+  assert.ok(!ids(runDoctor({ workflows: [ci, deploy], vercel: [], files: {} }, rulebook, base)).includes("CI-005"));
+  assert.ok(ids(runDoctor({ workflows: [ci], vercel: [], files: {} }, rulebook, base)).includes("CI-005"));
+});

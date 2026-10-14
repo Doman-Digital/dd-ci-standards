@@ -96,6 +96,25 @@ export const FIXTURES = {
     // A comment about the old runners is not a step.
     pass: wf("jobs:\n  e2e:\n    steps:\n      # was: CI_PORT_OFFSET from runner.name\n      - run: pnpm test\n"),
   },
+  "CI-017": {
+    fail: wf("on:\n  pull_request:\njobs:\n  visual:\n    runs-on: x\n    continue-on-error: true\n    steps:\n      - run: pnpm test:visual\n"),
+    // The same advisory job, run on a schedule.
+    pass: wf("on:\n  schedule:\n    - cron: '17 3 * * 1'\njobs:\n  visual:\n    runs-on: x\n    continue-on-error: true\n    steps:\n      - run: pnpm test:visual\n"),
+  },
+  "CI-018": {
+    fail: wf("on:\n  schedule:\n    - cron: '0 6 * * 1'\njobs: {}\n"),
+    pass: wf("on:\n  schedule:\n    - cron: '17 6 * * 1'\njobs: {}\n"),
+  },
+  "CI-019": {
+    fail: wf("on:\n  schedule:\n    - cron: '17 * * * *'\njobs:\n  batch:\n    steps:\n      - run: echo \"BATCH=$(( $(date -u +%H) % 4 ))\" >> \"$GITHUB_ENV\"\n"),
+    // A date stamp is not a choice of work.
+    pass: wf("on:\n  schedule:\n    - cron: '17 * * * *'\njobs:\n  batch:\n    steps:\n      - run: echo \"STAMP=$(date -u +%Y-%m-%d)\" >> \"$GITHUB_ENV\"\n"),
+  },
+  "CI-020": {
+    fail: wf("on:\n  pull_request:\njobs:\n  lint:\n    steps:\n      - run: pnpm install --frozen-lockfile\n      - run: pnpm lint\n  typecheck:\n    steps:\n      - run: pnpm install --frozen-lockfile\n      - run: pnpm typecheck\n  test:\n    steps:\n      - run: pnpm install --frozen-lockfile\n      - run: pnpm test\n"),
+    // One job for the checks; e2e needs a database, so it keeps its own VM.
+    pass: wf("on:\n  pull_request:\njobs:\n  verify:\n    steps:\n      - run: pnpm install --frozen-lockfile\n      - run: pnpm lint\n      - run: pnpm test\n  e2e:\n    services:\n      postgres:\n        image: postgres:16\n    steps:\n      - run: pnpm install --frozen-lockfile\n      - run: pnpm e2e\n  smoke:\n    steps:\n      - run: npm install -g wrangler\n"),
+  },
   "CF-001": {
     ctx: { repo: "Doman-Digital/demo", deploys: { workers: [{ worker: "demo-site", repo: "Doman-Digital/demo", path: "workers-builds" }] } },
     // An unregistered Worker, and an Actions deploy beside the app's build.
