@@ -2,8 +2,16 @@
   "version": 1,
   "about": "The DD Framework rulebook. Each rule has an id, the incident or source it comes from, the repo kinds it applies to, and two dates: from warn_from it is reported, from enforce_from it fails. enforce_from is at most 90 days after warn_from, so nothing warns forever. lib/rules.mjs holds the checks; test/fixtures.mjs holds a failing and a passing example of every rule, and the tests fail if a rule has none. Exemptions: README, 'Exemptions'.",
   "kinds": {
-    "full": ["dd-site", "dd-product", "dd-tooling", "client-site", "client-app"],
-    "light": ["sales-demo"]
+    "full": [
+      "dd-site",
+      "dd-product",
+      "dd-tooling",
+      "client-site",
+      "client-app"
+    ],
+    "light": [
+      "sales-demo"
+    ]
   },
   "rules": [
     {
@@ -45,7 +53,7 @@
     {
       "id": "CI-005",
       "title": "A workflow runs on both push and pull_request for the same branches",
-      "why": "2026-08-16 portfolio audit (was double-run).",
+      "why": "2026-08-16 portfolio audit (was double-run). Not reported when a workflow_run deploy waits for the workflow: the push run is the deploy's gate, which CI-014 requires on every push to main (DOM-776).",
       "legacy": "double-run",
       "applies": "full",
       "warn_from": "2026-08-16",
@@ -125,6 +133,38 @@
       "applies": "full",
       "warn_from": "2026-10-14",
       "enforce_from": "2026-12-31"
+    },
+    {
+      "id": "CI-017",
+      "title": "A job that runs on every pull request is allowed to fail",
+      "why": "13 October 2026 (DOM-776 audit): visual-regression-portal in the monorepo and osint-engine's integration-tests ran on every PR push with continue-on-error: true. Each took a VM from a pool of six, often for minutes, and a red result changed nothing. Advisory work belongs on a schedule or a manual run.",
+      "applies": "full",
+      "warn_from": "2026-10-14",
+      "enforce_from": "2026-12-31"
+    },
+    {
+      "id": "CI-018",
+      "title": "A schedule fires on the hour",
+      "why": "13 October 2026 (DOM-776 audit): GitHub started scheduled runs 4 to 9.5 hours late, and its documentation says runs at the start of an hour are the most likely to be delayed or dropped. Crons at minute 0 across the estate then queued together on the shared pool.",
+      "applies": "full",
+      "warn_from": "2026-10-14",
+      "enforce_from": "2026-12-31"
+    },
+    {
+      "id": "CI-019",
+      "title": "A scheduled workflow works out its batch from the clock",
+      "why": "13 October 2026 (DOM-776 audit): Market-probability-engine's Tiingo batches chose their tickers from the hour the run started. GitHub started the runs hours late, so from 8 October every batch picked an empty slot and refreshed nothing, while every run passed.",
+      "applies": "full",
+      "warn_from": "2026-10-14",
+      "enforce_from": "2026-12-31"
+    },
+    {
+      "id": "CI-020",
+      "title": "Three or more pull request jobs each install the same dependencies",
+      "why": "13 October 2026 (DOM-776 audit): on the shared pool each job waits for its own VM, then boots, checks out and installs before it does seconds of work. redacted ran 9 to 11 jobs per push, redacted 7, redacted 5, redacted 6, each installing the same lockfile; in the monorepo 58% of job time was setup. One job with several steps does the same checks with one wait and one install.",
+      "applies": "full",
+      "warn_from": "2026-10-14",
+      "enforce_from": "2027-01-12"
     },
     {
       "id": "SEC-001",
@@ -217,8 +257,8 @@
     },
     {
       "id": "FW-002",
-      "title": "An exemption expires within 14 days, or is invalid",
-      "why": "Exemptions expire so ignored debt comes back as a finding instead of a forgotten note.",
+      "title": "An exemption expires within 14 days, is invalid, or exempts nothing",
+      "why": "Exemptions expire so ignored debt comes back as a finding instead of a forgotten note. One that matches no finding hides the next real one unreviewed (DOM-776 audit, 13 October 2026: dd-seo-mcp, dd-repo-registry and dd-prompt-library carried exemptions for findings already fixed).",
       "applies": "all",
       "warn_from": "2026-10-03",
       "enforce_from": "2026-10-03",

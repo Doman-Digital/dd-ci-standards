@@ -110,7 +110,9 @@ or, for a repo-wide one, in `.github/dd.json`:
 
 An exemption counts only with a reason and a date inside the limit.
 When it expires the finding comes back. FW-002 reports exemptions that are
-invalid or expire within 14 days. The old
+invalid, expire within 14 days, or exempt nothing (the rule finds nothing in
+that file, so the exemption would hide the next real finding unreviewed).
+Remove those. The old
 `# ci-standards: allow-double-run <reason>` comment still works, and is
 reported as undated.
 
@@ -255,7 +257,9 @@ has to pass a policy check to merge, not get caught in the next audit.
 
   Setting up a repo for it, once: a deploy token in Doppler
   `dd-deploy/<config>` as `CLOUDFLARE_DEPLOY_VALUE` (Workers Scripts edit
-  only, on that one account, with an expiry date), a Doppler service account
+  on that one account, with an expiry date; add Workers Routes edit on the
+  zone only when the wrangler config has a route or custom domain, and the
+  edit permission of any binding wrangler creates), a Doppler service account
   identity that trusts the repo's default branch, and the repo variable
   `DOPPLER_IDENTITY_ID`, plus `CLOUDFLARE_ACCOUNT_ID` when the token can see
   more than one account. `tokens.json` records every Cloudflare token by
