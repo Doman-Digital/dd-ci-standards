@@ -219,189 +219,189 @@
       "account": "Doman Digital",
       "repo": "Doman-Digital/client-previews",
       "config": "workers/beautyops/wrangler.jsonc",
-      "path": "manual",
-      "target": "actions",
-      "note": "live; tools/deploy-beautyops.mjs"
+      "path": "actions",
+      "note": "deploy-sites.yml (dispatch from main, tip guard); Doppler dd-deploy/previews",
+      "workflow": ".github/workflows/deploy-sites.yml"
     },
     {
       "worker": "beautyops-apex-redirect",
       "account": "Doman Digital",
       "repo": "Doman-Digital/client-previews",
       "config": "workers/beautyops/wrangler.apex.jsonc",
-      "path": "manual",
-      "target": "actions",
-      "note": "live redirect"
+      "path": "actions",
+      "note": "deploy-sites.yml (dispatch from main, tip guard); Doppler dd-deploy/previews",
+      "workflow": ".github/workflows/deploy-sites.yml"
     },
     {
       "worker": "dmitridoman",
       "account": "Doman Digital",
       "repo": "Doman-Digital/client-previews",
       "config": "workers/dmitridoman/wrangler.jsonc",
-      "path": "manual",
-      "target": "actions",
-      "note": "live; dmitridoman.co.uk"
+      "path": "actions",
+      "note": "deploy-sites.yml (dispatch from main, tip guard); Doppler dd-deploy/previews",
+      "workflow": ".github/workflows/deploy-sites.yml"
     },
     {
       "worker": "persona-7",
       "account": "Doman Digital",
       "repo": "Doman-Digital/client-previews",
       "config": "workers/persona-7/wrangler.jsonc",
-      "path": "manual",
-      "target": "actions",
-      "note": "production Worker for persona7.co.uk; Doman-Digital/Persona-7 on Vercel is the other path, pick one"
+      "path": "actions",
+      "note": "deploy-sites.yml (dispatch from main, tip guard); Doppler dd-deploy/previews",
+      "workflow": ".github/workflows/deploy-sites.yml"
     },
     {
       "worker": "persona-7-www-redirect",
       "account": "Doman Digital",
       "repo": "Doman-Digital/client-previews",
       "config": "workers/persona-7/wrangler.www.jsonc",
-      "path": "manual",
-      "target": "actions",
-      "note": "redirect"
+      "path": "actions",
+      "note": "deploy-sites.yml (dispatch from main, tip guard); Doppler dd-deploy/previews",
+      "workflow": ".github/workflows/deploy-sites.yml"
     },
     {
       "worker": "dd-ambersun-preview",
       "account": "Doman Digital",
       "repo": "Doman-Digital/client-previews",
       "config": "sites/ambersun (tools/batch.mjs)",
-      "path": "manual",
-      "target": "actions",
-      "note": "gated preview; deploy-sites.yml exists but never ran a deploy"
+      "path": "actions",
+      "note": "deploy-sites.yml (dispatch from main, tip guard); Doppler dd-deploy/previews",
+      "workflow": ".github/workflows/deploy-sites.yml"
     },
     {
       "worker": "dd-bbtn-studio-preview",
       "account": "Doman Digital",
       "repo": "Doman-Digital/client-previews",
       "config": "sites/bbtn-studio (tools/batch.mjs)",
-      "path": "manual",
-      "target": "actions",
-      "note": "gated preview; deploy-sites.yml exists but never ran a deploy"
+      "path": "actions",
+      "note": "deploy-sites.yml (dispatch from main, tip guard); Doppler dd-deploy/previews",
+      "workflow": ".github/workflows/deploy-sites.yml"
     },
     {
       "worker": "dd-beautique-brackley-preview",
       "account": "Doman Digital",
       "repo": "Doman-Digital/client-previews",
       "config": "sites/beautique-brackley (tools/batch.mjs)",
-      "path": "manual",
-      "target": "actions",
-      "note": "gated preview; deploy-sites.yml exists but never ran a deploy"
+      "path": "actions",
+      "note": "deploy-sites.yml (dispatch from main, tip guard); Doppler dd-deploy/previews",
+      "workflow": ".github/workflows/deploy-sites.yml"
     },
     {
       "worker": "dd-beautyops-preview",
       "account": "Doman Digital",
       "repo": "Doman-Digital/client-previews",
       "config": "sites/beautyops (tools/batch.mjs)",
-      "path": "manual",
-      "target": "actions",
-      "note": "gated preview; deploy-sites.yml exists but never ran a deploy"
+      "path": "actions",
+      "note": "deploy-sites.yml (dispatch from main, tip guard); Doppler dd-deploy/previews",
+      "workflow": ".github/workflows/deploy-sites.yml"
     },
     {
       "worker": "dd-brackley-wellbeing-preview",
       "account": "Doman Digital",
       "repo": "Doman-Digital/client-previews",
       "config": "sites/brackley-wellbeing (tools/batch.mjs)",
-      "path": "manual",
-      "target": "actions",
-      "note": "gated preview; deploy-sites.yml exists but never ran a deploy"
+      "path": "actions",
+      "note": "deploy-sites.yml (dispatch from main, tip guard); Doppler dd-deploy/previews",
+      "workflow": ".github/workflows/deploy-sites.yml"
     },
     {
       "worker": "dd-candy-aesthetics-preview",
       "account": "Doman Digital",
       "repo": "Doman-Digital/client-previews",
       "config": "sites/candy-aesthetics (tools/batch.mjs)",
-      "path": "manual",
-      "target": "actions",
-      "note": "gated preview; deploy-sites.yml exists but never ran a deploy"
+      "path": "actions",
+      "note": "deploy-sites.yml (dispatch from main, tip guard); Doppler dd-deploy/previews",
+      "workflow": ".github/workflows/deploy-sites.yml"
     },
     {
       "worker": "dd-colucci-preview",
       "account": "Doman Digital",
       "repo": "Doman-Digital/client-previews",
       "config": "sites/colucci (tools/batch.mjs)",
-      "path": "manual",
-      "target": "actions",
-      "note": "gated preview; deploy-sites.yml exists but never ran a deploy"
+      "path": "actions",
+      "note": "deploy-sites.yml (dispatch from main, tip guard); Doppler dd-deploy/previews",
+      "workflow": ".github/workflows/deploy-sites.yml"
     },
     {
       "worker": "dd-dunhams-preview",
       "account": "Doman Digital",
       "repo": "Doman-Digital/client-previews",
       "config": "sites/dunhams (tools/batch.mjs)",
-      "path": "manual",
-      "target": "actions",
-      "note": "gated preview; deploy-sites.yml exists but never ran a deploy"
+      "path": "actions",
+      "note": "deploy-sites.yml (dispatch from main, tip guard); Doppler dd-deploy/previews",
+      "workflow": ".github/workflows/deploy-sites.yml"
     },
     {
       "worker": "dd-groom-preview",
       "account": "Doman Digital",
       "repo": "Doman-Digital/client-previews",
       "config": "sites/groom (tools/batch.mjs)",
-      "path": "manual",
-      "target": "actions",
-      "note": "gated preview; deploy-sites.yml exists but never ran a deploy"
+      "path": "actions",
+      "note": "deploy-sites.yml (dispatch from main, tip guard); Doppler dd-deploy/previews",
+      "workflow": ".github/workflows/deploy-sites.yml"
     },
     {
       "worker": "dd-meridian-preview",
       "account": "Doman Digital",
       "repo": "Doman-Digital/client-previews",
       "config": "sites/meridian (tools/batch.mjs)",
-      "path": "manual",
-      "target": "actions",
-      "note": "gated preview; deploy-sites.yml exists but never ran a deploy"
+      "path": "actions",
+      "note": "deploy-sites.yml (dispatch from main, tip guard); Doppler dd-deploy/previews",
+      "workflow": ".github/workflows/deploy-sites.yml"
     },
     {
       "worker": "dd-olivetree-preview",
       "account": "Doman Digital",
       "repo": "Doman-Digital/client-previews",
       "config": "sites/olivetree (tools/batch.mjs)",
-      "path": "manual",
-      "target": "actions",
-      "note": "gated preview; deploy-sites.yml exists but never ran a deploy"
+      "path": "actions",
+      "note": "deploy-sites.yml (dispatch from main, tip guard); Doppler dd-deploy/previews",
+      "workflow": ".github/workflows/deploy-sites.yml"
     },
     {
       "worker": "dd-otwithshelly-preview",
       "account": "Doman Digital",
       "repo": "Doman-Digital/client-previews",
       "config": "sites/otwithshelly (tools/batch.mjs)",
-      "path": "manual",
-      "target": "actions",
-      "note": "gated preview; deploy-sites.yml exists but never ran a deploy"
+      "path": "actions",
+      "note": "deploy-sites.yml (dispatch from main, tip guard); Doppler dd-deploy/previews",
+      "workflow": ".github/workflows/deploy-sites.yml"
     },
     {
       "worker": "dd-persona-7-preview",
       "account": "Doman Digital",
       "repo": "Doman-Digital/client-previews",
       "config": "sites/persona-7 (tools/batch.mjs)",
-      "path": "manual",
-      "target": "actions",
-      "note": "gated preview; deploy-sites.yml exists but never ran a deploy"
+      "path": "actions",
+      "note": "deploy-sites.yml (dispatch from main, tip guard); Doppler dd-deploy/previews",
+      "workflow": ".github/workflows/deploy-sites.yml"
     },
     {
       "worker": "dd-pw-brackley-preview",
       "account": "Doman Digital",
       "repo": "Doman-Digital/client-previews",
       "config": "sites/pw-brackley (tools/batch.mjs)",
-      "path": "manual",
-      "target": "actions",
-      "note": "gated preview; deploy-sites.yml exists but never ran a deploy"
+      "path": "actions",
+      "note": "deploy-sites.yml (dispatch from main, tip guard); Doppler dd-deploy/previews",
+      "workflow": ".github/workflows/deploy-sites.yml"
     },
     {
       "worker": "dd-starr-preview",
       "account": "Doman Digital",
       "repo": "Doman-Digital/client-previews",
       "config": "sites/starr (tools/batch.mjs)",
-      "path": "manual",
-      "target": "actions",
-      "note": "gated preview; deploy-sites.yml exists but never ran a deploy"
+      "path": "actions",
+      "note": "deploy-sites.yml (dispatch from main, tip guard); Doppler dd-deploy/previews",
+      "workflow": ".github/workflows/deploy-sites.yml"
     },
     {
       "worker": "dd-totteridge-academy-preview",
       "account": "Doman Digital",
       "repo": "Doman-Digital/client-previews",
       "config": "sites/totteridge-academy (tools/batch.mjs)",
-      "path": "manual",
-      "target": "actions",
-      "note": "gated preview; deploy-sites.yml exists but never ran a deploy"
+      "path": "actions",
+      "note": "deploy-sites.yml (dispatch from main, tip guard); Doppler dd-deploy/previews",
+      "workflow": ".github/workflows/deploy-sites.yml"
     },
     {
       "worker": "dd-portal",
