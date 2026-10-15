@@ -57,6 +57,10 @@ repos:
       - workflow: secret-scan.yml
         cron: "17 3 * * 6"
         reason: "weekly full-history gitleaks scan, moved out of ci.yml so pull requests rely on the policy check's scan (CI-015)"
+      - workflow: company-os.yml
+        cron: "15 7 * * 1"
+        owner: "Doman Digital / Company OS"
+        reason: "weekly Company OS scorecard and canonical mirror refresh (DOM-377), 8min cap"
       - workflow: security-rotation-reminder.yml
         cron: "13 9 1 1,4,7,10 *"
         reason: "quarterly secret-rotation-due check, 5min cap, off the hour"
