@@ -215,3 +215,16 @@ test("an OpenNext deploy counts as a production deploy (CI-013, SEC-007)", () =>
 test("CI-017 leaves a job alone when its if: keeps it off pull requests", () => {
   assert.ok(!ids(runDoctor(FIXTURES["CI-017"].passAlso, rulebook, base)).includes("CI-017"));
 });
+
+test("CI-021 reports only the reusable post-deploy job, not comments or composite steps", () => {
+  const run = (text) => ids(runDoctor({ workflows: [{ path: ".github/workflows/deploy.yml", text }], vercel: [], files: {} }, rulebook, base)).filter((id) => id === "CI-021");
+  assert.deepEqual(run("jobs:\n  checks:\n    uses: ./.github/workflows/post-deploy-checks.yml\n"), ["CI-021"]);
+  assert.deepEqual(run("jobs:\n  deploy:\n    steps:\n      # uses: Doman-Digital/dd-ci-standards/.github/workflows/post-deploy-checks.yml@v1\n      - uses: Doman-Digital/dd-ci-standards/.github/actions/post-deploy-checks@v1\n"), []);
+});
+
+test("SEC-008 requires workflow-level permissions, accepting empty and block maps", () => {
+  const run = (text) => ids(runDoctor({ workflows: [{ path: ".github/workflows/ci.yml", text }], vercel: [], files: {} }, rulebook, base)).filter((id) => id === "SEC-008");
+  assert.deepEqual(run("# permissions: {}\njobs:\n  check:\n    permissions:\n      contents: read\n"), ["SEC-008"]);
+  assert.deepEqual(run("permissions: {}\njobs: {}\n"), []);
+  assert.deepEqual(run("permissions:\n  contents: read\njobs: {}\n"), []);
+});

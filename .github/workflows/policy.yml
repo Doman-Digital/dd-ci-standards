@@ -58,6 +58,9 @@ on:
         type: string
         default: ubuntu-latest
 
+permissions:
+  contents: read
+
 jobs:
   check:
     runs-on: ${{ inputs.runner }}
@@ -71,6 +74,7 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
+          filter: blob:none
           path: repo
 
       - uses: Doman-Digital/dd-ci-standards/doctor@v1
@@ -87,6 +91,7 @@ jobs:
       - name: Scan the commits this pull request adds
         working-directory: repo
         env:
+          GH_TOKEN: ${{ github.token }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
@@ -95,6 +100,14 @@ jobs:
           else
             range="HEAD~1..HEAD"
           fi
+          # Lazy history blobs still need private-repo auth after checkout
+          # removes its credentials. Scope it to this step's Git children;
+          # never persist it or put a token in a process argument.
+          set +x
+          unset GIT_TRACE GIT_TRACE_CURL GIT_TRACE_PACKET GIT_CURL_VERBOSE
+          export GIT_CONFIG_COUNT=1
+          export GIT_CONFIG_KEY_0="http.${GITHUB_SERVER_URL%/}/.extraheader"
+          export GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 | tr -d '\n')"
           gitleaks git --log-opts="$range" --redact --no-banner .
 
   # Kept for rulesets that require `<caller> / secrets`: a skipped job takes no

@@ -28,7 +28,7 @@ test("the debt it cannot fix is dated, not hidden: exemptions expire in 60 days"
   const { writes } = planAdopt(messy, rulebook, ctx);
   const dd = JSON.parse(writes[".github/dd.json"]);
   const rules = dd.exempt.map((e) => e.rule).sort();
-  assert.deepEqual(rules, ["CI-001", "CI-003"]);
+  assert.deepEqual(rules, ["CI-001", "CI-003", "SEC-008"]);
   assert.ok(dd.exempt.every((e) => e.until === "2027-03-16" && /Baseline at adoption/.test(e.reason)));
   // the day after they expire, the findings come back
   const adopted = {
