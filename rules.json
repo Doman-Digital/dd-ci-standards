@@ -167,6 +167,14 @@
       "enforce_from": "2027-01-12"
     },
     {
+      "id": "CI-021",
+      "title": "Post-deploy checks start a separate runner for a request",
+      "why": "DOM-776 audit pattern10: sleeping and requesting DD Checks as a separate reusable-workflow job pays another VM boot and queue wait. Use the composite action as a step after deployment; retain the legacy workflow for callers until they migrate.",
+      "applies": "full",
+      "warn_from": "2026-10-15",
+      "enforce_from": "2026-11-15"
+    },
+    {
       "id": "SEC-001",
       "title": "A third-party action is not pinned to a full commit SHA",
       "why": "tj-actions/changed-files, March 2025: a re-pointed tag ran code that dumped CI secrets. GitHub: a full SHA is the only immutable reference. First-party Doman-Digital actions stay on tags.",
@@ -221,6 +229,14 @@
       "applies": "all",
       "warn_from": "2026-10-07",
       "enforce_from": "2026-12-31"
+    },
+    {
+      "id": "SEC-008",
+      "title": "A workflow has no explicit top-level token permissions",
+      "why": "DOM-776 audit pattern15: workflows inherited unspecified repository token permissions. Declare the minimum top-level permissions (an empty map is valid), and grant any extra permission only to the job that needs it.",
+      "applies": "full",
+      "warn_from": "2026-10-15",
+      "enforce_from": "2026-11-15"
     },
     {
       "id": "CF-001",
