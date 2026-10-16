@@ -37,11 +37,9 @@ name: ci-standards policy
 # `<caller> / secrets`; drop it once no ruleset names it.
 #
 # GitHub-hosted by default: callers include public repos. A private repo
-# passes its own runner, so the gate keeps running when GitHub-hosted minutes
-# are unavailable (2026-10-06: a billing hold stopped the gate from starting,
-# and it is required on the monorepo's main). Org repos pass the org's
-# variable; client repos pass their scale set, so the gate does not spend the
-# client's own Free-plan minutes:
+# passes its own runner. Org repos pass the org's variable (CI_RUNNER); client
+# repos pass their scale set, so the gate does not spend the client's own
+# Free-plan minutes:
 #
 #       uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1
 #       with:
