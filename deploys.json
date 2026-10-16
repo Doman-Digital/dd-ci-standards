@@ -547,7 +547,7 @@
       "repo": "joetardi/Tardi-Group",
       "config": "wrangler.jsonc",
       "path": "manual",
-      "note": "OpenNext trial of the portal; the live portal is on Vercel"
+      "note": "OpenNext trial of the portal"
     },
     {
       "worker": "rmp-electrical-staging",
