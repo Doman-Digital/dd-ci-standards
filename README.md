@@ -116,8 +116,8 @@ Remove those. The old
 `# ci-standards: allow-double-run <reason>` comment still works, and is
 reported as undated.
 
-This exists because CI cost across the portfolio grew unchecked until it
-tripped a billing block, with 400+ Actions runs/month in two repos, an 18-PR
+This exists because CI cost across the portfolio grew unchecked, with 400+
+Actions runs/month in two repos, an 18-PR
 Dependabot fan-out in one afternoon, crons added with no registry anywhere.
 The point of this repo is to be the ceiling that holds by itself: new waste
 has to pass a policy check to merge, not get caught in the next audit.
@@ -177,8 +177,8 @@ has to pass a policy check to merge, not get caught in the next audit.
 - **`.github/workflows/node-ci.yml`**: reference reusable CI for a single
   pnpm/Node app. **Not yet adopted anywhere**: see the comment at the top
   of the file for why (existing repo CI reflects real tested logic that
-  shouldn't be swapped blind while Actions billing is blocked and no run
-  can verify the migration). Adopt one repo at a time once that clears.
+  shouldn't be swapped blind without a run to verify the migration). Adopt
+  one repo at a time, confirming each with a green run on the repo's runner.
 
 - **`.github/workflows/post-deploy-checks.yml`**: reusable workflow (DD
   Checks C29). After a successful production deploy it calls `POST /run` on
@@ -197,7 +197,7 @@ has to pass a policy check to merge, not get caught in the next audit.
       ADMIN_RUN_TOKEN: ${{ secrets.ADMIN_RUN_TOKEN }}
   ```
 
-  A host that deploys outside Actions (Vercel) triggers the caller on
+  A host that deploys outside Actions triggers the caller on
   `deployment_status` and gates the job on `state == 'success'` and
   `environment == 'Production'`. Inputs: `check` (one check id), `delay_seconds`
   (default 30, so the release is serving), `runner`.

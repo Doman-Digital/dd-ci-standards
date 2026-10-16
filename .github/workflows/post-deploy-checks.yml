@@ -23,7 +23,7 @@ name: post-deploy-checks (reusable)
 #       secrets:
 #         ADMIN_RUN_TOKEN: ${{ secrets.ADMIN_RUN_TOKEN }}
 #
-# For a host that deploys outside Actions (Vercel), trigger the caller on
+# For a host that deploys outside Actions, trigger the caller on
 # `deployment_status` and gate the job on a successful Production deployment:
 #
 #   on:

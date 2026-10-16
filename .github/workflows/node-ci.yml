@@ -4,9 +4,9 @@ name: node-ci (reusable)
 # any repo in the portfolio as of 2026-08-16 — each repo's existing ci.yml
 # reflects real, previously-tested logic (GitHub App token minting for
 # private deps, Playwright caching, monorepo path filters) that a first-pass
-# generic workflow shouldn't blindly replace while GitHub Actions billing is
-# blocked and no run can verify the swap. Migrate one repo at a time once
-# billing clears and each migration can be confirmed by an actual green run.
+# generic workflow shouldn't blindly replace without a run to verify the swap.
+# Migrate one repo at a time, and confirm each migration with an actual green
+# run on the repo's own runner.
 #
 # Adoption, once ready:
 #

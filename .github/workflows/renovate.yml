@@ -10,8 +10,7 @@ name: Renovate (self-hosted)
 # onboarding backend, not this config. This workflow sidesteps it entirely.
 #
 # Lives here (Doman-Digital org) rather than on a personal account on
-# purpose: dmitridoman's personal GitHub Actions billing was blocked as of
-# 2026-08-17. The org account showed no such block.
+# purpose: the org owns the runners and the Renovate GitHub App.
 #
 # One job per GitHub owner, each minting its own short-lived App
 # installation token (mirrors the same actions/create-github-app-token
