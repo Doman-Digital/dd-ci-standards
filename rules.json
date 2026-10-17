@@ -25,8 +25,8 @@
     },
     {
       "id": "CI-002",
-      "title": "A public repo runs jobs on the self-hosted runners",
-      "why": "GitHub: never use self-hosted runners with public repositories; a fork's pull request could run code on the VM.",
+      "title": "A public job is outside the disposable public runner profile",
+      "why": "Public PR code is untrusted. A public job may use the dedicated repository-restricted disposable VM profile in docs/public-runners.md, with native fork admission, read authority and host isolation verified before activation. Private and persistent pools remain unavailable to public repos. This is a permanent allowed profile, with GitHub and host controls outside PR YAML.",
       "applies": "full",
       "visibility": "public",
       "warn_from": "2026-10-03",
