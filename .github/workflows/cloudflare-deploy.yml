@@ -92,6 +92,10 @@ on:
         description: A wrangler config whose Worker gets every secret of the Doppler config behind DOPPLER_RUNTIME_TOKEN before it deploys. Empty syncs nothing.
         type: string
         default: ""
+      sync-secrets-filter:
+        description: Optional repository Node script which reads Doppler JSON on stdin and emits only runtime secrets on stdout. Runs only with sync-secrets-to.
+        type: string
+        default: ""
       runner:
         description: Runner label. Defaults to the CI_RUNNER variable, then ubuntu-latest.
         type: string
@@ -195,13 +199,18 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           WRANGLER: ${{ steps.install.outputs.wrangler }}
           CONFIG: ${{ inputs.sync-secrets-to }}
+          FILTER: ${{ inputs.sync-secrets-filter }}
         run: |
           set -euo pipefail
           if [ -z "$DOPPLER_TOKEN" ]; then
             echo "::error::sync-secrets-to is set but DOPPLER_RUNTIME_TOKEN was not passed."
             exit 1
           fi
-          doppler secrets download --no-file --format json | $WRANGLER secret bulk --config "$CONFIG"
+          if [ -n "$FILTER" ]; then
+            doppler secrets download --no-file --format json | node "$FILTER" | $WRANGLER secret bulk --config "$CONFIG"
+          else
+            doppler secrets download --no-file --format json | $WRANGLER secret bulk --config "$CONFIG"
+          fi
       - name: Deploy
         if: steps.tip.outputs.deploy == 'true'
         env:
