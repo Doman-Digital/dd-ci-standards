@@ -180,12 +180,34 @@ has to pass a policy check to merge, not get caught in the next audit.
   shouldn't be swapped blind without a run to verify the migration). Adopt
   one repo at a time, confirming each with a green run on the repo's runner.
 
-- **`.github/workflows/post-deploy-checks.yml`**: reusable workflow (DD
+- **`.github/actions/post-deploy-checks`**: use this composite step after
+  deployment in the same job. It requests DD Checks without another runner
+  boot or queue wait (DOM-776 audit pattern 10, CI-021):
+
+  ```yaml
+  - name: Request post-deploy checks
+    uses: Doman-Digital/dd-ci-standards/.github/actions/post-deploy-checks@v1
+    with:
+      client: rmp-electrical
+      delay_seconds: "30"
+    env:
+      ADMIN_RUN_TOKEN: ${{ secrets.ADMIN_RUN_TOKEN }}
+  ```
+
+  Inputs are the client slug, optional check id and a delay from 0 to 120
+  seconds. The runner needs Bash, curl and jq. Pass the optional token only
+  through the step environment. A missing token, refused request, invalid
+  response or failing check warns without failing the deployment. The token
+  goes to curl on stdin; raw response and error bodies aren't printed.
+  Existing client sign-off rules still apply.
+
+- **`.github/workflows/post-deploy-checks.yml`**: legacy reusable workflow (DD
   Checks C29). After a successful production deploy it calls `POST /run` on
   `checks.domandigital.co.uk`, so the client's `http`, `domain`, `form` and
   `browser` checks run now rather than at their next slot (Schedule A s.2,
   "after any platform change"), and it lists each check with its dashboard
-  link in the job summary. Call it as the job after the deploy:
+  link in the job summary. Its interface remains available for existing callers;
+  migrate to the composite above to avoid the additional runner. Legacy call:
 
   ```yaml
   checks:
@@ -355,3 +377,17 @@ New rules, warning until 31 December 2026: CI-001, CI-008, SEC-001,
 SEC-002, SEC-003, SEC-005, SEC-006, REG-003. SEC-004 (a tracked file of
 secrets) enforces from 18 October 2026. CI-002 (self-hosted runners in a public repo)
 fails from the start.
+
+DOM-776 follow-up rules CI-021 and SEC-008 warn from 15 October 2026 and
+are enforced from 15 November. CI-021 finds the legacy post-deploy workflow
+at job level; SEC-008 finds a workflow without a top-level permissions
+block. These are structural checks, not a full assessment of the granted
+permissions. Existing rule semantics and dates are unchanged.
+
+The policy checkout keeps full commit history with `filter: blob:none`.
+Private historical blobs fetched by the secret scan use the existing job
+token through process-scoped Git configuration. Credentials are neither
+persisted in the checkout nor passed in process arguments. The regression
+uses a real filtered local repository and protected HTTP endpoint, with an
+unauthenticated negative control. Composite tests execute its actual script
+against a local command stub; they never contact DD Checks or deploy.

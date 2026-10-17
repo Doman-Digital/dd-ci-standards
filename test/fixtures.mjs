@@ -127,6 +127,14 @@ export const FIXTURES = {
     fail: { workflows: [{ path: ".github/workflows/ci-standards-policy.yml", text: "jobs:\n  p:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1.0.22\n" }], vercel: [], files: { "renovate.json": '{ "extends": ["github>Doman-Digital/dd-ci-standards//default.json#v1.0.13"] }' } },
     pass: { workflows: [{ path: ".github/workflows/ci-standards-policy.yml", text: "jobs:\n  p:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1\n" }], vercel: [], files: { "renovate.json": '{ "extends": ["github>Doman-Digital/dd-ci-standards//default.json#v1"] }' } },
   },
+  "CI-021": {
+    fail: wf("on: [push]\njobs:\n  checks:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/post-deploy-checks.yml@v1\n"),
+    pass: wf("on: [push]\njobs:\n  deploy:\n    steps:\n      - uses: Doman-Digital/dd-ci-standards/.github/actions/post-deploy-checks@v1\n"),
+  },
+  "SEC-008": {
+    fail: wf("on: [pull_request]\njobs: {}\n"),
+    pass: wf("on: [pull_request]\npermissions: {}\njobs: {}\n"),
+  },
   "SEC-001": {
     fail: wf("jobs:\n  a:\n    steps:\n      - uses: tj-actions/changed-files@v45\n"),
     pass: wf("jobs:\n  a:\n    steps:\n      - uses: tj-actions/changed-files@48d8f15b2aaa3d255ca5af3eba4870f807ce6b3c # v45\n      - uses: Doman-Digital/dd-ci-standards/doctor@v1\n      - uses: ./.github/actions/setup\n"),
