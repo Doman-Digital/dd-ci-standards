@@ -258,6 +258,14 @@ has to pass a policy check to merge, not get caught in the next audit.
         pre-deploy: node scripts/check-migrations.mjs   # optional
   ```
 
+  Runtime secret sync can opt into `sync-secrets-filter`, a repository Node
+  script receiving Doppler JSON on stdin and emitting a filtered JSON object.
+  Use it to keep CLI credentials, metadata and unused provider keys out of a
+  Worker's binding budget. It must validate the complete input before writing
+  output and keep values out of diagnostics. An empty input preserves the
+  existing unfiltered sync. Both paths retain pipefail and the existing tip,
+  CI and migration gates. Filtering does not remove existing Worker secrets.
+
   Setting up a repo for it, once: a deploy token in Doppler
   `dd-deploy/<config>` as `CLOUDFLARE_DEPLOY_VALUE` (Workers Scripts edit
   on that one account, with an expiry date; add Workers Routes edit on the
