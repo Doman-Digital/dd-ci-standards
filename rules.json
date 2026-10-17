@@ -201,7 +201,7 @@
     {
       "id": "SEC-004",
       "title": "A file of secrets is tracked by git",
-      "why": "4 October 2026: a Vercel env pull with 66 production values sat on a client repo's main branch for six months. The CI secret scan only read each push's own commits, so nothing ever looked at it.",
+      "why": "4 October 2026: a pulled env file with 66 production values sat on a client repo's main branch for six months. The CI secret scan only read each push's own commits, so nothing ever looked at it.",
       "applies": "all",
       "warn_from": "2026-10-04",
       "enforce_from": "2026-10-18"
@@ -209,7 +209,7 @@
     {
       "id": "SEC-005",
       "title": ".gitignore does not cover env and token files",
-      "why": "4 October 2026: 12 repos had no .env rule and most client repos did not ignore .doppler-token, while dd-bot push --all stages everything.",
+      "why": "4 October 2026: 12 repos had no .env rule and most client repos did not ignore .doppler-token, while a bulk `git add` stages everything.",
       "applies": "all",
       "warn_from": "2026-10-04",
       "enforce_from": "2026-12-31"
