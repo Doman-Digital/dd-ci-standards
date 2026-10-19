@@ -95,9 +95,9 @@ repos:
   dd-ci-standards:
     github_actions_crons:
       - workflow: renovate.yml
-        cron: "17 4 * * 1"
+        cron: "17 4 * * *"
         owner: "DD Framework"
-        reason: "weekly self-hosted Renovate across the portfolio. Unregistered until 2026-10-03: the old cron check read only the first cron line and missed it"
+        reason: "daily self-hosted Renovate across the portfolio, so house packages (@domandigital/*) land within a day; other updates still wait for Monday (DOM-1043). Public repo, so hosted minutes are free. Unregistered until 2026-10-03: the old cron check read only the first cron line and missed it"
     vercel_crons: []
 
   chair-and-blade:
