@@ -301,6 +301,24 @@ has to pass a policy check to merge, not get caught in the next audit.
   the wait protects against someone else's release, and `@v1` stays a tag
   on purpose (see Versioning).
 
+  House packages (`@domandigital/*`) are the other exception: their own
+  "house packages" group, at any time, `rangeStrategy: "bump"`, automerged
+  once CI is green. `renovate.yml` runs every day for them; everything else
+  still waits for Monday. Automerge waits for the repo's checks: the preset no
+  longer sets `requiredStatusChecks: null`, which Renovate reads as
+  `ignoreTests: true`, merge without waiting. Renovate's own commit statuses
+  are off (`statusCheckNames`), because the App that runs it can read statuses
+  but not write them, and the 403 aborted every repo (DOM-1043).
+
+  A repo that falls behind anyway fails PKG-001: `dd doctor` reads the craft
+  versions the lockfile resolves for the repo's own packages, reads the
+  catalogue each release carries from its npm tarball (cached by version),
+  and compares it with `floors.json`, the oldest catalogue copy-check trusts.
+  claude-kit's `tools/copy_check.py` holds the same number; it is private and
+  the policy check runs on each caller's token, so the doctor's copy is here.
+  Raise both together. Where a claude-kit checkout is present, `dd doctor`
+  says when they differ.
+
 ## Repo description and tags
 
 Every repo must be identifiable from its GitHub page alone. `repo-topics.json` sets the rule:

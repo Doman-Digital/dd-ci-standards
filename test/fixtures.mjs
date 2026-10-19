@@ -123,6 +123,13 @@ export const FIXTURES = {
     fail: { workflows: [{ path: ".github/workflows/deploy.yml", text: "on:\n  push:\n    branches: [main]\njobs:\n  d:\n    steps:\n      - run: npx wrangler deploy\n" }], vercel: [], files: {}, wrangler: [{ path: "wrangler.jsonc", name: "demo-site" }, { path: "worker/wrangler.toml", name: "demo-cron" }] },
     pass: { workflows: [{ path: ".github/workflows/ci.yml", text: "on:\n  pull_request:\njobs:\n  b:\n    steps:\n      - run: npx wrangler deploy --dry-run\n" }], vercel: [], files: {}, wrangler: [{ path: "wrangler.jsonc", name: "demo-site" }] },
   },
+  "PKG-001": {
+    // The catalogue comes in the context (lib/craft.mjs reads npm before the rules run).
+    fail: view({}),
+    pass: view({}),
+    ctx: { craft: { floor: "2026.10.3", versions: [{ version: "0.20.2", catalogue: "2026.10.2", lockfile: "pnpm-lock.yaml", importer: "apps/portal" }, { version: "0.5.0", catalogue: "none", lockfile: "pnpm-lock.yaml", importer: "packages/ui" }] } },
+    passCtx: { craft: { floor: "2026.10.3", versions: [{ version: "0.20.5", catalogue: "2026.10.3", lockfile: "pnpm-lock.yaml", importer: "." }] } },
+  },
   "FW-003": {
     fail: { workflows: [{ path: ".github/workflows/ci-standards-policy.yml", text: "jobs:\n  p:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1.0.22\n" }], vercel: [], files: { "renovate.json": '{ "extends": ["github>Doman-Digital/dd-ci-standards//default.json#v1.0.13"] }' } },
     pass: { workflows: [{ path: ".github/workflows/ci-standards-policy.yml", text: "jobs:\n  p:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1\n" }], vercel: [], files: { "renovate.json": '{ "extends": ["github>Doman-Digital/dd-ci-standards//default.json#v1"] }' } },

@@ -231,6 +231,14 @@
       "enforce_from": "2026-12-31"
     },
     {
+      "id": "PKG-001",
+      "title": "The repo runs a craft catalogue older than copy-check trusts",
+      "why": "19 October 2026: copy-check passed a client email full of chatbot residue because the machine ran craft catalogue 2026.09.12. Repos were worse: their lockfiles held craft 0.5.0 to 0.20.2 (catalogues none to 2026.10.2) while npm had 0.20.5, because Renovate aborted every repo before opening a PR (DOM-1043). The floor is floors.json, the same number copy-check refuses below. Renovate's house packages group bumps craft within a day of a release; a repo still behind fails here rather than checking copy with old rules.",
+      "applies": "all",
+      "warn_from": "2026-10-19",
+      "enforce_from": "2026-10-26"
+    },
+    {
       "id": "REG-002",
       "title": "The repo's description or tags break repo-topics.json",
       "why": "Every repo must be identifiable from its GitHub page alone, and its kind tag decides which rules apply (was the repo metadata check, enforced since September 2026).",
