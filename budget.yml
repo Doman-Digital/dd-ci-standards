@@ -64,6 +64,11 @@ repos:
       - workflow: security-rotation-reminder.yml
         cron: "13 9 1 1,4,7,10 *"
         reason: "quarterly secret-rotation-due check, 5min cap, off the hour"
+      # DOM-847 (Doman-Digital #1159): the first three days of the quarter, so a
+      # dropped run is caught; the entry above goes when #1159 merges.
+      - workflow: security-rotation-reminder.yml
+        cron: "13 9 1-3 1,4,7,10 *"
+        reason: "quarterly secret-rotation-due check on days 1-3, skips when a reminder is already open, 5min cap, off the hour"
     vercel_crons:
       - app: apps/marketing
         path: /api/cron/churn-followup
@@ -95,9 +100,9 @@ repos:
   dd-ci-standards:
     github_actions_crons:
       - workflow: renovate.yml
-        cron: "17 4 * * 1"
+        cron: "17 4 * * *"
         owner: "DD Framework"
-        reason: "weekly self-hosted Renovate across the portfolio. Unregistered until 2026-10-03: the old cron check read only the first cron line and missed it"
+        reason: "daily self-hosted Renovate across the portfolio, so house packages (@domandigital/*) land within a day; other updates still wait for Monday (DOM-1043). Public repo, so hosted minutes are free. Unregistered until 2026-10-03: the old cron check read only the first cron line and missed it"
     vercel_crons: []
 
   chair-and-blade:

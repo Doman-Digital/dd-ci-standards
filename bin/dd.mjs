@@ -29,6 +29,7 @@ import { dirname, join, resolve, basename } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { loadFsView } from "../lib/view.mjs";
 import { budgetForRepo } from "../lib/budget.mjs";
+import { craftContext, craftFloor } from "../lib/craft.mjs";
 import { runDoctor, levelOn } from "../lib/engine.mjs";
 import { planAdopt } from "../lib/adopt.mjs";
 import { planNew, addToRegistry, cleanVerdict, ruleset, PR_BODY, REGISTRY_REPO, POLICY_CHECK } from "../lib/new.mjs";
@@ -120,9 +121,29 @@ async function context(args) {
   return { dir, repo, ctx: { today, kind, visibility, repo, repoName, budget, meta, taxonomy } };
 }
 
+/**
+ * The copy-check floor lives here (floors.json) because claude-kit is private.
+ * Where a claude-kit checkout is at hand, say when its number differs.
+ */
+function floorDrift(floorsText) {
+  const kit = process.env.DD_CLAUDE_KIT || join(process.env.HOME || "", "dd-claude-kit");
+  try {
+    const m = /^MIN_CATALOGUE = "([^"]+)"/m.exec(readFileSync(join(kit, "tools", "copy_check.py"), "utf8"));
+    const ours = craftFloor(floorsText).minCatalogue;
+    if (m && m[1] !== ours) return [`floors.json says craft catalogue ${ours}, ${kit}/tools/copy_check.py says ${m[1]}. Make them the same.`];
+  } catch {
+    // No claude-kit here (CI, another machine): nothing to compare.
+  }
+  return [];
+}
+
 async function doctor(args) {
   const { dir, repo, ctx } = await context(args);
-  const result = runDoctor(loadFsView(dir), rulebook, ctx);
+  const view = loadFsView(dir);
+  const floors = readFileSync(join(HOME, "floors.json"), "utf8");
+  ctx.craft = await craftContext(view, floors);
+  ctx.craftNotes = floorDrift(floors);
+  const result = runDoctor(view, rulebook, ctx);
   console.log(format(result, opt(args, "--format") || "text", repo));
   return result.findings.some((f) => f.level === "enforce") ? 1 : 0;
 }

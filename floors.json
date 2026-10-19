@@ -1,0 +1,7 @@
+{
+  "@domandigital/craft": {
+    "minCatalogue": "2026.10.3",
+    "source": "MIN_CATALOGUE in Doman-Digital/dd-claude-kit tools/copy_check.py, the oldest catalogue copy-check trusts. That repo is private and the policy check runs on each caller's own token, so the number the doctor reads lives here, in public. Raise both together until copy_check.py reads this file (DOM-1043).",
+    "why": "19 October 2026: a machine on catalogue 2026.09.12 called a client email full of chatbot residue clean. 2026.10.3 (craft 0.20.5) catches residue mid-paragraph and the stock email opener (DOM-1016)."
+  }
+}

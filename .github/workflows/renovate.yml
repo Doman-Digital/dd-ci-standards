@@ -26,12 +26,15 @@ name: Renovate (self-hosted)
 
 on:
   schedule:
-    # Mondays. Off the top of the hour, where GitHub delays scheduled runs
-    # most: the 05:00 run started between 09:58 and 11:29 UTC from 7 to 28
-    # September 2026, outside the old "before 6am on monday" window in
-    # default.json, so Renovate opened no routine update anywhere for a month.
-    # default.json now says "on monday".
-    - cron: "17 4 * * 1"
+    # Every day, so a house package (@domandigital/*, craft above all) reaches
+    # every repo within a day of its release; default.json's "house packages"
+    # rule runs "at any time" while every other update still waits for its
+    # Monday window, so the other six runs a week open nothing else (DOM-1043).
+    # Off the top of the hour, where GitHub delays scheduled runs most: the
+    # 05:00 run started between 09:58 and 11:29 UTC from 7 to 28 September
+    # 2026, outside the old "before 6am on monday" window, so Renovate opened
+    # no routine update anywhere for a month. default.json says "on monday".
+    - cron: "17 4 * * *"
   workflow_dispatch:
     inputs:
       dryRun:
@@ -77,6 +80,11 @@ jobs:
       # token can't be tested before the next Monday run
       # and a wrong scope fails silently, so it stays as-is until a dry run
       # (workflow_dispatch, dryRun: true) proves a narrower one.
+      # The App has statuses: read, not write. Renovate's own commit statuses
+      # (renovate/stability-days and the rest) got a 403 and Renovate aborted
+      # the repo before any PR or dashboard: 20 of 22 Doman-Digital repos, and
+      # every other owner, from 28 Sep to 19 Oct 2026. default.json turns those
+      # statuses off (statusCheckNames); they gate nothing (DOM-1043, DOM-454).
       - name: Mint token for ${{ matrix.owner }}
         id: app-token
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0 # zizmor: ignore[github-app]
@@ -99,8 +107,22 @@ jobs:
       # resolves the pnpm version from *that* directory's own package.json
       # packageManager field -- exactly what's needed across repos pinned to
       # different pnpm majors (9.x here, 10.x there).
+      # Renovate 43 and later need Node 24. On the runner's default Node 22,
+      # `npx renovate` quietly installed 42.99.0, the last release that still
+      # accepted it, and npm warned it was unsupported (19 Oct 2026).
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+
       - name: Enable Corepack (pnpm via each repo's own packageManager field)
         run: corepack enable
+
+      # The same reasoning for Python repos: dd-photo-pack locks with uv, and
+      # Renovate shells out to `uv lock --upgrade-package` for its update
+      # branch. Without uv the branch fails with `spawn uv ENOENT` and the run
+      # goes red every Monday (19 Oct 2026, DOM-847).
+      - name: Install uv (Python lockfile updates)
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
 
       # Autodiscover is safe now where it was not on 2026-08-17: with
       # requireConfig "required" and onboarding off, a repo with no Renovate
@@ -115,4 +137,6 @@ jobs:
           RENOVATE_ONBOARDING: "false"
           RENOVATE_DRY_RUN: ${{ (github.event_name == 'workflow_dispatch' && inputs.dryRun) && 'full' || 'null' }}
           LOG_LEVEL: debug
-        run: npx --yes renovate
+        # The major is named so a new one is a reviewed change, not a surprise
+        # on a Monday; minors and patches arrive by themselves.
+        run: npx --yes renovate@44

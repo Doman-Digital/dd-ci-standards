@@ -7,7 +7,12 @@
   "prHourlyLimit": 2,
   "minimumReleaseAge": "3 days",
   "dependencyDashboard": true,
-  "requiredStatusChecks": null,
+  "statusCheckNames": {
+    "artifactError": null,
+    "configValidation": null,
+    "mergeConfidence": null,
+    "minimumReleaseAge": null
+  },
   "labels": ["dependencies"],
   "lockFileMaintenance": {
     "enabled": true,
@@ -48,6 +53,18 @@
       "matchPackageNames": ["Doman-Digital/**", "dmitridoman/**", "@domandigital/**"],
       "minimumReleaseAge": null,
       "pinDigests": false
+    },
+    {
+      "description": "House packages (@domandigital/*, craft above all) as soon as they are published, in their own group, merged once CI is green. They used to sit in the Monday group with 70 third-party packages, not automerged, so the Doman-Digital monorepo stayed on craft 0.5.0 while npm had 0.20.5 and copy-check ran old rules (DOM-1043). Last among the grouping rules so it wins; the rule above already skips the release-age wait for our own packages. No hourly or concurrent cap: on the first run sen-sphere's house PR was skipped because security PRs had used the hour's two, and a house release is one PR a repo",
+      "matchPackageNames": ["@domandigital/**"],
+      "groupName": "house packages",
+      "schedule": ["at any time"],
+      "rangeStrategy": "bump",
+      "automerge": true,
+      "platformAutomerge": true,
+      "prPriority": 10,
+      "prHourlyLimit": 0,
+      "prConcurrentLimit": 0
     },
     {
       "description": "Never update dd-ci-standards itself. Callers use @v1 (and #v1 for this preset), which moves with every release; Renovate rewrote it to fixed releases (v1.0.13, v1.0.22), and a pinned caller stops getting new rules (FW-003, 13 October 2026)",
