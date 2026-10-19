@@ -4,7 +4,8 @@
 //   dd doctor [dir]   what is missing in this repo, against rules.json
 //   dd rules          the rulebook, with each rule's level today
 //   dd adopt [dir]    bring a repo up to the rules: owned files written,
-//                     existing findings recorded as 60-day exemptions (lib/adopt.mjs)
+//                     existing findings recorded as 60-day exemptions (lib/adopt.mjs);
+//                     --only CI-022 writes that rule's fix and nothing else
 //   dd new --kind <kind> <name> --description "<text>"
 //                     a repo that starts compliant: create-next-app, create-site,
 //                     dd adopt, dd doctor clean, then the GitHub repo and a
@@ -154,7 +155,13 @@ async function adopt(args) {
     console.error("dd adopt: the repo's kind is unknown. Tag the repo on GitHub (repo-topics.json) or pass --kind.");
     return 2;
   }
-  const { writes, summary, before, after } = planAdopt(loadFsView(dir), rulebook, ctx);
+  const only = opt(args, "--only")?.split(",").map((s) => s.trim()).filter(Boolean);
+  const unknown = (only || []).filter((id) => !rulebook.rules.some((r) => r.id === id));
+  if (unknown.length) {
+    console.error(`dd adopt: --only names rules that do not exist: ${unknown.join(", ")}`);
+    return 2;
+  }
+  const { writes, summary, before, after } = planAdopt(loadFsView(dir), rulebook, ctx, { only });
   const count = (r, l) => r.findings.filter((f) => f.level === l).length;
   console.log(`dd adopt${repo ? ` (${repo})` : ""}: before, ${count(before, "enforce")} failing and ${count(before, "warn")} warning.`);
   if (!summary.length) console.log("  nothing to change.");
@@ -381,7 +388,7 @@ export async function main(argv) {
   if (cmd === "adopt") return adopt(args);
   if (cmd === "new") return newRepo(args);
   console.error(`usage: dd doctor [dir] [--kind k] [--visibility private|public] [--today YYYY-MM-DD] [--format text|github|json]
-       dd adopt [dir] [--kind k] [--dry-run]
+       dd adopt [dir] [--kind k] [--only RULE,...] [--dry-run]
        dd new --kind <kind> <name> --description "<text>" [--visibility private|public] [--framework next|astro]
               [--answers <file> | --client <name> --site-url <url> --sector <sector>] [--dir <path>]
               [--create-site <create-site cli.js>] [--local] [--dry-run]

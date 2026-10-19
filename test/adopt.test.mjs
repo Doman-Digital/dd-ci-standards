@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { planAdopt, POLICY_CALLER } from "../lib/adopt.mjs";
 import { runDoctor } from "../lib/engine.mjs";
+import { IGNORE_BLOCK } from "../lib/rules.mjs";
 
 const rulebook = JSON.parse(readFileSync(new URL("../rules.json", import.meta.url), "utf8"));
 const taxonomy = JSON.parse(readFileSync(new URL("../repo-topics.json", import.meta.url), "utf8"));
@@ -48,4 +49,65 @@ test("adopt is idempotent: a second run changes nothing", () => {
     files: { ...messy.files, "renovate.json": writes["renovate.json"], ".github/dd.json": writes[".github/dd.json"], ".gitignore": writes[".gitignore"] },
   };
   assert.deepEqual(planAdopt(adopted, rulebook, ctx).writes, {});
+});
+
+const LIGHT = "${{ vars.CI_RUNNER_LIGHT || vars.CI_RUNNER || 'ubuntu-latest' }}";
+const STANDARD = "${{ vars.CI_RUNNER || 'ubuntu-latest' }}";
+const pools = {
+  workflows: [{
+    path: ".github/workflows/ci.yml",
+    text: `name: CI
+on:
+  pull_request:
+concurrency:
+  group: g
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  changes:
+    runs-on: ${STANDARD} # the pool
+    timeout-minutes: 2
+    steps:
+      - run: echo
+  lint:
+    runs-on:
+      - self-hosted
+      - dd-ci-ephemeral
+    timeout-minutes: 4
+    steps:
+      - run: echo
+  build:
+    runs-on: dd-ci-light
+    timeout-minutes: 20
+    steps:
+      - run: echo
+  gate:
+    runs-on: ${LIGHT}
+    timeout-minutes: 5
+    steps:
+      - run: echo
+`,
+  }, { path: ".github/workflows/ci-standards-policy.yml", text: POLICY_CALLER }],
+  vercel: [],
+  files: { "renovate.json": '{ "extends": ["github>Doman-Digital/dd-ci-standards//default.json#v1"] }', ".gitignore": IGNORE_BLOCK },
+};
+
+test("adopt moves each job to the pool its timeout gives it (CI-022), keeping comments", () => {
+  const { writes, after } = planAdopt(pools, rulebook, ctx);
+  const text = writes[".github/workflows/ci.yml"];
+  assert.match(text, /changes:\n    runs-on: \$\{\{ vars\.CI_RUNNER_LIGHT \|\| vars\.CI_RUNNER \|\| 'ubuntu-latest' \}\} # the pool\n    timeout-minutes: 2/);
+  assert.match(text, /lint:\n    runs-on: \$\{\{ vars\.CI_RUNNER_LIGHT[^\n]*\n    timeout-minutes: 4/);
+  assert.match(text, /build:\n    runs-on: \$\{\{ vars\.CI_RUNNER \|\| 'ubuntu-latest' \}\}\n    timeout-minutes: 20/);
+  assert.doesNotMatch(text, /self-hosted|dd-ci-ephemeral/);
+  assert.ok(!after.findings.some((f) => f.rule === "CI-022"));
+  assert.ok(!after.exempted.some((f) => f.rule === "CI-022"), "fixed, not baselined");
+});
+
+test("adopt --only writes that rule's fix and nothing else, and a second run changes nothing", () => {
+  const debt = { ...pools, workflows: pools.workflows.map((w) => (w.path.endsWith("ci.yml") ? { ...w, text: w.text.replace("    timeout-minutes: 20\n", "") } : w)) };
+  const { writes } = planAdopt(debt, rulebook, ctx, { only: ["CI-022"] });
+  assert.deepEqual(Object.keys(writes), [".github/workflows/ci.yml"], "no dd.json baseline for the CI-003 debt");
+  const again = { ...debt, workflows: debt.workflows.map((w) => (writes[w.path] ? { ...w, text: writes[w.path] } : w)) };
+  assert.deepEqual(planAdopt(again, rulebook, ctx, { only: ["CI-022"] }).writes, {});
 });

@@ -45,9 +45,36 @@ same way in three places.
 - records everything else the doctor finds in `.github/dd.json` as
   exemptions that expire in 60 days.
 
+It also rewrites the lines the rulebook decides: each job's `runs-on`
+(CI-022, below).
+
 So the adopting PR is green on arrival, and every piece of existing debt has
 a line in the repo and a date. When the date passes the finding fails again.
-A second run changes nothing. `--dry-run` prints the plan.
+A second run changes nothing. `--dry-run` prints the plan. `--only CI-022`
+writes that rule's fix and nothing else, for a repo that adopted before the
+rule existed.
+
+### Runner pools
+
+Which runner a job uses is decided here, never in the repo (CI-022,
+DOM-834). dd-ci-01 has two pools: the standard one (`vars.CI_RUNNER`,
+4 vCPU) and the light one (`vars.CI_RUNNER_LIGHT`, `dd-ci-light`, 2 vCPU and
+3 GiB). A job's own `timeout-minutes` places it:
+
+| The job | runs-on |
+| --- | --- |
+| `timeout-minutes` of 5 or less | `${{ vars.CI_RUNNER_LIGHT \|\| vars.CI_RUNNER \|\| 'ubuntu-latest' }}` |
+| a longer timeout, one set by an expression, or `services:` / `container:` | `${{ vars.CI_RUNNER \|\| 'ubuntu-latest' }}` |
+
+The 5 is `LIGHT_MAX_TIMEOUT` in `lib/rules.mjs`. Measured over the 7 days
+to 19 October 2026, the jobs it moves finish in a median of under a
+minute (the monorepo's `changes` 0.65 minutes over 204 runs, its gate 0.17).
+A job that runs out of time on the light pool had the wrong timeout: raise
+it and the rule moves the job back. Both expressions fall back to the pool
+the job used before when a variable is unset, and both variables are
+private to the organisation's private repos, so a public repo never reaches
+either (CI-002 still fails it). `dd adopt` rewrites `runs-on`; nothing else
+in the job changes.
 ### Making a repo
 
 ```sh
@@ -409,6 +436,11 @@ are enforced from 15 November. CI-021 finds the legacy post-deploy workflow
 at job level; SEC-008 finds a workflow without a top-level permissions
 block. These are structural checks, not a full assessment of the granted
 permissions. Existing rule semantics and dates are unchanged.
+
+DOM-834 rule CI-022 warns from 20 October 2026 and is enforced from 20
+November: a job runs on the runner pool its timeout gives it (Runner pools,
+above). `dd adopt` writes the fix; `dd adopt --only <rules>` writes only
+those rules' fixes.
 
 The policy checkout keeps full commit history with `filter: blob:none`.
 Private historical blobs fetched by the secret scan use the existing job
