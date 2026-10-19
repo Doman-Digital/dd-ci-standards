@@ -184,6 +184,22 @@
       "enforce_from": "2026-11-20"
     },
     {
+      "id": "CI-023",
+      "title": "A workflow still uses Vercel",
+      "why": "Vercel was retired for CI and deploys (DOM-555, DOM-776). On 19 October 2026 its leftovers were still in five repos: six VERCEL_TOKEN_* inputs in dd-repo-registry's sweep, a kv.vercel-storage placeholder in the monorepo's lighthouse.yml, and comments in Tardi, sen-sphere and verqan-api describing Vercel building main. A workflow that names Vercel either does nothing or depends on an account nobody watches. A portal still served by Vercel records it as an exemption.",
+      "applies": "full",
+      "warn_from": "2026-10-20",
+      "enforce_from": "2026-10-27"
+    },
+    {
+      "id": "CI-024",
+      "title": "A workflow names one of the old persistent runners",
+      "why": "The eight persistent runners on dd-ci-01 (dd-ci-01-a to dd-ci-01-h) were replaced by a fresh VM per job (DOM-555). On 19 October 2026 beautyops and the monorepo's lighthouse.yml still branched on their names, so the branch never ran and the comment beside it described a machine that is gone. CI-016 catches the workarounds by shape; this catches the names.",
+      "applies": "full",
+      "warn_from": "2026-10-20",
+      "enforce_from": "2026-10-27"
+    },
+    {
       "id": "SEC-001",
       "title": "A third-party action is not pinned to a full commit SHA",
       "why": "tj-actions/changed-files, March 2025: a re-pointed tag ran code that dumped CI secrets. GitHub: a full SHA is the only immutable reference. First-party Doman-Digital actions stay on tags.",
@@ -304,6 +320,14 @@
       "applies": "all",
       "warn_from": "2026-10-14",
       "enforce_from": "2026-11-14"
+    },
+    {
+      "id": "FW-004",
+      "title": "A shared workflow or action is pinned to a branch",
+      "why": "19 October 2026 (DOM-776): dd-photo-pack called the policy workflow at @dom-776-ci-deploy-standards, a working branch. A branch moves without a release and vanishes when it is merged and deleted, and then every run of the caller fails. Pin a house workflow or action to a major tag (@v1), a release or a full commit SHA.",
+      "applies": "all",
+      "warn_from": "2026-10-20",
+      "enforce_from": "2026-10-27"
     }
   ]
 }
