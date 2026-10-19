@@ -228,3 +228,44 @@ test("SEC-008 requires workflow-level permissions, accepting empty and block map
   assert.deepEqual(run("permissions: {}\njobs: {}\n"), []);
   assert.deepEqual(run("permissions:\n  contents: read\njobs: {}\n"), []);
 });
+
+test("CI-022 puts a job on a pool from its own timeout, and names the expression to use", () => {
+  const job = (runsOn, extra = "    timeout-minutes: 5\n") => ({ workflows: [{ path: ".github/workflows/ci.yml", text: `on:\n  pull_request:\njobs:\n  a:\n    runs-on: ${runsOn}\n${extra}    steps:\n      - run: x\n        timeout-minutes: 1\n` }], vercel: [], files: {} });
+  const ci022 = (v, over = {}) => runDoctor(v, rulebook, { ...base, ...over }).findings.filter((f) => f.rule === "CI-022");
+  const LIGHT = "${{ vars.CI_RUNNER_LIGHT || vars.CI_RUNNER || 'ubuntu-latest' }}";
+  const STANDARD = "${{ vars.CI_RUNNER || 'ubuntu-latest' }}";
+  // 5 minutes or less: light, from any pool the organisation runs, hosted or self-hosted.
+  for (const from of [STANDARD, "ubuntu-latest", "dd-ci-ephemeral", "dd-ci-light", "${{ vars.CI_RUNNER_LIGHT || 'ubuntu-latest' }}"]) {
+    const f = ci022(job(from));
+    assert.equal(f.length, 1, from);
+    assert.equal(f[0].runsOn, LIGHT);
+  }
+  // Quote style and spacing do not matter.
+  assert.equal(ci022(job('${{vars.CI_RUNNER_LIGHT||vars.CI_RUNNER||"ubuntu-latest"}}')).length, 0);
+  // A step's timeout is not the job's: no job timeout, or one from an expression, is standard.
+  for (const extra of ["", "    timeout-minutes: ${{ github.ref_name == 'main' && 45 || 15 }}\n", "    timeout-minutes: 6\n"]) {
+    assert.equal(ci022(job(STANDARD, extra)).length, 0);
+    const f = ci022(job(LIGHT, extra));
+    assert.equal(f.length, 1);
+    assert.equal(f[0].runsOn, STANDARD);
+  }
+  // An expression the rulebook did not write is left alone.
+  assert.equal(ci022(job("${{ matrix.os }}")).length, 0);
+  // Not the organisation's runners: another owner's repo, or a reusable workflow's jobs.
+  assert.equal(ci022(job(STANDARD), { meta: { owner: { login: "redacted" } } }).length, 0);
+  const reusable = job(STANDARD);
+  reusable.workflows[0].text = reusable.workflows[0].text.replace("  pull_request:", "  workflow_call:");
+  assert.equal(ci022(reusable).length, 0);
+});
+
+test("a public repo stays off the light runners: CI-002 catches the light expression, CI-022 does not ask for it", () => {
+  const v = { workflows: [{ path: ".github/workflows/ci.yml", text: "on:\n  pull_request:\njobs:\n  a:\n    runs-on: ${{ vars.CI_RUNNER_LIGHT || vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 2\n    steps:\n      - run: x\n" }], vercel: [], files: {} };
+  const pub = ids(runDoctor(v, rulebook, { ...base, visibility: "public" }));
+  assert.ok(pub.includes("CI-002"));
+  assert.ok(!pub.includes("CI-022"));
+  const hosted = { ...v, workflows: [{ ...v.workflows[0], text: v.workflows[0].text.replace(/runs-on: .*/, "runs-on: dd-ci-light") }] };
+  assert.ok(ids(runDoctor(hosted, rulebook, { ...base, visibility: "public" })).includes("CI-002"));
+  // and in a private repo the light expression satisfies CI-001 as well
+  const priv = ids(runDoctor(v, rulebook, base));
+  assert.ok(!priv.includes("CI-001") && !priv.includes("CI-022"));
+});
