@@ -1,0 +1,22 @@
+name: DD post-deploy checks
+description: Request DD Checks after deployment, within the existing job.
+inputs:
+  client:
+    description: Client registry slug.
+    required: true
+  check:
+    description: Optional check id; empty requests every client check.
+    default: ""
+  delay_seconds:
+    description: Wait for the release to serve, between 0 and 120 seconds.
+    default: "30"
+runs:
+  using: composite
+  steps:
+    - name: Request post-deploy checks
+      shell: bash
+      env:
+        CLIENT: ${{ inputs.client }}
+        CHECK: ${{ inputs.check }}
+        DELAY: ${{ inputs.delay_seconds }}
+      run: bash "$GITHUB_ACTION_PATH/run.sh"
