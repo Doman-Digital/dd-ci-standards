@@ -1,0 +1,19 @@
+name: dd scanners
+description: |
+  Which scanners beyond gitleaks the calling repo runs in the policy check,
+  read from scanners.json at the same release as the workflow. One register
+  for the estate, so no caller carries a scanner switch of its own.
+
+outputs:
+  semgrep:
+    description: "`true` when scanners.json lists the repo for Semgrep."
+    value: ${{ steps.read.outputs.semgrep }}
+
+runs:
+  using: composite
+  steps:
+    - id: read
+      shell: bash
+      env:
+        REPO: ${{ github.repository }}
+      run: node "$GITHUB_ACTION_PATH/read.mjs" "$GITHUB_ACTION_PATH/../scanners.json" "$REPO" >> "$GITHUB_OUTPUT"

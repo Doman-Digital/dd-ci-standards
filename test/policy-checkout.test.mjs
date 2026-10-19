@@ -8,12 +8,12 @@ import { spawn, execFileSync } from "node:child_process";
 import { createServer } from "node:http";
 
 const policy = readFileSync(new URL("../.github/workflows/policy.yml", import.meta.url), "utf8");
-const scan = policy.split("      - name: Scan for secrets\n")[1].split("\n\n      # Was redacted")[0];
+const scan = policy.split("      - name: Scan the commits this pull request adds\n")[1].split("\n\n      # Was redacted")[0];
 const script = scan.split("        run: |\n")[1].split("\n").map((s) => s.replace(/^ {10}/, "")).join("\n");
 
 test("policy checkout retains commit history and uses read-only, non-persistent blob filtering", () => {
   assert.match(policy, /^permissions:\n  contents: read\n/m);
-  assert.match(policy, /fetch-depth: 0\n\s+filter: \$\{\{ \(github.event_name == 'pull_request' \|\| github.event_name == 'push'\) && 'blob:none' \|\| '' \}\}/);
+  assert.match(policy, /fetch-depth: 0\n\s+filter: blob:none/);
   assert.match(policy, /persist-credentials: false/);
   assert.match(scan, /GH_TOKEN: \$\{\{ github.token \}\}/);
   assert.ok(!script.includes("${{"));
@@ -59,7 +59,7 @@ test("filtered private history is fetched with scan-only auth and leaves no cred
     git(["remote", "set-url", "origin", `${origin}/repo.git`], checkout);
     writeFileSync(join(tools, "gitleaks"), '#!/bin/sh\ngit log --format= --patch "$BASE_SHA..$HEAD_SHA" > "$SCAN_CAPTURE"\n', { mode: 0o755 });
     const file = join(dir, "scan.sh"); writeFileSync(file, script);
-    const env = { ...process.env, PATH: `${tools}:${process.env.PATH}`, GH_TOKEN: fixtureToken, EVENT_NAME: "pull_request", BASE_SHA: base, HEAD_SHA: head, GITHUB_SERVER_URL: origin, GIT_TERMINAL_PROMPT: "0", SCAN_CAPTURE: join(dir, "patch") };
+    const env = { ...process.env, PATH: `${tools}:${process.env.PATH}`, GH_TOKEN: fixtureToken, BASE_SHA: base, HEAD_SHA: head, GITHUB_SERVER_URL: origin, GIT_TERMINAL_PROMPT: "0", SCAN_CAPTURE: join(dir, "patch") };
     const noAuth = await run("git", ["log", "--format=", "--patch", `${base}..${head}`], { cwd: checkout, env });
     assert.notEqual(noAuth.code, 0); assert.ok(denied > 0, "negative control must reach the protected HTTP endpoint");
     const result = await run("bash", [file], { cwd: checkout, env });
@@ -74,40 +74,16 @@ test("filtered private history is fetched with scan-only auth and leaves no cred
   } finally { await new Promise((resolve) => server.listening ? server.close(resolve) : resolve()); rmSync(dir, { recursive: true, force: true }); }
 });
 
-// The range each event scans, with gitleaks replaced by a stub that prints
-// the log options it was given.
-const rangeFor = (env, setup) => {
-  const dir = mkdtempSync(join(tmpdir(), "dd-policy-range-"));
-  try {
-    const git = (args) => execFileSync("git", args, { cwd: dir, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
-    git(["init", "-q", "-b", "main"]); git(["config", "user.name", "Fixture"]); git(["config", "user.email", "fixture@example.invalid"]);
-    writeFileSync(join(dir, "a.txt"), "1\n"); git(["add", "."]); git(["commit", "-qm", "one"]);
-    writeFileSync(join(dir, "a.txt"), "2\n"); git(["commit", "-qam", "two"]);
-    const shas = { one: git(["rev-parse", "HEAD~1"]), two: git(["rev-parse", "HEAD"]) };
-    const tools = join(dir, ".bin"); mkdirSync(tools);
-    writeFileSync(join(tools, "gitleaks"), '#!/bin/sh\nfor a in "$@"; do case "$a" in --log-opts=*) echo "${a#--log-opts=}";; esac; done\n', { mode: 0o755 });
-    const file = join(dir, ".scan.sh"); writeFileSync(file, script);
-    const out = execFileSync("bash", [file], { cwd: dir, encoding: "utf8", env: { ...process.env, PATH: `${tools}:${process.env.PATH}`, GH_TOKEN: "x", GITHUB_SERVER_URL: "https://github.com", ...setup(shas), ...env } });
-    return { range: out.trim().split("\n").pop(), shas };
-  } finally { rmSync(dir, { recursive: true, force: true }); }
-};
 
-test("a push scans the pushed commits, and only the pushed commit when before is unknown", () => {
-  const known = rangeFor({ EVENT_NAME: "push" }, (s) => ({ BEFORE_SHA: s.one, AFTER_SHA: s.two }));
-  assert.equal(known.range, `${known.shas.one}..${known.shas.two}`);
-  const created = rangeFor({ EVENT_NAME: "push" }, (s) => ({ BEFORE_SHA: "0".repeat(40), AFTER_SHA: s.two }));
-  assert.equal(created.range, `-1 ${created.shas.two}`);
-  const forced = rangeFor({ EVENT_NAME: "push" }, (s) => ({ BEFORE_SHA: "1".repeat(40), AFTER_SHA: s.two }));
-  assert.equal(forced.range, `-1 ${forced.shas.two}`);
+test("the caller has no switches: the workflow takes only a runner and runs on pull requests", () => {
+  const inputs = policy.split("    inputs:\n")[1].split("\npermissions:")[0];
+  assert.deepEqual([...inputs.matchAll(/^ {6}([a-z_-]+):$/gm)].map((m) => m[1]), ["runner"]);
+  assert.ok(!/secrets:\n\s+SLACK/.test(policy), "no secrets input");
+  assert.ok(!/github\.event\.(before|after)/.test(policy), "no push mode");
 });
 
-test("a scheduled or manual run scans the checked-out branch's history, not every branch", () => {
-  assert.equal(rangeFor({ EVENT_NAME: "schedule" }, () => ({})).range, "HEAD");
-  assert.equal(rangeFor({ EVENT_NAME: "workflow_dispatch" }, () => ({})).range, "HEAD");
-});
-
-test("the doctor and Semgrep run on pull requests only; Semgrep only when asked", () => {
-  assert.match(policy, /- if: github.event_name == 'pull_request'\n\s+uses: Doman-Digital\/dd-ci-standards\/doctor@v1/);
-  assert.match(policy, /if: \$\{\{ !cancelled\(\) && inputs.semgrep && github.event_name == 'pull_request' \}\}/);
+test("Semgrep runs only for a repo scanners.json lists, read before the doctor", () => {
+  assert.match(policy, /- id: scanners\n\s+uses: Doman-Digital\/dd-ci-standards\/scanners@v1\n\n\s+- uses: Doman-Digital\/dd-ci-standards\/doctor@v1/);
+  assert.match(policy, /steps\.scanners\.outputs\.semgrep == 'true' && github\.event_name == 'pull_request'/);
   assert.match(policy, /SEMGREP_IMAGE: semgrep\/semgrep@sha256:[0-9a-f]{64}/);
 });

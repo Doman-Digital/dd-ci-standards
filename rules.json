@@ -120,8 +120,8 @@
     },
     {
       "id": "CI-015",
-      "title": "A repo that calls the policy check runs its own secret scan on every pull request",
-      "why": "13 October 2026 (DOM-776 audit): the monorepo's secret-scan job, redacted' gitleaks.yml, redacted's gitleaks job and redacted's TruffleHog each scanned the same commits as the policy check, a full-history clone and another VM for a one-second scan. The monorepo's alone was about 1,350 VM-minutes a month, on a pool of six VMs.",
+      "title": "A repo that calls the policy check runs a scanner of its own",
+      "why": "13 October 2026 (DOM-776 audit): the monorepo's secret-scan job, redacted' gitleaks.yml, redacted's gitleaks job and redacted's TruffleHog each scanned the same commits as the policy check, a full-history clone and another VM for a one-second scan. The monorepo's alone was about 1,350 VM-minutes a month, on a pool of six VMs. From 20 October (step 5) the estate has one scanner per kind of commit: the policy check for pull requests (gitleaks, plus Semgrep for the repos in scanners.json) and the estate sweep in dd-repo-registry for default branches (new commits daily, all history weekly). Any other scanner workflow, whatever starts it, is a duplicate.",
       "applies": "full",
       "warn_from": "2026-10-14",
       "enforce_from": "2026-11-14"
@@ -198,6 +198,22 @@
       "applies": "full",
       "warn_from": "2026-10-20",
       "enforce_from": "2026-10-27"
+    },
+    {
+      "id": "CI-025",
+      "title": "A monorepo's pull request job runs every workspace",
+      "why": "DOM-776 step 5, 19 October 2026: the monorepo's verify and build ran lint, typecheck, test and build for all ten workspaces on every pull request, 22 of its 32 VM-minutes per run, though most PRs touch one app. dd-ci-standards' workspace-scope action works out the affected workspaces (and runs everything when a shared file changes), so a turbo run on a PR passes its filters.",
+      "applies": "full",
+      "warn_from": "2026-10-20",
+      "enforce_from": "2026-11-20"
+    },
+    {
+      "id": "CI-026",
+      "title": "budget.yml registers a schedule the repo no longer has",
+      "why": "DOM-776 step 5, 19 October 2026: budget.yml still listed seven monorepo crons that #1104 had replaced, and redacted's lighthouse.yml long after the workflow was deleted. CI-007 catches a cron with no line; this catches a line with no cron, so the register stays the truth.",
+      "applies": "all",
+      "warn_from": "2026-10-20",
+      "enforce_from": "2026-11-20"
     },
     {
       "id": "SEC-001",
@@ -303,6 +319,14 @@
       "applies": "all",
       "warn_from": "2026-10-07",
       "enforce_from": "2026-11-06"
+    },
+    {
+      "id": "REG-005",
+      "title": "The ruleset requires a check no workflow produces",
+      "why": "DOM-776 step 5, 19 October 2026: redacted' ruleset required `scan`, the job of gitleaks.yml, which the step was about to delete. A required check that never reports holds every pull request open with no error to read. The estate sweep and the policy check read the default branch's rules and compare them with the jobs the workflows define.",
+      "applies": "all",
+      "warn_from": "2026-10-20",
+      "enforce_from": "2026-10-27"
     },
     {
       "id": "FW-002",

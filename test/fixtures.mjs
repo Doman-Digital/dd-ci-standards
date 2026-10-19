@@ -114,14 +114,16 @@ jobs:
     pass: wf("on:\n  workflow_run:\n    workflows: [CI]\n    types: [completed]\n    branches: [main]\nconcurrency:\n  group: deploy-production\n  cancel-in-progress: false\njobs:\n  deploy:\n    steps:\n      - uses: Doman-Digital/dd-ci-standards/.github/actions/deploy-tip@v1\n        id: tip\n        with:\n          sha: ${{ github.event.workflow_run.head_sha }}\n      - uses: actions/checkout@v4\n        with:\n          ref: ${{ github.event.workflow_run.head_sha }}\n      - run: npx wrangler deploy\n", ".github/workflows/deploy.yml"),
   },
   "CI-015": {
-    // redacted' gitleaks.yml beside the policy caller; a weekly full-history sweep is fine.
+    // redacted's TruffleHog beside the policy caller, on push to main only:
+    // the estate sweep already scans what reaches main.
     fail: { workflows: [
       { path: ".github/workflows/ci-standards-policy.yml", text: "on:\n  pull_request:\njobs:\n  policy:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1\n" },
-      { path: ".github/workflows/gitleaks.yml", text: "on:\n  pull_request:\n  push:\n    branches: [main]\njobs:\n  scan:\n    steps:\n      - uses: gitleaks/gitleaks-action@0000000000000000000000000000000000000000\n" },
+      { path: ".github/workflows/secret-scan.yml", text: "on:\n  push:\n    branches: [main]\njobs:\n  trufflehog:\n    steps:\n      - uses: trufflesecurity/trufflehog@0000000000000000000000000000000000000000\n" },
     ], vercel: [], files: {} },
+    // The policy caller alone; a comment naming gitleaks is not a scanner.
     pass: { workflows: [
-      { path: ".github/workflows/ci-standards-policy.yml", text: "on:\n  pull_request:\njobs:\n  policy:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1\n" },
-      { path: ".github/workflows/gitleaks.yml", text: "on:\n  schedule:\n    - cron: '17 3 * * 1'\njobs:\n  scan:\n    steps:\n      - uses: gitleaks/gitleaks-action@0000000000000000000000000000000000000000\n" },
+      { path: ".github/workflows/ci-standards-policy.yml", text: "# gitleaks runs inside the policy check\non:\n  pull_request:\njobs:\n  policy:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1\n" },
+      { path: ".github/workflows/ci.yml", text: "on:\n  pull_request:\njobs:\n  test:\n    steps:\n      # was: gitleaks detect\n      - run: pnpm test\n" },
     ], vercel: [], files: {} },
   },
   "CI-016": {
@@ -163,6 +165,15 @@ jobs:
     ctx: { craft: { floor: "2026.10.3", versions: [{ version: "0.20.2", catalogue: "2026.10.2", lockfile: "pnpm-lock.yaml", importer: "apps/portal" }, { version: "0.5.0", catalogue: "none", lockfile: "pnpm-lock.yaml", importer: "packages/ui" }] } },
     passCtx: { craft: { floor: "2026.10.3", versions: [{ version: "0.20.5", catalogue: "2026.10.3", lockfile: "pnpm-lock.yaml", importer: "." }] } },
   },
+  "REG-005": {
+    // redacted: the ruleset still requires gitleaks.yml's `scan` after the file went.
+    fail: { workflows: [{ path: ".github/workflows/ci.yml", text: "on:\n  pull_request:\njobs:\n  lint:\n    steps:\n      - run: x\n" }], vercel: [], files: {}, required: ["lint", "scan"] },
+    // A job's name:, a matrix leg and a reusable caller's "<job> / <called job>" all count.
+    pass: { workflows: [
+      { path: ".github/workflows/ci.yml", text: "on:\n  pull_request:\njobs:\n  gate:\n    name: All checks passed\n    steps:\n      - run: x\n  audit:\n    name: Security audit (cargo audit)\n    steps:\n      - run: x\n  test:\n    strategy:\n      matrix:\n        node: [22]\n    steps:\n      - run: x\n" },
+      { path: ".github/workflows/ci-standards-policy.yml", text: "on:\n  pull_request:\njobs:\n  policy:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1\n" },
+    ], vercel: [], files: {}, required: ["All checks passed", "Security audit (cargo audit)", "test (22)", "policy / check", "policy / secrets"] },
+  },
   "FW-003": {
     fail: { workflows: [{ path: ".github/workflows/ci-standards-policy.yml", text: "jobs:\n  p:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1.0.22\n" }], vercel: [], files: { "renovate.json": '{ "extends": ["github>Doman-Digital/dd-ci-standards//default.json#v1.0.13"] }' } },
     pass: { workflows: [{ path: ".github/workflows/ci-standards-policy.yml", text: "jobs:\n  p:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1\n" }], vercel: [], files: { "renovate.json": '{ "extends": ["github>Doman-Digital/dd-ci-standards//default.json#v1"] }' } },
@@ -184,6 +195,16 @@ jobs:
     fail: wf("jobs:\n  lh:\n    steps:\n      - if: runner.name != 'dd-ci-01-h'\n        run: pnpm lhci\n"),
     // The host's own name is not a runner name.
     pass: wf("jobs:\n  lh:\n    steps:\n      # Runs on a fresh VM on dd-ci-01.\n      - run: echo dd-ci-01 && pnpm lhci\n"),
+  },
+  "CI-025": {
+    fail: { workflows: [{ path: ".github/workflows/ci.yml", text: "on:\n  pull_request:\njobs:\n  verify:\n    steps:\n      - run: pnpm exec turbo run lint --concurrency=1\n" }], vercel: [], files: { "turbo.json": "{}" } },
+    pass: { workflows: [{ path: ".github/workflows/ci.yml", text: "on:\n  pull_request:\njobs:\n  verify:\n    steps:\n      - id: scope\n        uses: Doman-Digital/dd-ci-standards/.github/actions/workspace-scope@v1\n      - run: pnpm exec turbo run lint $TURBO_FILTERS\n" }], vercel: [], files: { "turbo.json": "{}" } },
+  },
+  "CI-026": {
+    fail: { workflows: [{ path: ".github/workflows/ci.yml", text: "on:\n  schedule:\n    - cron: '43 4 * * 1'\njobs: {}\n" }], vercel: [], files: {} },
+    ctx: { budget: { ghCrons: [{ workflow: "ci.yml", cron: "43 4 * * 1" }, { workflow: "lighthouse.yml", cron: "0 3 * * 1" }], vercelCrons: [] } },
+    pass: { workflows: [{ path: ".github/workflows/ci.yml", text: "on:\n  schedule:\n    - cron: '43 4 * * 1'\njobs: {}\n" }], vercel: [], files: {} },
+    passCtx: { budget: { ghCrons: [{ workflow: "ci.yml", cron: "43 4 * * 1" }], vercelCrons: [] } },
   },
   "SEC-008": {
     fail: wf("on: [pull_request]\njobs: {}\n"),

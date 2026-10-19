@@ -280,3 +280,20 @@ test("FW-004 names the branch and leaves major tags, releases and SHAs alone", (
   const r = runDoctor(FIXTURES["FW-004"].fail, rulebook, base);
   assert.match(r.findings.find((f) => f.rule === "FW-004").message, /policy\.yml@dom-776-ci-deploy-standards/);
 });
+
+test("CI-023, CI-024 and FW-004 read the repo's composite actions too", () => {
+  const v = { workflows: [], actions: [{ path: ".github/actions/handoff/action.yml", text: "runs:\n  using: composite\n  steps:\n    - if: runner.name == 'dd-ci-01-b'\n      run: echo $VERCEL_TOKEN\n    - uses: Doman-Digital/dd-photo-pack/grade@main\n" }], vercel: [], files: {} };
+  const found = ids(runDoctor(v, rulebook, base));
+  for (const id of ["CI-023", "CI-024", "FW-004"]) assert.ok(found.includes(id), id);
+});
+
+test("CI-015 lets the estate sweep, the one central scanner, run gitleaks", () => {
+  const v = FIXTURES["CI-015"].fail;
+  assert.ok(ids(runDoctor(v, rulebook, base)).includes("CI-015"));
+  assert.ok(!ids(runDoctor(v, rulebook, { ...base, repo: "Doman-Digital/dd-repo-registry" })).includes("CI-015"));
+});
+
+test("REG-005 is not judged when the rules could not be read", () => {
+  const v = { ...FIXTURES["REG-005"].fail, required: null };
+  assert.ok(!ids(runDoctor(v, rulebook, base)).includes("REG-005"));
+});

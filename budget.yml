@@ -31,13 +31,11 @@ repos:
         cron: "47 4 * * 5"
         owner: "Doman Digital / Marketing Site"
         reason: "weekly live re-capture of the client screenshots, 90min cap, now Friday"
-      - workflow: ci-standards-policy.yml
-        cron: "17 3 * * 6"
-        reason: "weekly full-history gitleaks scan by the shared policy check; was secret-scan.yml until DOM-776 step 5 (20 Oct 2026)"
-      # Goes once the monorepo's DOM-776 step 5 PR deletes secret-scan.yml.
+      # Goes once the monorepo's DOM-776 step 5 PR deletes secret-scan.yml
+      # (CI-026 reports it then): the estate sweep's weekly scan replaces it.
       - workflow: secret-scan.yml
         cron: "17 3 * * 6"
-        reason: "weekly full-history gitleaks scan, until the policy check's schedule replaces it"
+        reason: "weekly full-history gitleaks scan, until the estate sweep's weekly scan replaces it"
       - workflow: company-os.yml
         cron: "15 7 * * 1"
         owner: "Doman Digital / Company OS"
@@ -75,7 +73,11 @@ repos:
       - workflow: sweep.yml
         cron: "15 6 * * *"
         owner: "DD Framework"
-        reason: "daily estate sweep: every repo the GitHub App can see, against the register; API reads only, about a minute, 10min cap"
+        reason: "daily estate sweep: every repo the GitHub App can see, against the register; API reads only, about a minute, 10min cap. Also the estate's secret scan of each default branch's last 26 hours (DOM-776)"
+      - workflow: sweep.yml
+        cron: "17 3 * * 6"
+        owner: "DD Framework"
+        reason: "weekly secret scan of all history in every repo the GitHub App can see: the one full-history scan, replacing each repo's own (DOM-776 step 5), 60min cap"
     vercel_crons: []
 
   dd-ci-standards:
@@ -141,10 +143,7 @@ repos:
         reason: "daily check for print orders left unpaid at Lulu; emails the team when one is waiting, since an unpaid order is never printed"
 
   MMM-Beauty:
-    github_actions_crons:
-      - workflow: lighthouse.yml
-        cron: "0 3 * * 1"
-        reason: "weekly Lighthouse run — moved off every-PR after it became the single most expensive part of CI"
+    github_actions_crons: []
     # 23 Vercel crons registered on apps/portal as of 2026-08-16, ~2,180
     # invocations/day, dominated by process-jobs running every minute
     # (1,440/day alone). Flagged in the audit as a Phase 4 follow-up —
@@ -252,14 +251,11 @@ repos:
 
   beautyops:
     github_actions_crons:
-      - workflow: ci-standards-policy.yml
-        cron: "37 3 * * 1"
-        reason: "weekly full-history gitleaks scan by the shared policy check; was gitleaks.yml at 03:00 Monday until DOM-776 step 5 (20 Oct 2026)"
-      # Goes once redacted' DOM-776 step 5 PR deletes gitleaks.yml.
+      # Goes once redacted' DOM-776 step 5 PR deletes gitleaks.yml
+      # (CI-026 reports it then): the estate sweep's weekly scan replaces it.
       - workflow: gitleaks.yml
         cron: "0 3 * * 1"
-        reason: "weekly full-history gitleaks scan, until the policy check's schedule replaces it"
-    vercel_crons: []
+        reason: "weekly full-history gitleaks scan, until the estate sweep's weekly scan replaces it"
     vercel_crons: []
 
   dd-graph:

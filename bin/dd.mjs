@@ -29,6 +29,7 @@ import { execFileSync } from "node:child_process";
 import { dirname, join, resolve, basename } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { loadFsView } from "../lib/view.mjs";
+import { requiredChecks } from "../lib/view-github.mjs";
 import { budgetForRepo } from "../lib/budget.mjs";
 import { craftContext, craftFloor } from "../lib/craft.mjs";
 import { runDoctor, levelOn } from "../lib/engine.mjs";
@@ -138,9 +139,25 @@ function floorDrift(floorsText) {
   return [];
 }
 
+/** GET on the GitHub API with the doctor's credentials (a token, or the gh CLI); null on 404. */
+async function apiGet(path) {
+  const token = process.env.GH_TOKEN || process.env.GITHUB_TOKEN;
+  if (token) {
+    const res = await fetch(`https://api.github.com${path}`, {
+      headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json", "User-Agent": "dd-doctor" },
+    });
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(`GET ${path}: HTTP ${res.status}`);
+    return res.json();
+  }
+  return JSON.parse(execFileSync("gh", ["api", path.replace(/^\//, "")], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }));
+}
+
 async function doctor(args) {
   const { dir, repo, ctx } = await context(args);
   const view = loadFsView(dir);
+  // The ruleset's required checks (REG-005), when the repo and its rules can be read.
+  if (repo && ctx.meta?.default_branch) view.required = await requiredChecks(repo, ctx.meta.default_branch, apiGet);
   const floors = readFileSync(join(HOME, "floors.json"), "utf8");
   ctx.craft = await craftContext(view, floors);
   ctx.craftNotes = floorDrift(floors);

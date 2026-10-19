@@ -163,22 +163,13 @@ has to pass a policy check to merge, not get caught in the next audit.
 
   on:
     pull_request:
-    # Optional. A push to main scans the pushed commits (the backstop for
-    # anything that skipped a PR); the schedule scans all of the branch's
-    # history and posts to Slack if it finds anything. Register the cron in
-    # budget.yml.
-    push:
-      branches: [main]
-    schedule:
-      - cron: "17 3 * * 6"
 
   # The gate has to satisfy its own [missing-concurrency] rule. Copy this
   # block along with the job or the policy workflow flags its own file on
-  # every PR. Only pull request runs are cancelled: a cancelled push run
-  # would leave its commits unscanned (CI-012).
+  # every PR.
   concurrency:
     group: ${{ github.workflow }}-${{ github.ref }}
-    cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+    cancel-in-progress: true
 
   # The check only reads the repo.
   permissions:
@@ -187,21 +178,32 @@ has to pass a policy check to merge, not get caught in the next audit.
   jobs:
     ci-standards-policy:
       uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1
-      # Optional: a self-hosted runner for a private repo, Semgrep's p/default
-      # rules over the files a PR changes, and a Slack webhook for the
-      # scheduled scan.
+      # A private repo passes its runner pool; nothing else is configured here.
       # with:
       #   runner: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
-      #   semgrep: true
-      # secrets:
-      #   SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
   ```
 
-  This one workflow is the estate's secret scan. A repo that calls it needs
-  no gitleaks, TruffleHog or Semgrep workflow of its own: on 20 October 2026
-  (DOM-776) the separate scans in the monorepo, redacted, redacted-app,
-  redacted and redacted were folded into it, each one a VM and a
-  full-history clone of its own.
+  The caller is the same in every repo, and `dd adopt` writes it. Anything
+  that differs between repos lives in a register here, read by the workflow
+  at the same release:
+
+  - **`scanners.json`**: the repos that also run Semgrep (`p/default` over
+    each PR's changed files, a step of the same job).
+
+  **One scanner per kind of commit.** Pull requests are scanned by this
+  workflow. Default branches are scanned by the estate sweep in
+  Doman-Digital/dd-repo-registry, over every repo the GitHub App sees: the
+  last 26 hours daily, all of history weekly. A repo needs no gitleaks,
+  TruffleHog or Semgrep workflow of its own, and CI-015 fails one. On
+  20 October 2026 (DOM-776) the separate scans in the monorepo,
+  redacted, redacted-app, redacted and redacted went, a VM and a
+  full-history clone each.
+
+  **Turbo monorepos** scope pull request work with
+  `.github/actions/workspace-scope` (`uses:
+  Doman-Digital/dd-ci-standards/.github/actions/workspace-scope@v1`): the
+  workspaces a PR changes and their dependents, or every workspace when a
+  file outside them changes. CI-025 reports a PR `turbo run` without it.
 
   Checks: push+pull_request double-runs on overlapping branches, jobs
   missing `timeout-minutes`, PR-triggered workflows missing a `concurrency`
@@ -465,16 +467,26 @@ November: a job runs on the runner pool its timeout gives it (Runner pools,
 above). `dd adopt` writes the fix; `dd adopt --only <rules>` writes only
 those rules' fixes.
 
-Three prevention rules from DOM-776 step 5 warn from 20 October 2026 and
-fail from 27 October, a week for the last callers to be cleaned:
+Guards from DOM-776 step 5, each warning from 20 October 2026. Every one of
+them also runs daily over the whole estate in the estate sweep
+(dd-repo-registry), so a repo that drifts is reported even with no PR open.
 
-- **CI-023**: a workflow line (not a comment) names Vercel. A portal still
-  served by Vercel records an exemption with the date it moves.
-- **CI-024**: a workflow names one of the persistent runners,
-  `dd-ci-01-a` to `dd-ci-01-h`.
-- **FW-004**: a house workflow or action (`Doman-Digital/...` or
-  `redacted/...`) is pinned to a branch. Use `@v1`, a release tag or a
-  full commit SHA.
+- **CI-015** (reworded; fails from 14 November): any scanner workflow beside
+  the policy check, whatever triggers it.
+- **CI-023** (fails from 27 October): a workflow or composite action line
+  (not a comment) names Vercel. A site still served by Vercel records an
+  exemption with the date it moves.
+- **CI-024** (fails from 27 October): a workflow or composite action names
+  one of the persistent runners, `dd-ci-01-a` to `dd-ci-01-h`.
+- **FW-004** (fails from 27 October): a house workflow or action
+  (`Doman-Digital/...` or `redacted/...`) is pinned to a branch. Use
+  `@v1`, a release tag or a full commit SHA.
+- **CI-025** (fails from 20 November): a Turbo monorepo's PR job runs
+  `turbo run` over every workspace.
+- **CI-026** (fails from 20 November): budget.yml registers a schedule the
+  repo no longer has, the reverse of CI-007.
+- **REG-005** (fails from 27 October): the default branch's ruleset requires
+  a check that no workflow job produces, so every PR waits for it.
 
 The policy checkout keeps full commit history with `filter: blob:none`.
 Private historical blobs fetched by the secret scan use the existing job
