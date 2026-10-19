@@ -8,16 +8,10 @@ name: ci-standards policy
 #
 #   on:
 #     pull_request:
-#     # Optional: scan what reaches main without a pull request, and all of
-#     # history once a week. Register the cron in budget.yml (CI-007).
-#     push:
-#       branches: [main]
-#     schedule:
-#       - cron: "17 3 * * 6"
 #
 #   concurrency:
 #     group: ${{ github.workflow }}-${{ github.ref }}
-#     cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+#     cancel-in-progress: true
 #
 #   permissions:
 #     contents: read
@@ -26,24 +20,26 @@ name: ci-standards policy
 #     ci-standards-policy:
 #       uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1
 #
-# What it does depends on what started it:
+# That is the whole caller, the same in every repo (`dd adopt` writes it).
+# Nothing about a repo is configured here: what differs between repos lives
+# in this repo's registers, read at the same release.
 #
-# - pull_request: `dd doctor` (bin/dd.mjs, rules in rules.json) against the
-#   calling repo, then gitleaks over the commits the pull request adds
-#   (SEC-006), then Semgrep over the files it changes if the caller asks for it.
-# - push (to main): gitleaks over the pushed commits. This is the backstop for
-#   anything that reached main without a pull request. It replaced the
-#   separate TruffleHog and gitleaks workflows in MMM-Beauty, mmm-beauty-app
-#   and beautyops (DOM-776, 20 October 2026).
-# - schedule or workflow_dispatch: gitleaks over all of the checked-out
-#   branch's history (the weekly full scan, which was the monorepo's own
-#   secret-scan.yml), and a Slack message if it finds anything.
+# On every pull request it runs `dd doctor` (bin/dd.mjs, rules in rules.json)
+# against the calling repo, then gitleaks over the commits the pull request
+# adds (SEC-006), then Semgrep over the files it changes if scanners.json
+# lists the repo for it. A rule past its enforce date fails the PR; a newer
+# rule only warns until its date. `@v1` moves with every release
+# (release.yml), so a new rule reaches every caller at once, as a warning
+# first. The doctor runs from the same release (doctor@v1): until 13 October
+# 2026 it was pinned to v1.0.13, so every caller ran 5 October's rules while
+# v1 moved on (FW-003).
 #
-# A rule past its enforce date fails the PR; a newer rule only warns until its
-# date. `@v1` moves with every release (release.yml), so a new rule reaches
-# every caller at once, as a warning first. The doctor runs from the same
-# release (doctor@v1): until 13 October 2026 it was pinned to v1.0.13, so every
-# caller ran 5 October's rules while v1 moved on (FW-003).
+# This is the estate's only pull request scanner. What reaches a default
+# branch without a pull request, and all of history once a week, is scanned
+# centrally by the estate sweep in Doman-Digital/dd-repo-registry, over every
+# repo it sees. A repo that runs a scanner of its own fails CI-015
+# (DOM-776, 20 October 2026: the monorepo, MMM-Beauty, mmm-beauty-app,
+# beautyops and sen-sphere each did, a VM and a clone apiece).
 #
 # gitleaks reads the calling repo's .gitleaks.toml and .gitleaksignore if
 # there are any. The binary is fetched at a fixed version and checked against
@@ -53,8 +49,7 @@ name: ci-standards policy
 # commits and trees come down at once, and git fetches the blobs of the
 # scanned commits when gitleaks reads them. In the monorepo the full-history
 # clone took 110 to 140 of the job's 150 seconds; blobless it is about 12
-# (DOM-776, 19 October 2026). The weekly full scan reads every blob, so it
-# takes the plain full clone instead.
+# (DOM-776, 19 October 2026).
 #
 # One job, not two (13 October 2026, DOM-776): every job is a fresh VM on a
 # host that runs six at once for the whole estate, and this gate runs on every
@@ -72,9 +67,6 @@ name: ci-standards policy
 #       uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1
 #       with:
 #         runner: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}   # or dd-client
-#         semgrep: true            # optional: Semgrep p/default on the diff
-#       secrets:
-#         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}   # optional
 #
 # Never pass a self-hosted runner from a public repo: a fork's pull request
 # would run on it.
@@ -86,14 +78,6 @@ on:
         description: Runner label for the job. Leave unset in public repos.
         type: string
         default: ubuntu-latest
-      semgrep:
-        description: Run Semgrep's p/default rules over the files a pull request changes.
-        type: boolean
-        default: false
-    secrets:
-      SLACK_WEBHOOK_URL:
-        description: Where a failed scheduled scan is reported. Without it the run is only red.
-        required: false
 
 permissions:
   contents: read
@@ -101,9 +85,7 @@ permissions:
 jobs:
   check:
     runs-on: ${{ inputs.runner }}
-    # 8 for a pull request or a push. 45 for a scan of all of history: the
-    # monorepo's took 53s to 10m32s on the VM for about 1,650 commits.
-    timeout-minutes: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && 45 || 8 }}
+    timeout-minutes: 8
     env:
       GITLEAKS_VERSION: "8.30.1"
       GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
@@ -115,31 +97,39 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
-          filter: ${{ (github.event_name == 'pull_request' || github.event_name == 'push') && 'blob:none' || '' }}
+          filter: blob:none
           path: repo
 
-      - if: github.event_name == 'pull_request'
-        uses: Doman-Digital/dd-ci-standards/doctor@v1
+      # Which scanners beyond gitleaks this repo runs, from scanners.json at
+      # this release. Before the doctor, which fails the job on a broken rule.
+      - id: scanners
+        uses: Doman-Digital/dd-ci-standards/scanners@v1
+
+      - uses: Doman-Digital/dd-ci-standards/doctor@v1
         with:
           path: repo
 
       - name: Install gitleaks
+        if: ${{ !cancelled() }}
         run: |
           curl -sSfL -o gitleaks.tgz "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
           echo "${GITLEAKS_SHA256}  gitleaks.tgz" | sha256sum -c -
           mkdir -p "$RUNNER_TEMP/gitleaks" && tar -xzf gitleaks.tgz -C "$RUNNER_TEMP/gitleaks" gitleaks && rm gitleaks.tgz
           echo "$RUNNER_TEMP/gitleaks" >> "$GITHUB_PATH"
 
-      - name: Scan for secrets
+      - name: Scan the commits this pull request adds
+        if: ${{ !cancelled() }}
         working-directory: repo
         env:
           GH_TOKEN: ${{ github.token }}
-          EVENT_NAME: ${{ github.event_name }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-          BEFORE_SHA: ${{ github.event.before }}
-          AFTER_SHA: ${{ github.event.after }}
         run: |
+          if [ -n "$BASE_SHA" ] && [ -n "$HEAD_SHA" ]; then
+            range="${BASE_SHA}..${HEAD_SHA}"
+          else
+            range="HEAD~1..HEAD"
+          fi
           # Lazy history blobs still need private-repo auth after checkout
           # removes its credentials. Scope it to this step's Git children;
           # never persist it or put a token in a process argument.
@@ -148,37 +138,13 @@ jobs:
           export GIT_CONFIG_COUNT=1
           export GIT_CONFIG_KEY_0="http.${GITHUB_SERVER_URL%/}/.extraheader"
           export GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 | tr -d '\n')"
-          case "$EVENT_NAME" in
-            pull_request)
-              if [ -n "$BASE_SHA" ] && [ -n "$HEAD_SHA" ]; then
-                range="${BASE_SHA}..${HEAD_SHA}"
-              else
-                range="HEAD~1..HEAD"
-              fi
-              echo "Scanning the commits this pull request adds: $range" ;;
-            push)
-              # A new branch has no before; a force push may leave before
-              # unreachable. Either way, scan the commit that was pushed.
-              if [ -n "$BEFORE_SHA" ] && ! printf '%s' "$BEFORE_SHA" | grep -q '^0*$' \
-                && git cat-file -e "${BEFORE_SHA}^{commit}" 2>/dev/null; then
-                range="${BEFORE_SHA}..${AFTER_SHA}"
-              else
-                range="-1 ${AFTER_SHA:-HEAD}"
-              fi
-              echo "Scanning the pushed commits: $range" ;;
-            *)
-              # Only what the checked-out branch reaches. Without log options
-              # gitleaks reads `git log --all`, every branch on the remote.
-              range="HEAD"
-              echo "Scanning all of $(git rev-parse --abbrev-ref HEAD)'s history" ;;
-          esac
           gitleaks git --log-opts="$range" --redact --no-banner .
 
       # Was sen-sphere's security-semgrep.yml, its own VM and container on
       # every pull request (DOM-776). p/secrets is left out: gitleaks above
       # already scans the same commits for secrets.
       - name: Semgrep (the files this pull request changes)
-        if: ${{ !cancelled() && inputs.semgrep && github.event_name == 'pull_request' }}
+        if: ${{ !cancelled() && steps.scanners.outputs.semgrep == 'true' && github.event_name == 'pull_request' }}
         working-directory: repo
         env:
           GH_TOKEN: ${{ github.token }}
@@ -197,22 +163,6 @@ jobs:
             -e GIT_CONFIG_COUNT -e GIT_CONFIG_KEY_0 -e GIT_CONFIG_VALUE_0 -e GIT_CONFIG_KEY_1 -e GIT_CONFIG_VALUE_1 \
             "$SEMGREP_IMAGE" \
             semgrep scan --config p/default --baseline-commit "$BASE_SHA" --error --metrics=off --disable-version-check
-
-      # Nothing else watches a scheduled run: it is not a PR check, so a
-      # finding has to reach a person.
-      - name: Post a failed scheduled scan to Slack
-        if: ${{ failure() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') }}
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          REPO: ${{ github.repository }}
-        run: |
-          if [ -z "$SLACK_WEBHOOK_URL" ]; then
-            echo "SLACK_WEBHOOK_URL is not passed, so only this run shows the failure."
-            exit 0
-          fi
-          printf '{"text":"Secret scan of all history failed in %s: %s"}' "$REPO" "$RUN_URL" \
-            | curl -sf -X POST "$SLACK_WEBHOOK_URL" -H 'Content-Type: application/json' -d @-
 
   # Kept for rulesets that require `<caller> / secrets`: a skipped job takes no
   # runner and counts as passed. The scan runs in `check` above.
