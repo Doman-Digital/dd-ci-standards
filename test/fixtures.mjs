@@ -31,6 +31,39 @@ export const FIXTURES = {
     fail: wf(JOB("${{ vars.CI_RUNNER || 'ubuntu-latest' }}")),
     pass: wf(JOB("ubuntu-latest")),
   },
+  "CI-022": {
+    // A two-minute job on the standard pool, and a long one on the light pool.
+    fail: view({
+      workflows: [
+        { path: ".github/workflows/ci.yml", text: "on:\n  pull_request:\njobs:\n  changes:\n    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 2\n    steps:\n      - run: x\n" },
+        { path: ".github/workflows/build.yml", text: "on:\n  pull_request:\njobs:\n  build:\n    runs-on: ${{ vars.CI_RUNNER_LIGHT || vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 20\n    steps:\n      - run: x\n" },
+      ],
+    }),
+    pass: wf(`on:
+  pull_request:
+jobs:
+  changes:
+    runs-on: \${{ vars.CI_RUNNER_LIGHT || vars.CI_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 2
+    steps:
+      - run: x
+  build:
+    runs-on: \${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 20
+    steps:
+      - run: x
+  db:
+    runs-on: \${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 5
+    services:
+      postgres:
+        image: postgres:17
+    steps:
+      - run: x
+  call:
+    uses: ./.github/workflows/other.yml
+`),
+  },
   "CI-003": {
     fail: wf("on:\n  push:\njobs:\n  a:\n    runs-on: ubuntu-latest\n    steps:\n      - run: x\n"),
     pass: wf("on:\n  push:\njobs:\n  a:\n    runs-on: ubuntu-latest\n    timeout-minutes: 5\n    steps:\n      - run: x\n  b:\n    uses: ./.github/workflows/other.yml\n"),

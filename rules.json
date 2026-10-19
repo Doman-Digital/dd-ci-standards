@@ -175,6 +175,15 @@
       "enforce_from": "2026-11-15"
     },
     {
+      "id": "CI-022",
+      "title": "A job is on the wrong runner pool for its timeout",
+      "why": "DOM-834, 19 October 2026: about 700 jobs a week finished in under 2 minutes but each held a 4-vCPU VM on a host with 16 (the monorepo's changes job 204 a week at a median of 0.65 minutes, its gate 204 at 0.17). The rulebook decides the pool, not the repo: a job whose timeout-minutes is 5 or less runs on the light pool, runs-on: ${{ vars.CI_RUNNER_LIGHT || vars.CI_RUNNER || 'ubuntu-latest' }}; a longer job, one with service containers or one whose timeout is an expression stays on ${{ vars.CI_RUNNER || 'ubuntu-latest' }}. A light job that runs out of time is a job whose timeout was wrong: raise it and it moves back. dd adopt writes the fix.",
+      "applies": "full",
+      "visibility": "private",
+      "warn_from": "2026-10-20",
+      "enforce_from": "2026-11-20"
+    },
+    {
       "id": "SEC-001",
       "title": "A third-party action is not pinned to a full commit SHA",
       "why": "tj-actions/changed-files, March 2025: a re-pointed tag ran code that dumped CI secrets. GitHub: a full SHA is the only immutable reference. First-party Doman-Digital actions stay on tags.",
