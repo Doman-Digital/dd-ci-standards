@@ -1,0 +1,62 @@
+name: Workspace scope
+description: |
+  Which workspaces of a Turbo monorepo a pull request affects, as Turbo and
+  pnpm filter arguments, so a PR's lint, typecheck, test and build run only
+  those (DOM-776 step 5, CI-025).
+
+  Every workspace on any event that is not a pull request, and on a pull
+  request that changes a file outside every workspace folder other than
+  documentation: the root package.json, the lockfile, turbo.json, a workflow,
+  a script, a docs JSON file. Turbo's own change detection does not see those
+  (tested on 19 October 2026 in the monorepo: a root package.json, lockfile,
+  scripts/ or workflow change marks no package), and apps may read them
+  directly.
+
+  Otherwise the workspaces Turbo finds changed since the pull request's base,
+  plus every workspace that depends on one of them, plus `include`.
+
+  Needs the checkout to hold the base commit (fetch-depth: 0; a blobless
+  filter is enough) and the dependencies installed (it runs `pnpm exec turbo`).
+
+    - uses: actions/checkout@<sha>
+      with:
+        fetch-depth: 0
+        filter: blob:none
+    - (install)
+    - id: scope
+      uses: Doman-Digital/dd-ci-standards/.github/actions/workspace-scope@v1
+    - if: steps.scope.outputs.run == 'true'
+      env:
+        TURBO_FILTERS: ${{ steps.scope.outputs.turbo-filters }}
+      run: pnpm exec turbo run lint $TURBO_FILTERS
+
+inputs:
+  include:
+    description: Workspace names to add to an affected-only scope, space separated.
+    default: ""
+  docs:
+    description: An extended regex of changed paths outside the workspaces that never widen the scope.
+    default: '^docs/.*\.(md|csv)$|^[^/]*\.md$'
+
+outputs:
+  run:
+    description: "`false` when no workspace is affected, so there is nothing to run."
+    value: ${{ steps.scope.outputs.run }}
+  turbo-filters:
+    description: "`--filter=<name>` per workspace, or empty for every workspace."
+    value: ${{ steps.scope.outputs.turbo-filters }}
+  pnpm-filters:
+    description: "`--filter=<name>` per workspace, or every workspace but the root (`--filter=!<root name>`)."
+    value: ${{ steps.scope.outputs.pnpm-filters }}
+
+runs:
+  using: composite
+  steps:
+    - id: scope
+      shell: bash
+      env:
+        EVENT_NAME: ${{ github.event_name }}
+        BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        INCLUDE: ${{ inputs.include }}
+        DOCS: ${{ inputs.docs }}
+      run: bash "$GITHUB_ACTION_PATH/scope.sh"
