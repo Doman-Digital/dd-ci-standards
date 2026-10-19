@@ -102,6 +102,13 @@ jobs:
       - name: Enable Corepack (pnpm via each repo's own packageManager field)
         run: corepack enable
 
+      # The same reasoning for Python repos: dd-photo-pack locks with uv, and
+      # Renovate shells out to `uv lock --upgrade-package` for its update
+      # branch. Without uv the branch fails with `spawn uv ENOENT` and the run
+      # goes red every Monday (19 Oct 2026, DOM-847).
+      - name: Install uv (Python lockfile updates)
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+
       # Autodiscover is safe now where it was not on 2026-08-17: with
       # requireConfig "required" and onboarding off, a repo with no Renovate
       # config is skipped, not onboarded or failed at initRepo.
