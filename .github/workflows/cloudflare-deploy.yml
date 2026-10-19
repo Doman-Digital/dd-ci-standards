@@ -139,12 +139,12 @@ jobs:
         uses: Doman-Digital/dd-ci-standards/.github/actions/deploy-tip@v1
         with:
           sha: ${{ github.event.workflow_run.head_sha || github.sha }}
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: steps.tip.outputs.deploy == 'true'
         with:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
           persist-credentials: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         if: steps.tip.outputs.deploy == 'true'
         with:
           node-version: ${{ inputs.node-version }}
@@ -190,7 +190,7 @@ jobs:
           doppler-config: ${{ inputs.doppler-config }}
       - name: Install Doppler CLI
         if: steps.tip.outputs.deploy == 'true' && inputs.sync-secrets-to != ''
-        uses: dopplerhq/cli-action@014df23b1329b615816a38eb5f473bb9000700b1 # v3
+        uses: dopplerhq/cli-action@4819d808ab99e5cde19a0637a16536a4038fad73 # v4.0.1
       - name: Sync runtime secrets from Doppler to the Worker
         if: steps.tip.outputs.deploy == 'true' && inputs.sync-secrets-to != ''
         env:
