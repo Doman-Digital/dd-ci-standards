@@ -167,9 +167,23 @@ jobs:
     fail: { workflows: [{ path: ".github/workflows/ci-standards-policy.yml", text: "jobs:\n  p:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1.0.22\n" }], vercel: [], files: { "renovate.json": '{ "extends": ["github>Doman-Digital/dd-ci-standards//default.json#v1.0.13"] }' } },
     pass: { workflows: [{ path: ".github/workflows/ci-standards-policy.yml", text: "jobs:\n  p:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1\n" }], vercel: [], files: { "renovate.json": '{ "extends": ["github>Doman-Digital/dd-ci-standards//default.json#v1"] }' } },
   },
+  "FW-004": {
+    fail: wf("on: [pull_request]\njobs:\n  policy:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@dom-776-ci-deploy-standards\n"),
+    pass: wf("on: [pull_request]\njobs:\n  policy:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1\n  deploy:\n    uses: Doman-Digital/dd-photo-pack/.github/workflows/grade.yml@0123456789abcdef0123456789abcdef01234567\n  other:\n    steps:\n      - uses: Doman-Digital/dd-photo-pack/action@v1.2.0\n"),
+  },
   "CI-021": {
     fail: wf("on: [push]\njobs:\n  checks:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/post-deploy-checks.yml@v1\n"),
     pass: wf("on: [push]\njobs:\n  deploy:\n    steps:\n      - uses: Doman-Digital/dd-ci-standards/.github/actions/post-deploy-checks@v1\n"),
+  },
+  "CI-023": {
+    fail: wf("on: [schedule]\njobs:\n  sweep:\n    steps:\n      - run: node sweep.mjs\n        env:\n          VERCEL_TOKEN_redacted: ${{ secrets.VERCEL_TOKEN_redacted }}\n"),
+    // A comment recording why Vercel went is history, not a dependency.
+    pass: wf("on: [schedule]\njobs:\n  sweep:\n    steps:\n      # Vercel was retired on 2 September 2026.\n      - run: node sweep.mjs\n"),
+  },
+  "CI-024": {
+    fail: wf("jobs:\n  lh:\n    steps:\n      - if: runner.name != 'dd-ci-01-h'\n        run: pnpm lhci\n"),
+    // The host's own name is not a runner name.
+    pass: wf("jobs:\n  lh:\n    steps:\n      # Runs on a fresh VM on dd-ci-01.\n      - run: echo dd-ci-01 && pnpm lhci\n"),
   },
   "SEC-008": {
     fail: wf("on: [pull_request]\njobs: {}\n"),

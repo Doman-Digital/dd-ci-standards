@@ -13,32 +13,9 @@ repos:
       - workflow: stale.yml
         cron: "30 1 * * *"
         reason: "daily stale issue/PR sweep, no checkout, near-zero cost"
-      - workflow: coverage-audit.yml
-        cron: "0 5 * * 1"
-        reason: "weekly content coverage crawl of production, 15min cap"
-      - workflow: ci.yml
-        cron: "0 6 * * 1"
-        reason: "weekly comprehensive full-suite sweep — deliberate, catches regressions on repos that haven't shipped in a week; paths-filter is intentionally bypassed on this trigger"
-      - workflow: review-calibration-weekly.yml
-        cron: "0 6 * * 1"
-        owner: "Doman Digital / Marketing Site"
-        reason: "weekly live review calibration against independent referees; records drift for Marketing Site, 120min cap"
-      - workflow: client-stack-weekly.yml
-        cron: "0 7 * * 1"
-        owner: "Doman Digital / Marketing Site"
-        reason: "weekly live browser capture of client sites to detect third-party stack drift; capped at 90 minutes"
-      - workflow: client-screenshots-weekly.yml
-        cron: "30 7 * * 1"
-        owner: "Doman Digital / Marketing Site"
-        reason: "weekly live re-capture of the client screenshots on the site, opening a review PR when a client site has changed; capped at 90 minutes"
-      - workflow: security-rotation-reminder.yml
-        cron: "0 9 1 1,4,7,10 *"
-        reason: "quarterly secret-rotation-due check, 5min cap"
-      # DOM-776 (Doman-Digital #1104): the same schedules off the hour (CI-018)
-      # and spread across the week. The entries above go when #1104 merges.
       - workflow: ci.yml
         cron: "43 4 * * 1"
-        reason: "weekly comprehensive full-suite sweep, as above, now Monday 04:43"
+        reason: "weekly comprehensive full-suite sweep — deliberate, catches regressions on repos that haven't shipped in a week; paths-filter is intentionally bypassed on this trigger"
       - workflow: coverage-audit.yml
         cron: "17 4 * * 2"
         reason: "weekly content coverage crawl of production, 15min cap, now Tuesday"
@@ -54,9 +31,13 @@ repos:
         cron: "47 4 * * 5"
         owner: "Doman Digital / Marketing Site"
         reason: "weekly live re-capture of the client screenshots, 90min cap, now Friday"
+      - workflow: ci-standards-policy.yml
+        cron: "17 3 * * 6"
+        reason: "weekly full-history gitleaks scan by the shared policy check; was secret-scan.yml until DOM-776 step 5 (20 Oct 2026)"
+      # Goes once the monorepo's DOM-776 step 5 PR deletes secret-scan.yml.
       - workflow: secret-scan.yml
         cron: "17 3 * * 6"
-        reason: "weekly full-history gitleaks scan, moved out of ci.yml so pull requests rely on the policy check's scan (CI-015)"
+        reason: "weekly full-history gitleaks scan, until the policy check's schedule replaces it"
       - workflow: company-os.yml
         cron: "15 7 * * 1"
         owner: "Doman Digital / Company OS"
@@ -268,6 +249,17 @@ repos:
 
   mmm-beauty-app:
     github_actions_crons: []
+
+  beautyops:
+    github_actions_crons:
+      - workflow: ci-standards-policy.yml
+        cron: "37 3 * * 1"
+        reason: "weekly full-history gitleaks scan by the shared policy check; was gitleaks.yml at 03:00 Monday until DOM-776 step 5 (20 Oct 2026)"
+      # Goes once redacted' DOM-776 step 5 PR deletes gitleaks.yml.
+      - workflow: gitleaks.yml
+        cron: "0 3 * * 1"
+        reason: "weekly full-history gitleaks scan, until the policy check's schedule replaces it"
+    vercel_crons: []
     vercel_crons: []
 
   dd-graph:

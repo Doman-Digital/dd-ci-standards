@@ -163,13 +163,22 @@ has to pass a policy check to merge, not get caught in the next audit.
 
   on:
     pull_request:
+    # Optional. A push to main scans the pushed commits (the backstop for
+    # anything that skipped a PR); the schedule scans all of the branch's
+    # history and posts to Slack if it finds anything. Register the cron in
+    # budget.yml.
+    push:
+      branches: [main]
+    schedule:
+      - cron: "17 3 * * 6"
 
   # The gate has to satisfy its own [missing-concurrency] rule. Copy this
   # block along with the job or the policy workflow flags its own file on
-  # every PR.
+  # every PR. Only pull request runs are cancelled: a cancelled push run
+  # would leave its commits unscanned (CI-012).
   concurrency:
     group: ${{ github.workflow }}-${{ github.ref }}
-    cancel-in-progress: true
+    cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
   # The check only reads the repo.
   permissions:
@@ -178,7 +187,21 @@ has to pass a policy check to merge, not get caught in the next audit.
   jobs:
     ci-standards-policy:
       uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1
+      # Optional: a self-hosted runner for a private repo, Semgrep's p/default
+      # rules over the files a PR changes, and a Slack webhook for the
+      # scheduled scan.
+      # with:
+      #   runner: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+      #   semgrep: true
+      # secrets:
+      #   SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
   ```
+
+  This one workflow is the estate's secret scan. A repo that calls it needs
+  no gitleaks, TruffleHog or Semgrep workflow of its own: on 20 October 2026
+  (DOM-776) the separate scans in the monorepo, redacted, redacted-app,
+  redacted and redacted were folded into it, each one a VM and a
+  full-history clone of its own.
 
   Checks: push+pull_request double-runs on overlapping branches, jobs
   missing `timeout-minutes`, PR-triggered workflows missing a `concurrency`
@@ -441,6 +464,17 @@ DOM-834 rule CI-022 warns from 20 October 2026 and is enforced from 20
 November: a job runs on the runner pool its timeout gives it (Runner pools,
 above). `dd adopt` writes the fix; `dd adopt --only <rules>` writes only
 those rules' fixes.
+
+Three prevention rules from DOM-776 step 5 warn from 20 October 2026 and
+fail from 27 October, a week for the last callers to be cleaned:
+
+- **CI-023**: a workflow line (not a comment) names Vercel. A portal still
+  served by Vercel records an exemption with the date it moves.
+- **CI-024**: a workflow names one of the persistent runners,
+  `dd-ci-01-a` to `dd-ci-01-h`.
+- **FW-004**: a house workflow or action (`Doman-Digital/...` or
+  `redacted/...`) is pinned to a branch. Use `@v1`, a release tag or a
+  full commit SHA.
 
 The policy checkout keeps full commit history with `filter: blob:none`.
 Private historical blobs fetched by the secret scan use the existing job

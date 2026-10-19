@@ -269,3 +269,14 @@ test("a public repo stays off the light runners: CI-002 catches the light expres
   const priv = ids(runDoctor(v, rulebook, base));
   assert.ok(!priv.includes("CI-001") && !priv.includes("CI-022"));
 });
+
+test("CI-005 leaves the policy caller's push-to-main scan alone", () => {
+  const v = { workflows: [{ path: ".github/workflows/ci-standards-policy.yml", text: "on:\n  pull_request:\n  push:\n    branches: [main]\nconcurrency:\n  group: ${{ github.workflow }}-${{ github.ref }}\n  cancel-in-progress: ${{ github.event_name == 'pull_request' }}\njobs:\n  policy:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1\n" }], vercel: [], files: {} };
+  const r = runDoctor(v, rulebook, base);
+  assert.ok(!ids(r).includes("CI-005") && !ids(r).includes("CI-012") && !ids(r).includes("CI-004"), ids(r).join(", "));
+});
+
+test("FW-004 names the branch and leaves major tags, releases and SHAs alone", () => {
+  const r = runDoctor(FIXTURES["FW-004"].fail, rulebook, base);
+  assert.match(r.findings.find((f) => f.rule === "FW-004").message, /policy\.yml@dom-776-ci-deploy-standards/);
+});
