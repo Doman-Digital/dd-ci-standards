@@ -80,6 +80,18 @@ repos:
         reason: "weekly secret scan of all history in every repo the GitHub App can see: the one full-history scan, replacing each repo's own (DOM-776 step 5), 60min cap"
     vercel_crons: []
 
+  dd-relay:
+    github_actions_crons:
+      - workflow: ops-canary.yml
+        cron: "20 5 * * *"
+        owner: "Doman Digital / Ops"
+        reason: "the ops Worker's github-feed canary: one step that fails on purpose daily so the cockpit proves it still sees red scheduled workflows (DOM-1029); light runner, 2min cap"
+      - workflow: ops-contract.yml
+        cron: "40 9 * * *"
+        owner: "Doman Digital / Ops"
+        reason: "nightly ops contract check: the cockpit's counts against direct Linear, GitHub, jobs.yaml and alert queries, and every feed's canary (DOM-1029); API reads and one SELECT, 10min cap"
+    vercel_crons: []
+
   dd-ci-standards:
     github_actions_crons:
       - workflow: renovate.yml
