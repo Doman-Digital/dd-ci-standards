@@ -43,6 +43,10 @@ repos:
       - workflow: security-rotation-reminder.yml
         cron: "13 9 1 1,4,7,10 *"
         reason: "quarterly secret-rotation-due check, 5min cap, off the hour"
+      - workflow: stripe-prices.yml
+        cron: "41 6 * * *"
+        owner: "Doman Digital / Marketing Site"
+        reason: "daily live check that every Stripe Price the site sells matches brand-facts (DOM-1059), no install, 5min cap on the light pool"
       # DOM-847 (Doman-Digital #1159): the first three days of the quarter, so a
       # dropped run is caught; the entry above goes when #1159 merges.
       - workflow: security-rotation-reminder.yml
