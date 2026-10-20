@@ -305,3 +305,22 @@ test("CI-028 reports a registered job that left CI_RUNNER_HOSTED, and a register
   const bare = runDoctor({ workflows: [{ path: ".github/workflows/ci.yml", text: FIXTURES["CI-028"].pass.workflows[0].text.replace(/runs-on: .*/, "runs-on: ${{ vars.CI_RUNNER_HOSTED }}") }], vercel: [], files: {} }, rulebook, ctx);
   assert.ok(bare.findings.some((f) => f.rule === "CI-028" && /valve can send it back/.test(f.message)));
 });
+
+test("CI-029 puts a deploy job on the deploy slot, and CI-022 leaves it alone", () => {
+  const wfOf = (on, key, runsOn, timeout = 3) => ({ workflows: [{ path: ".github/workflows/deploy.yml", text: `on:\n  ${on}:\njobs:\n  ${key}:\n    runs-on: ${runsOn}\n    timeout-minutes: ${timeout}\n    steps:\n      - run: x\n` }], vercel: [], files: {} });
+  const rules = (v, over = {}) => runDoctor(v, rulebook, { ...base, ...over }).findings.map((f) => f.rule);
+  const STANDARD = "${{ vars.CI_RUNNER || 'ubuntu-latest' }}";
+  const DEPLOY = "${{ vars.CI_RUNNER_DEPLOY || vars.CI_RUNNER || 'ubuntu-latest' }}";
+  // A short deploy is a deploy, not a light job.
+  const f = runDoctor(wfOf("push", "deploy", STANDARD), rulebook, base).findings.filter((x) => x.rule === "CI-029");
+  assert.equal(f.length, 1);
+  assert.equal(f[0].runsOn, DEPLOY);
+  assert.ok(!rules(wfOf("push", "deploy", STANDARD)).includes("CI-022"));
+  assert.ok(!rules(wfOf("push", "deploy", DEPLOY)).includes("CI-029"));
+  // In a pull request workflow, or a dry run or preview, it is CI.
+  assert.ok(!rules(wfOf("pull_request", "deploy", STANDARD)).includes("CI-029"));
+  assert.ok(!rules(wfOf("push", "dry-run-deploy", STANDARD)).includes("CI-029"));
+  assert.ok(!rules(wfOf("push", "deploy-preview", STANDARD)).includes("CI-029"));
+  // Client accounts and public repos are not on the org's pools.
+  assert.ok(!rules(wfOf("push", "deploy", STANDARD), { visibility: "public" }).includes("CI-029"));
+});
