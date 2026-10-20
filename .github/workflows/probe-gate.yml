@@ -1,0 +1,34 @@
+name: probe gate cancel
+
+# Temporary probe for DOM-776 (never merged): what a required-style gate
+# reports when its run is cancelled, with always() and with !cancelled().
+on:
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  work:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - run: sleep 90
+  gate-always:
+    needs: work
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - run: test "${{ needs.work.result }}" = success
+  gate-not-cancelled:
+    needs: work
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - run: test "${{ needs.work.result }}" = success
