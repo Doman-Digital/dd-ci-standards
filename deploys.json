@@ -101,6 +101,14 @@
       "note": "main, root astro; Sanity deploy hook"
     },
     {
+      "worker": "sensphere-voice",
+      "account": "sen-sphere",
+      "repo": "sensphere/sen-sphere",
+      "config": "workers/voice/wrangler.jsonc",
+      "path": "actions",
+      "note": "voice-deploy.yml on push to main touching workers/voice (DOM-920); phone line for Cherif's London number"
+    },
+    {
       "worker": "tardi-web",
       "account": "Tardi",
       "repo": "joetardi/Tardi-Group",
