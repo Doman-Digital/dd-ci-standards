@@ -27,8 +27,11 @@ description: |
       uses: Doman-Digital/dd-ci-standards/.github/actions/workspace-scope@v1
     - if: steps.scope.outputs.run == 'true'
       env:
-        TURBO_FILTERS: ${{ steps.scope.outputs.turbo-filters }}
+        TURBO_FILTERS: (the scope step's turbo-filters output)
       run: pnpm exec turbo run lint $TURBO_FILTERS
+
+  No expression braces in this text: GitHub evaluates them even in a
+  description, and the action then fails to load (20 October 2026).
 
 inputs:
   include:
