@@ -170,6 +170,12 @@ jobs:
     // !cancelled() on the job; always() on a step inside a running job is fine.
     pass: wf("on:\n  pull_request:\nconcurrency:\n  group: ci-${{ github.ref }}\n  cancel-in-progress: true\njobs:\n  gate:\n    needs: [test]\n    if: ${{ !cancelled() }}\n    runs-on: x\n    steps:\n      - if: always()\n        run: x\n"),
   },
+  "CI-028": {
+    fail: wf(JOB("${{ vars.CI_RUNNER_HOSTED || vars.CI_RUNNER || 'ubuntu-latest' }}")),
+    ctx: { hostedJobs: { jobs: [] } },
+    pass: wf(JOB("${{ vars.CI_RUNNER_HOSTED || vars.CI_RUNNER || 'ubuntu-latest' }}")),
+    passCtx: { hostedJobs: { jobs: [{ repo: "demo", workflow: "ci.yml", job: "test" }] } },
+  },
   "REG-007": {
     // beautyops: the ruleset still requires gitleaks.yml's `scan` after the file went.
     fail: { workflows: [{ path: ".github/workflows/ci.yml", text: "on:\n  pull_request:\njobs:\n  lint:\n    steps:\n      - run: x\n" }], vercel: [], files: {}, required: ["lint", "scan"] },
