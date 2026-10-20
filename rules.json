@@ -216,6 +216,14 @@
       "enforce_from": "2026-11-20"
     },
     {
+      "id": "CI-027",
+      "title": "A cancellable pull request workflow has a job that runs with always()",
+      "why": "20 October 2026 (DOM-776): GitHub still runs an always() job after its run is cancelled, so the monorepo's cancelled PR runs stayed queued for hours waiting for a VM for the All checks passed gate, holding the concurrency group, while the newer commit's run sat pending behind them (Doman-Digital#1167, run 39344916461, queued from 23:59 to past 12:40). With if: ${{ !cancelled() }} a cancelled run reports the gate cancelled, tested on 20 October, and a cancelled required check still blocks the merge.",
+      "applies": "full",
+      "warn_from": "2026-10-20",
+      "enforce_from": "2026-10-27"
+    },
+    {
       "id": "SEC-001",
       "title": "A third-party action is not pinned to a full commit SHA",
       "why": "tj-actions/changed-files, March 2025: a re-pointed tag ran code that dumped CI secrets. GitHub: a full SHA is the only immutable reference. First-party Doman-Digital actions stay on tags.",
