@@ -79,6 +79,25 @@ name: ci-standards policy
 # they pass. To send the gate back to the caller's runner: delete the org
 # variable (every repo), or set CI_RUNNER_LIGHT on one repo to its CI_RUNNER.
 
+#
+# Required by an org ruleset too (20 October 2026, DOM-1084). The org is on
+# GitHub Enterprise, so one org ruleset, `dd-policy-required` (managed by
+# dd-repo-registry repo-settings.yaml), runs this file on every pull request
+# into the default branch of every private org repo, with or without a
+# caller. GitHub only runs a ruleset workflow whose `on:` names pull_request
+# or merge_group, hence the two triggers below; a caller still reaches it
+# through workflow_call. In that run `inputs` is empty, so the job runs on the
+# org's CI_RUNNER_LIGHT, which every private org repo sees.
+#
+# The concurrency group is keyed on github.workflow_ref, which names the file
+# that started the run: the caller's in a called run, this file in a ruleset
+# run. So the two never share a group and cancel each other while both run,
+# and neither shares the caller's own group.
+#
+# The `check` job skips in this repo itself: here the pull_request trigger
+# would run it with no runner variable (a public repo sees none), and
+# ci-standards-policy.yml already runs this pull request's own rules.
+
 on:
   workflow_call:
     inputs:
@@ -86,12 +105,19 @@ on:
         description: Runner label for the job. Leave unset in public repos.
         type: string
         default: ubuntu-latest
+  pull_request:
+  merge_group:
+
+concurrency:
+  group: dd-policy-${{ github.workflow_ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
   check:
+    if: ${{ github.repository != 'Doman-Digital/dd-ci-standards' }}
     runs-on: ${{ vars.CI_RUNNER_LIGHT || inputs.runner }}
     timeout-minutes: 8
     env:
@@ -130,8 +156,8 @@ jobs:
         working-directory: repo
         env:
           GH_TOKEN: ${{ github.token }}
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha }}
         run: |
           if [ -n "$BASE_SHA" ] && [ -n "$HEAD_SHA" ]; then
             range="${BASE_SHA}..${HEAD_SHA}"

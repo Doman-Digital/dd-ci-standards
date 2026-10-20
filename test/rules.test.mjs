@@ -270,6 +270,18 @@ test("a public repo stays off the light runners: CI-002 catches the light expres
   assert.ok(!priv.includes("CI-001") && !priv.includes("CI-022"));
 });
 
+test("CI-002 skips a job that never runs in this repo: policy.yml on its own pull requests (DOM-1084)", () => {
+  const text = (cond) => `on:\n  workflow_call:\n  pull_request:\njobs:\n  check:\n${cond}    runs-on: \${{ vars.CI_RUNNER_LIGHT || inputs.runner }}\n    timeout-minutes: 2\n    steps:\n      - run: x\n`;
+  const run = (cond, repoName = "dd-ci-standards") =>
+    ids(runDoctor({ workflows: [{ path: ".github/workflows/policy.yml", text: text(cond) }], vercel: [], files: {} }, rulebook, { ...base, visibility: "public", repoName }));
+  assert.ok(run("").includes("CI-002"));
+  assert.ok(!run("    if: ${{ github.repository != 'Doman-Digital/dd-ci-standards' }}\n").includes("CI-002"));
+  assert.ok(!run("    if: ${{ false }}\n").includes("CI-002"));
+  // another repo's name, or an escape hatch in the condition, still runs here
+  assert.ok(run("    if: ${{ github.repository != 'Doman-Digital/other' }}\n").includes("CI-002"));
+  assert.ok(run("    if: ${{ github.repository != 'Doman-Digital/dd-ci-standards' || github.event_name == 'push' }}\n").includes("CI-002"));
+});
+
 test("CI-005 leaves the policy caller's push-to-main scan alone", () => {
   const v = { workflows: [{ path: ".github/workflows/ci-standards-policy.yml", text: "on:\n  pull_request:\n  push:\n    branches: [main]\nconcurrency:\n  group: ${{ github.workflow }}-${{ github.ref }}\n  cancel-in-progress: ${{ github.event_name == 'pull_request' }}\njobs:\n  policy:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1\n" }], vercel: [], files: {} };
   const r = runDoctor(v, rulebook, base);
