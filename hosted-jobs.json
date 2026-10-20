@@ -1,0 +1,5 @@
+{
+  "$comment": "The jobs that run on GitHub's included Actions minutes (CI-028, DOM-1079). The Enterprise plan includes GitHub-hosted minutes a month on a budget of $0, so nothing here may bill; the allowance lives only in dd-netcup-config etc/ci-hosted/valve.json. A job listed here uses runs-on: ${{ vars.CI_RUNNER_HOSTED || vars.CI_RUNNER || 'ubuntu-latest' }}; the organisation variable CI_RUNNER_HOSTED is set by dd-ci-hosted-valve (dd-netcup-config alerts/ci-hosted-valve.py): 'ubuntu-latest' only while the plan reads enterprise and usage is under 90% of the allowance, otherwise dd-ci-ephemeral. Add a row in the same change as the workflow edit, with the minutes a month measured on a 2-vCPU runner. repo is the repository name, workflow the file name under .github/workflows, job the job id.",
+  "updated": "2026-10-20",
+  "jobs": []
+}

@@ -297,3 +297,11 @@ test("REG-007 is not judged when the rules could not be read", () => {
   const v = { ...FIXTURES["REG-007"].fail, required: null };
   assert.ok(!ids(runDoctor(v, rulebook, base)).includes("REG-007"));
 });
+
+test("CI-028 reports a registered job that left CI_RUNNER_HOSTED, and a registered job with its own runs-on", () => {
+  const ctx = { today: "2026-11-25", kind: "dd-tooling", visibility: "private", repoName: "demo", budget: { ghCrons: [], vercelCrons: [] }, hostedJobs: { jobs: [{ repo: "demo", workflow: "ci.yml", job: "test" }] } };
+  const own = runDoctor(FIXTURES["CI-001"].pass, rulebook, ctx);
+  assert.ok(own.findings.some((f) => f.rule === "CI-028" && /does not run on CI_RUNNER_HOSTED/.test(f.message)));
+  const bare = runDoctor({ workflows: [{ path: ".github/workflows/ci.yml", text: FIXTURES["CI-028"].pass.workflows[0].text.replace(/runs-on: .*/, "runs-on: ${{ vars.CI_RUNNER_HOSTED }}") }], vercel: [], files: {} }, rulebook, ctx);
+  assert.ok(bare.findings.some((f) => f.rule === "CI-028" && /valve can send it back/.test(f.message)));
+});

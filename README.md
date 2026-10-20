@@ -77,6 +77,18 @@ either (CI-002 still fails it). `dd adopt` rewrites `runs-on`; nothing else
 in the job changes.
 ### Making a repo
 
+**GitHub's included minutes (CI-028, DOM-1079).** The Enterprise plan includes
+50,000 GitHub-hosted minutes a month on an Actions budget of $0, so a job may
+run there only if `hosted-jobs.json` lists it (repo, workflow file, job id),
+and then as `${{ vars.CI_RUNNER_HOSTED || vars.CI_RUNNER || 'ubuntu-latest' }}`.
+The organisation variable `CI_RUNNER_HOSTED` is `ubuntu-latest` until
+`dd-ci-hosted-valve` (dd-netcup-config `alerts/ci-hosted-valve.py`) reads 90%
+of the allowance and sets it to `dd-ci-ephemeral`; it sets it back when the
+billing month rolls over. CI-022 leaves a job on the variable to CI-028, and
+CI-028 reports a job on the variable that is not listed, a listed job that
+left it, and a listed job whose `runs-on` is not the expression above. The
+list is empty until the organisation's plan reads `enterprise`.
+
 ```sh
 node <dd-ci-standards checkout>/bin/dd.mjs new --kind dd-site dd-example \
   --description "What the repo is, in a sentence." --answers answers.json
@@ -485,6 +497,8 @@ them also runs daily over the whole estate in the estate sweep
   `turbo run` over every workspace.
 - **CI-026** (fails from 20 November): budget.yml registers a schedule the
   repo no longer has, the reverse of CI-007.
+- **CI-028** (fails from 20 November): a job runs on `CI_RUNNER_HOSTED`
+  without being listed in `hosted-jobs.json`, or is listed and does not.
 - **CI-027** (fails from 27 October): a job in a cancellable pull request
   workflow runs with `always()`. GitHub runs it even after the run is
   cancelled, so the cancelled run holds its concurrency group until a VM is

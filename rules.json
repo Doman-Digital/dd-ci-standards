@@ -224,6 +224,15 @@
       "enforce_from": "2026-10-27"
     },
     {
+      "id": "CI-028",
+      "title": "A job uses CI_RUNNER_HOSTED without being in hosted-jobs.json (or is listed and does not)",
+      "why": "DOM-1079, 20 October 2026: the Enterprise plan includes 50,000 GitHub-hosted minutes a month, on an Actions budget of $0 with stop usage on. The whole monorepo would use all of them, so only the jobs listed in dd-ci-standards hosted-jobs.json run there, as runs-on: ${{ vars.CI_RUNNER_HOSTED || vars.CI_RUNNER || 'ubuntu-latest' }}. A timer on dd-work-01 points the variable back at dd-ci-ephemeral at 90% of the allowance. A job on the variable that is not listed spends minutes nobody measured; a listed job that left it reserves minutes for nothing.",
+      "applies": "full",
+      "visibility": "private",
+      "warn_from": "2026-10-21",
+      "enforce_from": "2026-11-20"
+    },
+    {
       "id": "SEC-001",
       "title": "A third-party action is not pinned to a full commit SHA",
       "why": "tj-actions/changed-files, March 2025: a re-pointed tag ran code that dumped CI secrets. GitHub: a full SHA is the only immutable reference. First-party Doman-Digital actions stay on tags.",
