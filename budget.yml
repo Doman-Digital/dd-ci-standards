@@ -86,6 +86,10 @@ repos:
         cron: "40 6 * * *"
         owner: "DD Framework"
         reason: "daily apply of repo-settings.yaml (update-branch, auto-merge, the dd-baseline ruleset) to every repo the GitHub App can see, so new repos are covered and drift is put back and posted to ops (DOM-1037); API calls only, about two minutes, 20min cap"
+      - workflow: lighthouse-live.yml
+        cron: "17 6 * * 1"
+        owner: "DD Framework"
+        reason: "weekly Lighthouse of every live page the registry lists under lighthouse.paths, through the PageSpeed Insights API (Google's hardware, no browser here), median of 3 runs, about ten minutes, 45min cap; replaces client-previews site-health.yml (DOM-776)"
     vercel_crons: []
 
   dd-relay:
