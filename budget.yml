@@ -82,6 +82,10 @@ repos:
         cron: "17 3 * * 6"
         owner: "DD Framework"
         reason: "weekly secret scan of all history in every repo the GitHub App can see: the one full-history scan, replacing each repo's own (DOM-776 step 5), 60min cap"
+      - workflow: repo-settings.yml
+        cron: "40 6 * * *"
+        owner: "DD Framework"
+        reason: "daily apply of repo-settings.yaml (update-branch, auto-merge, the dd-baseline ruleset) to every repo the GitHub App can see, so new repos are covered and drift is put back and posted to ops (DOM-1037); API calls only, about two minutes, 20min cap"
     vercel_crons: []
 
   dd-relay:
