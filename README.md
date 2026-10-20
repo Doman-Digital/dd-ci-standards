@@ -485,8 +485,13 @@ them also runs daily over the whole estate in the estate sweep
   `turbo run` over every workspace.
 - **CI-026** (fails from 20 November): budget.yml registers a schedule the
   repo no longer has, the reverse of CI-007.
-- **REG-005** (fails from 27 October): the default branch's ruleset requires
+- **REG-007** (fails from 27 October): the default branch's ruleset requires
   a check that no workflow job produces, so every PR waits for it.
+
+The estate sweep in dd-repo-registry raises ids of its own (REG-001, REG-005,
+REG-006, DEL-, SEC-101 to SEC-105, EST-, JOB-, DEP-) into the same report. It
+fails its run when one of those ids is also in rules.json, so pick a new id
+here rather than reuse one (REG-007 was REG-005 for its first day).
 
 The policy checkout keeps full commit history with `filter: blob:none`.
 Private historical blobs fetched by the secret scan use the existing job
