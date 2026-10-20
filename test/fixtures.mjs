@@ -31,6 +31,17 @@ export const FIXTURES = {
     fail: wf(JOB("${{ vars.CI_RUNNER || 'ubuntu-latest' }}")),
     pass: wf(JOB("ubuntu-latest")),
   },
+  "CI-029": {
+    // A push-triggered deploy on the standard pool.
+    fail: wf("on:\n  push:\n    branches: [main]\njobs:\n  deploy:\n    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 15\n    steps:\n      - run: x\n"),
+    // On the deploy slot; a dry run in a pull request workflow is CI, not a deploy.
+    pass: view({
+      workflows: [
+        { path: ".github/workflows/deploy.yml", text: "on:\n  push:\n    branches: [main]\njobs:\n  deploy:\n    runs-on: ${{ vars.CI_RUNNER_DEPLOY || vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 15\n    steps:\n      - run: x\n" },
+        { path: ".github/workflows/ci.yml", text: "on:\n  pull_request:\njobs:\n  dry-run-deploy:\n    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 10\n    steps:\n      - run: x\n" },
+      ],
+    }),
+  },
   "CI-022": {
     // A two-minute job on the standard pool, and a long one on the light pool.
     fail: view({
