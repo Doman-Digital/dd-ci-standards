@@ -321,7 +321,7 @@
       "enforce_from": "2026-11-06"
     },
     {
-      "id": "REG-005",
+      "id": "REG-007",
       "title": "The ruleset requires a check no workflow produces",
       "why": "DOM-776 step 5, 19 October 2026: beautyops' ruleset required `scan`, the job of gitleaks.yml, which the step was about to delete. A required check that never reports holds every pull request open with no error to read. The estate sweep and the policy check read the default branch's rules and compare them with the jobs the workflows define.",
       "applies": "all",

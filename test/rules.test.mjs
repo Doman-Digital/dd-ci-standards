@@ -293,7 +293,7 @@ test("CI-015 lets the estate sweep, the one central scanner, run gitleaks", () =
   assert.ok(!ids(runDoctor(v, rulebook, { ...base, repo: "Doman-Digital/dd-repo-registry" })).includes("CI-015"));
 });
 
-test("REG-005 is not judged when the rules could not be read", () => {
-  const v = { ...FIXTURES["REG-005"].fail, required: null };
-  assert.ok(!ids(runDoctor(v, rulebook, base)).includes("REG-005"));
+test("REG-007 is not judged when the rules could not be read", () => {
+  const v = { ...FIXTURES["REG-007"].fail, required: null };
+  assert.ok(!ids(runDoctor(v, rulebook, base)).includes("REG-007"));
 });

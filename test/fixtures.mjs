@@ -165,7 +165,7 @@ jobs:
     ctx: { craft: { floor: "2026.10.3", versions: [{ version: "0.20.2", catalogue: "2026.10.2", lockfile: "pnpm-lock.yaml", importer: "apps/portal" }, { version: "0.5.0", catalogue: "none", lockfile: "pnpm-lock.yaml", importer: "packages/ui" }] } },
     passCtx: { craft: { floor: "2026.10.3", versions: [{ version: "0.20.5", catalogue: "2026.10.3", lockfile: "pnpm-lock.yaml", importer: "." }] } },
   },
-  "REG-005": {
+  "REG-007": {
     // beautyops: the ruleset still requires gitleaks.yml's `scan` after the file went.
     fail: { workflows: [{ path: ".github/workflows/ci.yml", text: "on:\n  pull_request:\njobs:\n  lint:\n    steps:\n      - run: x\n" }], vercel: [], files: {}, required: ["lint", "scan"] },
     // A job's name:, a matrix leg and a reusable caller's "<job> / <called job>" all count.

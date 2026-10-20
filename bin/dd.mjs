@@ -156,7 +156,7 @@ async function apiGet(path) {
 async function doctor(args) {
   const { dir, repo, ctx } = await context(args);
   const view = loadFsView(dir);
-  // The ruleset's required checks (REG-005), when the repo and its rules can be read.
+  // The ruleset's required checks (REG-007), when the repo and its rules can be read.
   if (repo && ctx.meta?.default_branch) view.required = await requiredChecks(repo, ctx.meta.default_branch, apiGet);
   const floors = readFileSync(join(HOME, "floors.json"), "utf8");
   ctx.craft = await craftContext(view, floors);
