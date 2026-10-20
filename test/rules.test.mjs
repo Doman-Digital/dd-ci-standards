@@ -323,4 +323,6 @@ test("CI-029 puts a deploy job on the deploy slot, and CI-022 leaves it alone", 
   assert.ok(!rules(wfOf("push", "deploy-preview", STANDARD)).includes("CI-029"));
   // Client accounts and public repos are not on the org's pools.
   assert.ok(!rules(wfOf("push", "deploy", STANDARD), { visibility: "public" }).includes("CI-029"));
+  // A deploy job on GitHub's included minutes is CI-028's.
+  assert.ok(!rules(wfOf("push", "deploy", "${{ vars.CI_RUNNER_HOSTED }}")).includes("CI-029"));
 });
