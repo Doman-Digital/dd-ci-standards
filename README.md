@@ -485,6 +485,11 @@ them also runs daily over the whole estate in the estate sweep
   `turbo run` over every workspace.
 - **CI-026** (fails from 20 November): budget.yml registers a schedule the
   repo no longer has, the reverse of CI-007.
+- **CI-027** (fails from 27 October): a job in a cancellable pull request
+  workflow runs with `always()`. GitHub runs it even after the run is
+  cancelled, so the cancelled run holds its concurrency group until a VM is
+  free for it. Use `!cancelled()`: a cancelled run then reports the job
+  cancelled, which still blocks a merge.
 - **REG-007** (fails from 27 October): the default branch's ruleset requires
   a check that no workflow job produces, so every PR waits for it.
 
