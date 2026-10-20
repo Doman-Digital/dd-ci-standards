@@ -184,6 +184,15 @@
       "enforce_from": "2026-11-20"
     },
     {
+      "id": "CI-029",
+      "title": "A deploy job is not on the deploy slot",
+      "why": "DOM-834, 20 October 2026: deploys waited in the same queue as pull request CI. dd-relay's deploy sat queued from 11:28 UTC behind 72 PR jobs, so a merged Worker was not live; org deploys (about 60 a week, 1.4 to 5 minutes) waited up to 84 to 215 minutes at p95. A job whose name says deploy (not a dry run or a preview, not in a pull request workflow) runs on its own reserved slot: runs-on: ${{ vars.CI_RUNNER_DEPLOY || vars.CI_RUNNER || 'ubuntu-latest' }}. cloudflare-deploy.yml reads the same variable. dd adopt writes the fix.",
+      "applies": "full",
+      "visibility": "private",
+      "warn_from": "2026-10-20",
+      "enforce_from": "2026-11-20"
+    },
+    {
       "id": "CI-023",
       "title": "A workflow still uses Vercel",
       "why": "Vercel was retired for CI and deploys (DOM-555, DOM-776). On 19 October 2026 its leftovers were still in five repos: six VERCEL_TOKEN_* inputs in dd-repo-registry's sweep, a kv.vercel-storage placeholder in the monorepo's lighthouse.yml, and comments in Tardi, sen-sphere and verqan-api describing Vercel building main. A workflow that names Vercel either does nothing or depends on an account nobody watches. A portal still served by Vercel records it as an exemption.",

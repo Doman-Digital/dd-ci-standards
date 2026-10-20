@@ -479,6 +479,12 @@ November: a job runs on the runner pool its timeout gives it (Runner pools,
 above). `dd adopt` writes the fix; `dd adopt --only <rules>` writes only
 those rules' fixes.
 
+DOM-834 rule CI-029 warns from 20 October 2026 and is enforced from 20
+November: a deploy job (not a dry run, a preview or a pull request workflow)
+runs on `${{ vars.CI_RUNNER_DEPLOY || vars.CI_RUNNER || 'ubuntu-latest' }}`,
+the reserved deploy slot `dd-ci-deploy`, so it never waits behind pull request
+CI. `cloudflare-deploy.yml` reads the same variable. `dd adopt` writes the fix.
+
 Guards from DOM-776 step 5, each warning from 20 October 2026. Every one of
 them also runs daily over the whole estate in the estate sweep
 (dd-repo-registry), so a repo that drifts is reported even with no PR open.
