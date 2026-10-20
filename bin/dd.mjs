@@ -120,7 +120,19 @@ async function context(args) {
   const visibility = opt(args, "--visibility") || (meta ? (meta.private ? "private" : "public") : null);
   const repoName = repo ? repo.split("/")[1] : basename(dir);
   const budget = budgetForRepo(readFileSync(join(HOME, "budget.yml"), "utf8"), repoName);
-  return { dir, repo, ctx: { today, kind, visibility, repo, repoName, budget, meta, taxonomy } };
+  return { dir, repo, ctx: { today, kind, visibility, repo, repoName, budget, meta, taxonomy, pr: pullRequest() } };
+}
+
+/** The pull request this run checks (LIN-001), from the Actions event file; null outside a pull request run. */
+function pullRequest() {
+  const path = process.env.GITHUB_EVENT_PATH;
+  if (!path || !/^pull_request/.test(process.env.GITHUB_EVENT_NAME || "")) return null;
+  try {
+    const pr = JSON.parse(readFileSync(path, "utf8")).pull_request;
+    return pr ? { title: pr.title || "", body: pr.body || "", branch: pr.head?.ref || "" } : null;
+  } catch {
+    return null;
+  }
 }
 
 /**
