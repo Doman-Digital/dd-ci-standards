@@ -96,6 +96,13 @@ on:
         description: Optional repository Node script which reads Doppler JSON on stdin and emits only runtime secrets on stdout. Runs only with sync-secrets-to.
         type: string
         default: ""
+      concurrency-key:
+        description: >-
+          Optional suffix for this call's deploy lane. Each lane deploys one at a time, and GitHub keeps only the newest
+          waiting run per lane. Give a second Worker in the same repo its own key (for example "ops") so a newer deploy of
+          the first Worker cannot replace its waiting job. Empty keeps the one lane per repo.
+        type: string
+        default: ""
       runner:
         description: Runner label. Defaults to the CI_RUNNER variable, then ubuntu-latest.
         type: string
@@ -129,7 +136,7 @@ jobs:
       contents: read
       id-token: write
     concurrency:
-      group: cloudflare-deploy-${{ github.repository }}
+      group: cloudflare-deploy-${{ github.repository }}${{ inputs.concurrency-key != '' && format('-{0}', inputs.concurrency-key) || '' }}
       cancel-in-progress: false
     defaults:
       run:
