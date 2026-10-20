@@ -322,6 +322,14 @@
       "enforce_from": "2026-10-26"
     },
     {
+      "id": "LIN-001",
+      "title": "A pull request names no Linear issue",
+      "why": "20 October 2026: client work was shipping with nothing in Linear or HubSpot to show for it. Since 22 July, 640 of 869 pull requests merged into the client repos named no issue, so the founder could not see what had been done for whom (DOM-1100). Every pull request names its issue (DOM-123) in the title, the body or the branch name, the same keys Linear's GitHub integration links on. Renovate and Dependabot branches are exempt. Add the key, then re-run the check or push a commit: editing the title alone does not start a new run.",
+      "applies": "all",
+      "warn_from": "2026-10-21",
+      "enforce_from": "2026-10-28"
+    },
+    {
       "id": "REG-002",
       "title": "The repo's description or tags break repo-topics.json",
       "why": "Every repo must be identifiable from its GitHub page alone, and its kind tag decides which rules apply (was the repo metadata check, enforced since September 2026).",
