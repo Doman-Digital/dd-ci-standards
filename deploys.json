@@ -1,6 +1,6 @@
 {
   "$comment": "Every Cloudflare Worker and the one way it is deployed (CF-001, DOM-776). path is how it deploys today: actions (cloudflare-deploy.yml or a reviewed deploy workflow), workers-builds (Cloudflare's GitHub app, simple client static sites only), manual (by hand: listed so it is visible, and moved to target), retired (serves nothing; deletion is the founder's call) or not-deployed (a config with no Worker). Collected 13 October 2026 from all eight accounts. Account ids are identifiers, not secrets.",
-  "updated": "2026-10-14",
+  "updated": "2026-10-20",
   "accounts": {
     "Doman Digital": "30515e0503d5fe494460233cc3535d74",
     "sen-sphere": "27afd0d63cc551836017345fba42762d",
@@ -27,6 +27,14 @@
       "config": "workers/email-in/wrangler.jsonc",
       "path": "actions",
       "note": "same deploy as dd-relay"
+    },
+    {
+      "worker": "dd-ops",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/dd-relay",
+      "config": "workers/ops/wrangler.jsonc",
+      "path": "actions",
+      "note": "same deploy as dd-relay, deploy-ops job; Ops read API and collectors (DOM-1029)"
     },
     {
       "worker": "dd-seo-mcp",
