@@ -272,6 +272,13 @@ jobs:
     fail: wf(JOB("${{ vars.CI_RUNNER || 'ubuntu-latest' }}")),
     pass: { workflows: [{ path: ".github/workflows/policy.yml", text: "jobs:\n  p:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1\n" }], vercel: [], files: {} },
   },
+  "LIN-001": {
+    // The pull request, not files: the view is empty and the pull request comes in the context.
+    fail: view({}),
+    pass: view({}),
+    ctx: { pr: { title: "Add the booking page", body: "", branch: "feat/booking" } },
+    passCtx: { pr: { title: "Add the booking page", body: "Closes DOM-123", branch: "feat/booking" } },
+  },
   "REG-004": {
     // Settings, not files: the view is empty and the settings come in the context.
     fail: view({}),

@@ -89,6 +89,17 @@ test("REG-004 does not require auto-merge on a private personal-account repo, bu
   assert.ok(ids(runDoctor(fail, rulebook, m({ private: false }))).includes("REG-004"), "public repos still need it");
 });
 
+test("LIN-001 finds the key in the title, body or branch, exempts dependency bots, and is silent outside a pull request", () => {
+  const run = (pr) => ids(runDoctor(FIXTURES["LIN-001"].fail, rulebook, { ...base, pr })).includes("LIN-001");
+  assert.equal(run({ title: "Fix the form (DOM-12)", body: "", branch: "x" }), false);
+  assert.equal(run({ title: "Fix the form", body: "", branch: "dom-1100-fix-form" }), false, "Linear's branch names are lower case");
+  assert.equal(run({ title: "Fix the form", body: "Part of CRO-7", branch: "x" }), false);
+  assert.equal(run({ title: "Update dependency sharp", body: "", branch: "renovate/npm-sharp" }), false);
+  assert.equal(run({ title: "Bump x", body: "", branch: "dependabot/npm_and_yarn/x" }), false);
+  assert.equal(run({ title: "Mention ADOM-12 or DOM-", body: "", branch: "x" }), true, "only a whole key counts");
+  assert.equal(run(undefined), false, "no pull request: not checked");
+});
+
 test("CI-001 checks only repos the organisation owns, since only they can use its runners", () => {
   const fail = FIXTURES["CI-001"].fail;
   const owned = (login) => ({ ...base, meta: { owner: { login } } });
