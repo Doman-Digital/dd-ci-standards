@@ -29,7 +29,7 @@ import { execFileSync } from "node:child_process";
 import { dirname, join, resolve, basename } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { loadFsView } from "../lib/view.mjs";
-import { requiredChecks } from "../lib/view-github.mjs";
+import { branchRules } from "../lib/view-github.mjs";
 import { budgetForRepo } from "../lib/budget.mjs";
 import { craftContext, craftFloor } from "../lib/craft.mjs";
 import { runDoctor, levelOn } from "../lib/engine.mjs";
@@ -168,8 +168,8 @@ async function apiGet(path) {
 async function doctor(args) {
   const { dir, repo, ctx } = await context(args);
   const view = loadFsView(dir);
-  // The ruleset's required checks (REG-007), when the repo and its rules can be read.
-  if (repo && ctx.meta?.default_branch) view.required = await requiredChecks(repo, ctx.meta.default_branch, apiGet);
+  // The ruleset's required checks (REG-007) and merge queue (REG-008), when the repo and its rules can be read.
+  if (repo && ctx.meta?.default_branch) Object.assign(view, await branchRules(repo, ctx.meta.default_branch, apiGet));
   const floors = readFileSync(join(HOME, "floors.json"), "utf8");
   ctx.craft = await craftContext(view, floors);
   ctx.craftNotes = floorDrift(floors);
