@@ -272,6 +272,13 @@ jobs:
     fail: wf("on:\n  pull_request:\njobs:\n  test:\n    steps:\n      - run: npm test\n"),
     pass: { workflows: [{ path: ".github/workflows/policy.yml", text: "jobs:\n  p:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1\n" }], vercel: [], files: {} },
   },
+  "SEC-009": {
+    // The shared deploy reads the variable in the caller's repo, which has none.
+    ctx: { repo: "Doman-Digital/demo", vars: {}, dopplerIdentities: { identities: [{ repo: "Doman-Digital/demo", branch: "main", reads: ["dd-deploy/demo"], identity: null }] } },
+    fail: wf("on:\n  workflow_run:\n    workflows: [CI]\njobs:\n  deploy:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/cloudflare-deploy.yml@v1\n    with:\n      doppler-config: demo\n", ".github/workflows/deploy.yml"),
+    passCtx: { vars: { DOPPLER_IDENTITY_ID: "0f0f0f0f-0000-4000-8000-000000000000" }, dopplerIdentities: { identities: [{ repo: "Doman-Digital/demo", branch: "main", reads: ["dd-deploy/demo"], identity: "0f0f0f0f-0000-4000-8000-000000000000" }] } },
+    pass: wf("on:\n  workflow_run:\n    workflows: [CI]\njobs:\n  deploy:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/cloudflare-deploy.yml@v1\n    with:\n      doppler-config: demo\n", ".github/workflows/deploy.yml"),
+  },
   "SEC-007": {
     // The old fallback: the Doppler token first, the repo secret if that is empty.
     fail: wf("jobs:\n  deploy:\n    steps:\n      - run: npx wrangler deploy\n        env:\n          CLOUDFLARE_API_TOKEN: ${{ steps.doppler.outputs.CLOUDFLARE_DEPLOY_VALUE || secrets.CLOUDFLARE_API_TOKEN }}\n", ".github/workflows/deploy.yml"),
