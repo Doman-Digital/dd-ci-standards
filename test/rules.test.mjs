@@ -326,6 +326,14 @@ test("REG-008 needs a merge queue: without one, or when the rules could not be r
   assert.deepEqual(found.map((f) => f.file), [".github/workflows/ci.yml"]);
 });
 
+test("REG-007 and REG-008 read a job name chosen by an expression (dd-claude-kit's Git hook fixtures)", () => {
+  const text = "on:\n  pull_request:\n  push:\n    branches: [main]\njobs:\n  hook-tests:\n    name: ${{ github.event_name == 'push' && 'Git hook fixtures on main' || 'Git hook fixtures' }}\n    steps:\n      - run: x\n";
+  const v = { workflows: [{ path: ".github/workflows/git-hooks.yml", text }], vercel: [], files: {}, required: ["Git hook fixtures"], mergeQueue: true };
+  const found = ids(runDoctor(v, rulebook, base));
+  assert.ok(!found.includes("REG-007"));
+  assert.ok(found.includes("REG-008"));
+});
+
 test("REG-007 is not judged when the rules could not be read", () => {
   const v = { ...FIXTURES["REG-007"].fail, required: null };
   assert.ok(!ids(runDoctor(v, rulebook, base)).includes("REG-007"));
