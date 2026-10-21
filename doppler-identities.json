@@ -99,7 +99,7 @@
         "dd-deploy/proteam"
       ],
       "service_account": "ci-proteam-electrical",
-      "identity": null,
+      "identity": "fb99e1ab-1ffc-4fad-bef4-cb9e9fadd5d1",
       "cloudflare_account": "30515e0503d5fe494460233cc3535d74"
     }
   ]
