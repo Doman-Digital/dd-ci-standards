@@ -126,6 +126,10 @@ jobs:
       GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
       # semgrep/semgrep, the image sen-sphere's own workflow pulled on 19 October 2026.
       SEMGREP_IMAGE: semgrep/semgrep@sha256:529ee8a277ec8adc5b534d7c74eea0a47e9de21d62852b6ba7ac6ba9566845c3
+      # SEC-009: the Doppler identity the repo's deploys sign in with. A
+      # ruleset run sees the target repo's variables, a called run the caller's.
+      DD_VARS_SEEN: "true"
+      DD_DOPPLER_IDENTITY_ID: ${{ vars.DOPPLER_IDENTITY_ID }}
     steps:
       - name: Checkout calling repo, full history
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

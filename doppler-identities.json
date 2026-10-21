@@ -1,0 +1,106 @@
+{
+  "about": "Every repo that signs in to Doppler with its GitHub identity (OIDC), the branch Doppler trusts it on, the Doppler configs its service account reads, and the identity id the repo variable DOPPLER_IDENTITY_ID must hold, and the Cloudflare account its deploy token is on (CLOUDFLARE_ACCOUNT_ID), when it deploys a Worker. IDs only: an identity id is useless without a GitHub OIDC token from that repo and branch. SEC-009 fails a repo whose workflows sign in without a row here, without the variable, or with a different value. bin/doppler-identity.mjs creates the service account and identity for a row and sets the variable (DOM-1265).",
+  "updated": "2026-10-21",
+  "identities": [
+    {
+      "repo": "Doman-Digital/Doman-Digital",
+      "branch": "main",
+      "reads": [
+        "dd-deploy/doman-digital"
+      ],
+      "service_account": "ci-Doman-Digital",
+      "identity": "e067aae0-bf80-4066-a014-169e617a16d4"
+    },
+    {
+      "repo": "Doman-Digital/dd-relay",
+      "branch": "main",
+      "reads": [
+        "dd-deploy/relay"
+      ],
+      "service_account": "ci-dd-relay",
+      "identity": "350e0f83-304d-40ff-9508-b007a1d2a733"
+    },
+    {
+      "repo": "Doman-Digital/dd-seo-mcp",
+      "branch": "main",
+      "reads": [
+        "dd-deploy/seo-mcp"
+      ],
+      "service_account": "ci-dd-seo-mcp",
+      "identity": "e6d14bd7-0565-41b7-b605-e66c5b778171",
+      "cloudflare_account": "30515e0503d5fe494460233cc3535d74"
+    },
+    {
+      "repo": "Doman-Digital/client-previews",
+      "branch": "main",
+      "reads": [
+        "dd-deploy/previews"
+      ],
+      "service_account": "ci-client-previews",
+      "identity": "e5088410-ac2e-489a-9bc2-183e8ad213df",
+      "cloudflare_account": "30515e0503d5fe494460233cc3535d74"
+    },
+    {
+      "repo": "Doman-Digital/dd-rebuild-relay",
+      "branch": "main",
+      "reads": [
+        "dd-deploy/rebuild-relay"
+      ],
+      "identity": "db56e2ba-284b-4553-8951-2724970559a8",
+      "cloudflare_account": "30515e0503d5fe494460233cc3535d74"
+    },
+    {
+      "repo": "Doman-Digital/beautyops",
+      "branch": "main",
+      "reads": [
+        "dd-deploy/beautyops",
+        "beautyops/prd"
+      ],
+      "identity": "8240d965-f6a1-42ea-8111-a8d981128fc5",
+      "cloudflare_account": "30515e0503d5fe494460233cc3535d74"
+    },
+    {
+      "repo": "Doman-Digital/Market-probability-engine",
+      "branch": "main",
+      "reads": [
+        "dd-deploy/mpe"
+      ],
+      "identity": "42a40b21-0e12-4a9f-be80-9187ee894dc3",
+      "cloudflare_account": "30515e0503d5fe494460233cc3535d74"
+    },
+    {
+      "repo": "Doman-Digital/Verqan-Platform",
+      "branch": "main",
+      "reads": [
+        "dd-deploy/verqan-platform",
+        "verqan-web/prd",
+        "verqan-docs/prd",
+        "verqan-dashboard/prd"
+      ],
+      "identity": "d5914e34-e09a-449a-95e2-0fb22face017",
+      "cloudflare_account": "30515e0503d5fe494460233cc3535d74"
+    },
+    {
+      "repo": "Doman-Digital/osint-engine",
+      "branch": "main",
+      "reads": [
+        "dd-deploy/meridian-api",
+        "dd-deploy/meridian-web",
+        "meridian-api/prd",
+        "meridian-web/prd"
+      ],
+      "identity": "d9b9826e-ce45-44a4-b958-a75dce412eb0",
+      "cloudflare_account": "30515e0503d5fe494460233cc3535d74"
+    },
+    {
+      "repo": "Doman-Digital/proteam-electrical",
+      "branch": "master",
+      "reads": [
+        "dd-deploy/proteam"
+      ],
+      "service_account": "ci-proteam-electrical",
+      "identity": null,
+      "cloudflare_account": "30515e0503d5fe494460233cc3535d74"
+    }
+  ]
+}

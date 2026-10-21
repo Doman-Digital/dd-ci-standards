@@ -306,6 +306,14 @@
       "enforce_from": "2026-11-15"
     },
     {
+      "id": "SEC-009",
+      "title": "A workflow signs in to Doppler with the repo's identity, which is missing or unregistered",
+      "why": "14 to 21 October 2026 (DOM-1265): proteam-electrical's Deploy failed on every run for a week with \"Input required and not supplied: doppler-identity-id\", because the repo never had the DOPPLER_IDENTITY_ID variable, and nothing noticed. The nine repos that worked had their identities made and their variables set by hand from a script outside Git. doppler-identities.json now records every repo's identity; this rule fails a repo whose workflows sign in without a row there, without the variable, or with a different value. The variable is read by the policy job in the repo's own Actions run.",
+      "applies": "all",
+      "warn_from": "2026-10-21",
+      "enforce_from": "2026-10-21"
+    },
+    {
       "id": "CF-001",
       "title": "A Worker has no registered deploy path, or two",
       "why": "13 October 2026 (DOM-776): some Workers were built by Cloudflare's GitHub app, some by Actions, and seven repos had no trace of how they deploy. deploys.json lists every Worker with its one path: Actions (cloudflare-deploy.yml) for internal Workers and anything gated, Workers Builds only for simple static client sites, or retired.",
