@@ -8,6 +8,7 @@ name: ci-standards policy
 #
 #   on:
 #     pull_request:
+#     merge_group:
 #
 #   concurrency:
 #     group: ${{ github.workflow }}-${{ github.ref }}
