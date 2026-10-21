@@ -390,7 +390,7 @@ test("SEC-009: registration, the variable and drift (DOM-1265)", () => {
   assert.match(run(deploy, { repo: "Doman-Digital/demo", vars: { DOPPLER_IDENTITY_ID: "22222222-2222-4222-8222-222222222222" } })[0], /doppler-identities.json says 1111/);
   assert.deepEqual(run(deploy, { repo: "Doman-Digital/demo", vars: { DOPPLER_IDENTITY_ID: "11111111-1111-4111-8111-111111111111" } }), []);
   // A commented-out sign-in, and the reusable workflow itself, do not count.
-  const quiet = { workflows: [{ path: ".github/workflows/a.yml", text: "on: [push]\n# doppler-identity-id: ${{ vars.DOPPLER_IDENTITY_ID }}\njobs: {}\n" }, { path: ".github/workflows/cloudflare-deploy.yml", text: "on:\n  workflow_call:\njobs:\n  d:\n    steps:\n      - with:\n          doppler-identity-id: ${{ vars.DOPPLER_IDENTITY_ID }}\n" }], vercel: [], files: {} };
+  const quiet = { workflows: [{ path: ".github/workflows/a.yml", text: "on: [push]\n# doppler-identity-id: ${{ vars.DOPPLER_IDENTITY_ID }}\njobs: {}\n" }, { path: ".github/workflows/policy.yml", text: "on:\n  pull_request:\njobs:\n  c:\n    env:\n      DD_DOPPLER_IDENTITY_ID: ${{ vars.DOPPLER_IDENTITY_ID }}\n" }, { path: ".github/workflows/cloudflare-deploy.yml", text: "on:\n  workflow_call:\njobs:\n  d:\n    steps:\n      - with:\n          doppler-identity-id: ${{ vars.DOPPLER_IDENTITY_ID }}\n" }], vercel: [], files: {} };
   assert.deepEqual(run(quiet, { repo: "Doman-Digital/other", vars: {} }), []);
 });
 
