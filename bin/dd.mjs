@@ -120,7 +120,9 @@ async function context(args) {
   const visibility = opt(args, "--visibility") || (meta ? (meta.private ? "private" : "public") : null);
   const repoName = repo ? repo.split("/")[1] : basename(dir);
   const budget = budgetForRepo(readFileSync(join(HOME, "budget.yml"), "utf8"), repoName);
-  return { dir, repo, ctx: { today, kind, visibility, repo, repoName, budget, meta, taxonomy, pr: pullRequest() } };
+  // The repo's variables, when the policy job passed them in (SEC-009); null elsewhere.
+  const vars = process.env.DD_VARS_SEEN === "true" ? { DOPPLER_IDENTITY_ID: process.env.DD_DOPPLER_IDENTITY_ID || "" } : null;
+  return { dir, repo, ctx: { today, kind, visibility, repo, repoName, budget, meta, taxonomy, pr: pullRequest(), vars } };
 }
 
 /** The pull request this run checks (LIN-001), from the Actions event file; null outside a pull request run. */

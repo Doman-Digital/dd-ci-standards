@@ -377,3 +377,34 @@ test("CI-029 puts a deploy job on the deploy slot, and CI-022 leaves it alone", 
   // A deploy job on GitHub's included minutes is CI-028's.
   assert.ok(!rules(wfOf("push", "deploy", "${{ vars.CI_RUNNER_HOSTED }}")).includes("CI-029"));
 });
+
+test("SEC-009: registration, the variable and drift (DOM-1265)", () => {
+  const deploy = { workflows: [{ path: ".github/workflows/deploy.yml", text: "on:\n  workflow_dispatch:\njobs:\n  d:\n    steps:\n      - uses: dopplerhq/secrets-fetch-action@451892f16195f9ac360e1a5bcbf0b5fd0e957534\n        with:\n          doppler-identity-id: ${{ vars.DOPPLER_IDENTITY_ID }}\n" }], vercel: [], files: {} };
+  const table = { identities: [{ repo: "Doman-Digital/demo", branch: "main", reads: ["dd-deploy/demo"], identity: "11111111-1111-4111-8111-111111111111" }] };
+  const run = (v, ctx) => runDoctor(v, rulebook, { ...base, dopplerIdentities: table, ...ctx }).findings.filter((f) => f.rule === "SEC-009").map((f) => f.message);
+  // A house repo with no row fails even where the variables cannot be read.
+  assert.match(run(deploy, { repo: "Doman-Digital/other", vars: null })[0], /no row/);
+  // A client repo signs in to its own Doppler: no row needed, the variable still is.
+  assert.deepEqual(run(deploy, { repo: "rmp474/RMP-Electrical", vars: null }), []);
+  assert.match(run(deploy, { repo: "rmp474/RMP-Electrical", vars: { DOPPLER_IDENTITY_ID: "" } })[0], /no such variable/);
+  assert.match(run(deploy, { repo: "Doman-Digital/demo", vars: { DOPPLER_IDENTITY_ID: "22222222-2222-4222-8222-222222222222" } })[0], /doppler-identities.json says 1111/);
+  assert.deepEqual(run(deploy, { repo: "Doman-Digital/demo", vars: { DOPPLER_IDENTITY_ID: "11111111-1111-4111-8111-111111111111" } }), []);
+  // A commented-out sign-in, and the reusable workflow itself, do not count.
+  const quiet = { workflows: [{ path: ".github/workflows/a.yml", text: "on: [push]\n# doppler-identity-id: ${{ vars.DOPPLER_IDENTITY_ID }}\njobs: {}\n" }, { path: ".github/workflows/cloudflare-deploy.yml", text: "on:\n  workflow_call:\njobs:\n  d:\n    steps:\n      - with:\n          doppler-identity-id: ${{ vars.DOPPLER_IDENTITY_ID }}\n" }], vercel: [], files: {} };
+  assert.deepEqual(run(quiet, { repo: "Doman-Digital/other", vars: {} }), []);
+});
+
+test("doppler-identities.json: one row per repo, each well formed, every house Actions deploy registered", () => {
+  const table = JSON.parse(readFileSync(new URL("../doppler-identities.json", import.meta.url), "utf8"));
+  const deploys = JSON.parse(readFileSync(new URL("../deploys.json", import.meta.url), "utf8"));
+  const repos = table.identities.map((r) => r.repo.toLowerCase());
+  assert.equal(new Set(repos).size, repos.length, "a repo appears twice");
+  for (const r of table.identities) {
+    assert.match(r.repo, /^[^/\s]+\/[^/\s]+$/, `${r.repo}: owner/name`);
+    assert.match(r.branch, /^[\w./-]+$/, `${r.repo}: branch`);
+    assert.ok(Array.isArray(r.reads) && r.reads.length && r.reads.every((c) => /^[\w-]+\/[\w-]+$/.test(c)), `${r.repo}: reads lists project/config`);
+    assert.ok(r.identity === null || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(r.identity), `${r.repo}: identity is a UUID or null`);
+  }
+  const missing = [...new Set(deploys.workers.filter((w) => w.path === "actions" && /^doman-digital\//i.test(w.repo || "")).map((w) => w.repo))].filter((r) => !repos.includes(r.toLowerCase()));
+  assert.deepEqual(missing, [], `Actions deploys with no Doppler identity row: ${missing.join(", ")}`);
+});
