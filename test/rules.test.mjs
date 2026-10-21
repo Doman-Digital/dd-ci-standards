@@ -316,6 +316,16 @@ test("CI-015 lets the estate sweep, the one central scanner, run gitleaks", () =
   assert.ok(!ids(runDoctor(v, rulebook, { ...base, repo: "Doman-Digital/dd-repo-registry" })).includes("CI-015"));
 });
 
+test("CI-015 reads a scan being run, not a gitleaks binary being fetched for a hook test (DOM-1264)", () => {
+  const caller = { path: ".github/workflows/ci-standards-policy.yml", text: "on:\n  pull_request:\njobs:\n  policy:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1\n" };
+  const run = (step) => ids(runDoctor({ workflows: [caller, { path: ".github/workflows/x.yml", text: `on:\n  pull_request:\njobs:\n  j:\n    steps:\n      - run: ${step}\n` }], vercel: [], files: {} }, rulebook, base));
+  for (const scan of ["gitleaks detect --source .", "gitleaks git -v", "gitleaks --verbose dir .", "semgrep --config auto"]) {
+    assert.ok(run(scan).includes("CI-015"), scan);
+  }
+  assert.ok(!run("tar xzf gitleaks.tar.gz gitleaks").includes("CI-015"));
+  assert.ok(!run("curl -fsSL https://github.com/gitleaks/gitleaks/releases/download/v8/gitleaks_8_linux_x64.tar.gz -o g.tgz").includes("CI-015"));
+});
+
 test("REG-008 needs a merge queue: without one, or when the rules could not be read, it is not judged", () => {
   const fail = FIXTURES["REG-008"].fail;
   assert.ok(ids(runDoctor(fail, rulebook, base)).includes("REG-008"));
