@@ -363,6 +363,14 @@
       "enforce_from": "2026-10-27"
     },
     {
+      "id": "REG-008",
+      "title": "The default branch has a merge queue and a required check's workflow does not run on merge_group",
+      "why": "DOM-1262, 21 October 2026: dd-claude-kit, dd-repo-registry and dd-relay moved from \"must be up to date with main\" to a merge queue once the org was on Enterprise Cloud. The queue tests each pull request on its own merge_group run and waits for the required checks there; a workflow without the trigger never reports, so the queue holds every pull request until it times out, with no error on the pull request. The policy check and the estate sweep read the default branch's rules and the workflows that produce each required check.",
+      "applies": "all",
+      "warn_from": "2026-10-21",
+      "enforce_from": "2026-10-28"
+    },
+    {
       "id": "FW-002",
       "title": "An exemption expires within 14 days, is invalid, or exempts nothing",
       "why": "Exemptions expire so ignored debt comes back as a finding instead of a forgotten note. One that matches no finding hides the next real one unreviewed (DOM-776 audit, 13 October 2026: dd-seo-mcp, dd-repo-registry and dd-prompt-library carried exemptions for findings already fixed).",

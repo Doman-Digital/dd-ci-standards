@@ -531,6 +531,11 @@ them also runs daily over the whole estate in the estate sweep
   cancelled, which still blocks a merge.
 - **REG-007** (fails from 27 October): the default branch's ruleset requires
   a check that no workflow job produces, so every PR waits for it.
+- **REG-008** (fails from 28 October): the default branch has a merge queue,
+  and a workflow that produces a required check does not run on
+  `merge_group`, so the queue waits for a check that never starts. Add
+  `merge_group:` and keep anything live to push, schedule or a manual run. The
+  caller `dd adopt` writes has the trigger (DOM-1262).
 
 The estate sweep in dd-repo-registry raises ids of its own (REG-001, REG-005,
 REG-006, DEL-, SEC-101 to SEC-105, EST-, JOB-, DEP-) into the same report. It
