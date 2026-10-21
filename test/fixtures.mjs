@@ -135,6 +135,8 @@ jobs:
     pass: { workflows: [
       { path: ".github/workflows/ci-standards-policy.yml", text: "# gitleaks runs inside the policy check\non:\n  pull_request:\njobs:\n  policy:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1\n" },
       { path: ".github/workflows/ci.yml", text: "on:\n  pull_request:\njobs:\n  test:\n    steps:\n      # was: gitleaks detect\n      - run: pnpm test\n" },
+      // Fetching the gitleaks binary to test a hook against it is not a scan.
+      { path: ".github/workflows/git-hooks.yml", text: "on:\n  pull_request:\njobs:\n  hooks:\n    steps:\n      - run: |\n          curl -fsSL https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_linux_x64.tar.gz -o g.tar.gz\n          tar xzf g.tar.gz gitleaks\n" },
     ], vercel: [], files: {} },
   },
   "CI-016": {
