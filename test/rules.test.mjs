@@ -316,6 +316,16 @@ test("CI-015 lets the estate sweep, the one central scanner, run gitleaks", () =
   assert.ok(!ids(runDoctor(v, rulebook, { ...base, repo: "Doman-Digital/dd-repo-registry" })).includes("CI-015"));
 });
 
+test("REG-008 needs a merge queue: without one, or when the rules could not be read, it is not judged", () => {
+  const fail = FIXTURES["REG-008"].fail;
+  assert.ok(ids(runDoctor(fail, rulebook, base)).includes("REG-008"));
+  assert.ok(!ids(runDoctor({ ...fail, mergeQueue: false }, rulebook, base)).includes("REG-008"));
+  assert.ok(!ids(runDoctor({ ...fail, mergeQueue: null, required: null }, rulebook, base)).includes("REG-008"));
+  // The caller already runs on merge_group, so only ci.yml is named.
+  const found = runDoctor(fail, rulebook, base).findings.filter((f) => f.rule === "REG-008");
+  assert.deepEqual(found.map((f) => f.file), [".github/workflows/ci.yml"]);
+});
+
 test("REG-007 is not judged when the rules could not be read", () => {
   const v = { ...FIXTURES["REG-007"].fail, required: null };
   assert.ok(!ids(runDoctor(v, rulebook, base)).includes("REG-007"));

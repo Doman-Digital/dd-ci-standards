@@ -196,6 +196,19 @@ jobs:
       { path: ".github/workflows/ci-standards-policy.yml", text: "on:\n  pull_request:\njobs:\n  policy:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1\n" },
     ], vercel: [], files: {}, required: ["All checks passed", "Security audit (cargo audit)", "test (22)", "policy / check", "policy / secrets"] },
   },
+  "REG-008": {
+    // The merge queue waits for `test` on its merge_group run, and ci.yml never starts one.
+    fail: { workflows: [
+      { path: ".github/workflows/ci.yml", text: "on:\n  pull_request:\n  push:\n    branches: [main]\njobs:\n  test:\n    steps:\n      - run: x\n" },
+      { path: ".github/workflows/ci-standards-policy.yml", text: "on:\n  pull_request:\n  merge_group:\njobs:\n  policy:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1\n" },
+    ], vercel: [], files: {}, required: ["test", "policy / check"], mergeQueue: true },
+    // Every producer runs on merge_group (list form too); a workflow that produces no required check needs nothing.
+    pass: { workflows: [
+      { path: ".github/workflows/ci.yml", text: "on: [pull_request, merge_group]\njobs:\n  test:\n    steps:\n      - run: x\n" },
+      { path: ".github/workflows/ci-standards-policy.yml", text: "on:\n  pull_request:\n  merge_group:\njobs:\n  policy:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1\n" },
+      { path: ".github/workflows/nightly.yml", text: "on:\n  schedule:\n    - cron: '7 3 * * *'\njobs:\n  sweep:\n    steps:\n      - run: x\n" },
+    ], vercel: [], files: {}, required: ["test", "policy / check"], mergeQueue: true },
+  },
   "FW-003": {
     fail: { workflows: [{ path: ".github/workflows/ci-standards-policy.yml", text: "jobs:\n  p:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1.0.22\n" }], vercel: [], files: { "renovate.json": '{ "extends": ["github>Doman-Digital/dd-ci-standards//default.json#v1.0.13"] }' } },
     pass: { workflows: [{ path: ".github/workflows/ci-standards-policy.yml", text: "jobs:\n  p:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1\n" }], vercel: [], files: { "renovate.json": '{ "extends": ["github>Doman-Digital/dd-ci-standards//default.json#v1"] }' } },
