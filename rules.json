@@ -330,6 +330,14 @@
       "enforce_from": "2026-10-26"
     },
     {
+      "id": "PKG-002",
+      "title": "A nested pnpm lockfile sits inside the root workspace without being one of its packages",
+      "why": "21 October 2026: Renovate's house packages PR (MMM-Beauty #722) bumped astro/package.json but not astro/pnpm-lock.yaml, and every Workers Build of the live site failed until #731 (DOM-1273). astro/ is installed with --ignore-workspace, but Renovate runs `pnpm install --lockfile-only` in the folder with no way to add that flag, so pnpm installed the root workspace, exited 0 and left the nested lockfile stale. A nested project outside the root workspace gets its own pnpm-workspace.yaml (`packages: []`), as sen-sphere, Tardi-Group, osint-engine and verqan-api already do; with it the same command updates the right lockfile.",
+      "applies": "all",
+      "warn_from": "2026-10-21",
+      "enforce_from": "2026-10-28"
+    },
+    {
       "id": "LIN-001",
       "title": "A pull request names no Linear issue",
       "why": "20 October 2026: client work was shipping with nothing in Linear or HubSpot to show for it. Since 22 July, 640 of 869 pull requests merged into the client repos named no issue, so the founder could not see what had been done for whom (DOM-1100). Every pull request names its issue (DOM-123) in the title, the body or the branch name, the same keys Linear's GitHub integration links on. Renovate and Dependabot branches are exempt. Add the key, then re-run the check or push a commit: editing the title alone does not start a new run.",
