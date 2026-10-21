@@ -410,6 +410,14 @@ has to pass a policy check to merge, not get caught in the next audit.
   and compares it with `floors.json`, the oldest catalogue copy-check trusts.
   claude-kit's `tools/copy_check.py` holds the same number; it is private and
   the policy check runs on each caller's token, so the doctor's copy is here.
+
+  Renovate updates a lockfile by running `pnpm install --lockfile-only` in its
+  folder, with no way to add `--ignore-workspace`. A nested project that sits
+  inside the root pnpm workspace without being one of its packages (an
+  `astro/` beside `apps/*`) therefore never gets its lockfile updated: pnpm
+  installs the root workspace and exits 0, and the next frozen install fails
+  (redacted #722, DOM-1273). PKG-002 reports that layout; the fix is a
+  `pnpm-workspace.yaml` with `packages: []` in the nested folder.
   Raise both together. Where a claude-kit checkout is present, `dd doctor`
   says when they differ.
 

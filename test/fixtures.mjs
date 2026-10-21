@@ -178,6 +178,11 @@ jobs:
     ctx: { craft: { floor: "2026.10.3", versions: [{ version: "0.20.2", catalogue: "2026.10.2", lockfile: "pnpm-lock.yaml", importer: "apps/portal" }, { version: "0.5.0", catalogue: "none", lockfile: "pnpm-lock.yaml", importer: "packages/ui" }] } },
     passCtx: { craft: { floor: "2026.10.3", versions: [{ version: "0.20.5", catalogue: "2026.10.3", lockfile: "pnpm-lock.yaml", importer: "." }] } },
   },
+  "PKG-002": {
+    // astro/ is outside apps/* and packages/*; apps/web is a member with a lockfile of its own.
+    fail: view({ files: { "pnpm-workspace.yaml": "packages:\n  - 'apps/*'\n  - 'packages/*'\n" }, paths: ["pnpm-workspace.yaml", "pnpm-lock.yaml", "astro/package.json", "astro/pnpm-lock.yaml"] }),
+    pass: view({ files: { "pnpm-workspace.yaml": "packages:\n  - 'apps/*'\n  - 'packages/*'\n" }, paths: ["pnpm-workspace.yaml", "pnpm-lock.yaml", "astro/pnpm-lock.yaml", "astro/pnpm-workspace.yaml", "apps/web/pnpm-lock.yaml"] }),
+  },
   "CI-027": {
     fail: wf("on:\n  pull_request:\nconcurrency:\n  group: ci-${{ github.ref }}\n  cancel-in-progress: true\njobs:\n  gate:\n    needs: [test]\n    if: ${{ always() }}\n    runs-on: x\n    steps:\n      - run: x\n"),
     // !cancelled() on the job; always() on a step inside a running job is fine.
