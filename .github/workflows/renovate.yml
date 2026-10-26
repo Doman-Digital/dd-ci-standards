@@ -122,7 +122,7 @@ jobs:
       # branch. Without uv the branch fails with `spawn uv ENOENT` and the run
       # goes red every Monday (19 Oct 2026, DOM-847).
       - name: Install uv (Python lockfile updates)
-        uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
 
       # Autodiscover is safe now where it was not on 2026-08-17: with
       # requireConfig "required" and onboarding off, a repo with no Renovate
