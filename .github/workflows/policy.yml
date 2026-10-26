@@ -62,7 +62,8 @@ name: ci-standards policy
 # skipped so old rulesets naming `<caller> / secrets` still passed, but no
 # ruleset named it (dd-baseline derives required checks from runs that
 # succeeded, and a skipped run never does), and its permanent "skipped" was
-# read three times as "this pull request was not scanned for secrets".
+# read as "this pull request was not scanned for secrets" (twice on
+# Doman-Digital#1257 alone).
 #
 # GitHub-hosted by default: callers include public repos. A private repo
 # passes its own runner. Org repos pass the org's variable (CI_RUNNER); client
