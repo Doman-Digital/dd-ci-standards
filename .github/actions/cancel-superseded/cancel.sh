@@ -13,7 +13,7 @@
 set -uo pipefail
 
 api="${GITHUB_API_URL:-https://api.github.com}"
-wait_seconds="${WAIT_SECONDS:-90}"
+wait_seconds="${WAIT_SECONDS:-20}"
 run="${api}/repos/${REPO}/actions/runs/${RUN_ID}"
 hdr=(-H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json")
 
