@@ -201,7 +201,7 @@ jobs:
     pass: { workflows: [
       { path: ".github/workflows/ci.yml", text: "on:\n  pull_request:\njobs:\n  gate:\n    name: All checks passed\n    steps:\n      - run: x\n  audit:\n    name: Security audit (cargo audit)\n    steps:\n      - run: x\n  test:\n    strategy:\n      matrix:\n        node: [22]\n    steps:\n      - run: x\n" },
       { path: ".github/workflows/ci-standards-policy.yml", text: "on:\n  pull_request:\njobs:\n  policy:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1\n" },
-    ], vercel: [], files: {}, required: ["All checks passed", "Security audit (cargo audit)", "test (22)", "policy / check", "policy / secrets"] },
+    ], vercel: [], files: {}, required: ["All checks passed", "Security audit (cargo audit)", "test (22)", "policy / check"] },
   },
   "REG-008": {
     // The merge queue waits for `test` on its merge_group run, and ci.yml never starts one.
