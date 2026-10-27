@@ -717,6 +717,14 @@
       "config": "wrangler.jsonc (env)",
       "path": "not-deployed",
       "note": "a config with no Worker in any account"
+    },
+    {
+      "worker": "dd-base-astro",
+      "account": "",
+      "repo": "Doman-Digital/dd-library",
+      "config": "dd-base/wrangler.jsonc",
+      "path": "not-deployed",
+      "note": "a config with no Worker in any account"
     }
   ]
 }
