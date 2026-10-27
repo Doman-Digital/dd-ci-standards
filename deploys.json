@@ -712,11 +712,11 @@
     },
     {
       "worker": "meridian-marketing",
-      "account": "",
+      "account": "Doman Digital",
       "repo": "Doman-Digital/client-previews",
       "config": "workers/meridian/wrangler.jsonc",
-      "path": "not-deployed",
-      "note": "a config with no Worker in any account"
+      "path": "actions",
+      "note": "meridianosint.com and www (behind Access) since 27 Oct 2026; deploy-sites.yml, site meridian-live (tools/deploy-meridian.mjs reads the domains back). DOM-808"
     },
     {
       "worker": "harrisons-beauty-cron",
