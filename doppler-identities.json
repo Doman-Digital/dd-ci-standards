@@ -81,7 +81,7 @@
       "cloudflare_account": "30515e0503d5fe494460233cc3535d74"
     },
     {
-      "repo": "Doman-Digital/osint-engine",
+      "repo": "Doman-Digital/meridian",
       "branch": "main",
       "reads": [
         "dd-deploy/meridian-api",

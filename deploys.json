@@ -63,7 +63,7 @@
     {
       "worker": "meridian-api-cf",
       "account": "Doman Digital",
-      "repo": "Doman-Digital/osint-engine",
+      "repo": "Doman-Digital/meridian",
       "config": "deploy/cloudflare (cf deploy, Containers)",
       "path": "actions",
       "note": "deploy-api.yml, dispatch only; token still a GitHub secret (SEC-007), no CI gate"
@@ -215,11 +215,10 @@
     {
       "worker": "meridian-web",
       "account": "Doman Digital",
-      "repo": "Doman-Digital/osint-engine",
+      "repo": "Doman-Digital/meridian",
       "config": "website/apps/web/wrangler.jsonc",
-      "path": "manual",
-      "target": "actions",
-      "note": "deployed by hand on 6 Oct"
+      "path": "actions",
+      "note": "deploy-web.yml from main; Doppler dd-deploy/meridian-web. Loses meridianosint.com's apex to meridian-marketing under DOM-808, then is deleted a week later"
     },
     {
       "worker": "proteam-electrical-astro",
@@ -608,18 +607,20 @@
     {
       "worker": "meridian-app",
       "account": "Doman Digital",
-      "repo": "Doman-Digital/osint-engine",
-      "config": "not on the default branch",
-      "path": "retired",
-      "note": "delete pending (founder): retire unless the private-app branch lands"
+      "repo": "Doman-Digital/meridian",
+      "config": "website/apps/web/wrangler.app.jsonc",
+      "path": "manual",
+      "target": "actions",
+      "note": "live at app.meridianosint.com behind Access; deployed by hand on 6 Oct (pnpm cf:deploy:app), config on main since PR #5. DOM-808"
     },
     {
       "worker": "meridian-admin",
       "account": "Doman Digital",
-      "repo": "Doman-Digital/osint-engine",
-      "config": "not on the default branch",
-      "path": "retired",
-      "note": "delete pending (founder): retire unless the private-app branch lands"
+      "repo": "Doman-Digital/meridian",
+      "config": "website/apps/admin/wrangler.jsonc",
+      "path": "manual",
+      "target": "actions",
+      "note": "live at admin.meridianosint.com behind Access (permanently); deployed by hand on 6 Oct, config on main since PR #5. DOM-808"
     },
     {
       "worker": "beep-test",
