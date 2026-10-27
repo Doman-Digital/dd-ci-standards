@@ -170,7 +170,23 @@
       "repo": "Doman-Digital/Verqan-Platform",
       "config": "apps/web/wrangler.jsonc",
       "path": "actions",
-      "note": "deploy.yml after CI on main (opennextjs-cloudflare deploy, build values from verqan-web/prd); Doppler dd-deploy/verqan-platform. First Actions deploy 14 Oct 2026"
+      "note": "deploy.yml after CI on main (Astro since 27 Oct 2026, DOM-837: wrangler deploy, build values from verqan-web/prd); Doppler dd-deploy/verqan-platform. First Actions deploy 14 Oct 2026"
+    },
+    {
+      "worker": "verqan-web-astro-test",
+      "account": "Doman Digital",
+      "repo": "",
+      "config": "",
+      "path": "retired",
+      "note": "delete pending (founder): noindex test Worker for the Astro port (DOM-837); the cutover on 27 Oct 2026 moved its build to the live Worker, nothing deploys it now"
+    },
+    {
+      "worker": "verqan-docs-astro-test",
+      "account": "Doman Digital",
+      "repo": "",
+      "config": "",
+      "path": "retired",
+      "note": "delete pending (founder): noindex test Worker for the Astro port (DOM-837); the cutover on 27 Oct 2026 moved its build to the live Worker, nothing deploys it now"
     },
     {
       "worker": "verqan-dashboard-cf",
@@ -186,23 +202,7 @@
       "repo": "Doman-Digital/Verqan-Platform",
       "config": "apps/docs/wrangler.jsonc",
       "path": "actions",
-      "note": "deploy.yml after CI on main (opennextjs-cloudflare deploy, build values from verqan-docs/prd); Doppler dd-deploy/verqan-platform. First Actions deploy 14 Oct 2026"
-    },
-    {
-      "worker": "verqan-web-astro-test",
-      "account": "Doman Digital",
-      "repo": "Doman-Digital/Verqan-Platform",
-      "config": "apps/web-astro/wrangler.jsonc",
-      "path": "actions",
-      "note": "noindex test Worker for the Astro port of verqan.com (DOM-837), no routes; deploy.yml after CI on main (wrangler deploy, build values from verqan-web/prd); Doppler dd-deploy/verqan-platform. Renamed to verqan-web-cf at the cutover, which removes this row"
-    },
-    {
-      "worker": "verqan-docs-astro-test",
-      "account": "Doman Digital",
-      "repo": "Doman-Digital/Verqan-Platform",
-      "config": "apps/docs-astro/wrangler.jsonc",
-      "path": "actions",
-      "note": "noindex test Worker for the Astro port of docs.verqan.com (DOM-837), no routes; deploy.yml after CI on main (wrangler deploy, build values from verqan-docs/prd); Doppler dd-deploy/verqan-platform. Renamed to verqan-docs-cf at the cutover, which removes this row"
+      "note": "deploy.yml after CI on main (Astro since 27 Oct 2026, DOM-837: wrangler deploy, build values from verqan-docs/prd); Doppler dd-deploy/verqan-platform. First Actions deploy 14 Oct 2026"
     },
     {
       "worker": "beautyops-app",
