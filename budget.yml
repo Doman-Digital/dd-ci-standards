@@ -105,6 +105,10 @@ repos:
         cron: "23 6 * * *"
         owner: "Meridian"
         reason: "daily check that deletes the retired Worker meridian-web on or after 2026-11-03 and stays red until deploys.json drops its row (DOM-1426); one curl-and-node job, no build, 10min cap. Disables itself when done, then the file is deleted"
+      - workflow: nightly-live-modules.yml
+        cron: "17 3 * * *"
+        owner: "Meridian"
+        reason: "nightly module integration harness against live third-party sites, moved off every pull request where it took a VM on each push and nobody acted on the result (DOM-1444, CI-017); one Rust build and test, 15min cap, non-blocking"
     vercel_crons: []
 
   dd-ci-standards:
