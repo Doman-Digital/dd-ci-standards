@@ -1,8 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { spawnSync } from "node:child_process";
 import { runDoctor, levelOn, exemptionState } from "../lib/engine.mjs";
-import { scheduleCrons } from "../lib/rules.mjs";
+import { scheduleCrons, issueKeysOf } from "../lib/rules.mjs";
 import { FIXTURES } from "./fixtures.mjs";
 
 const rulebook = JSON.parse(readFileSync(new URL("../rules.json", import.meta.url), "utf8"));
@@ -89,15 +92,57 @@ test("REG-004 does not require auto-merge on a private personal-account repo, bu
   assert.ok(ids(runDoctor(fail, rulebook, m({ private: false }))).includes("REG-004"), "public repos still need it");
 });
 
-test("LIN-001 finds the key in the title, body or branch, exempts dependency bots, and is silent outside a pull request", () => {
+test("LIN-001 reads Closes, Part of and the branch, exempts dependency bots and the no-issue label, and is silent outside a pull request", () => {
   const run = (pr) => ids(runDoctor(FIXTURES["LIN-001"].fail, rulebook, { ...base, pr })).includes("LIN-001");
-  assert.equal(run({ title: "Fix the form (DOM-12)", body: "", branch: "x" }), false);
+  assert.equal(run({ title: "Fix the form", body: "Closes DOM-12", branch: "x" }), false);
+  assert.equal(run({ title: "Part of DOM-1363: the check", body: "", branch: "x" }), false, "the title counts");
   assert.equal(run({ title: "Fix the form", body: "", branch: "dom-1100-fix-form" }), false, "Linear's branch names are lower case");
   assert.equal(run({ title: "Fix the form", body: "Part of CRO-7", branch: "x" }), false);
   assert.equal(run({ title: "Update dependency sharp", body: "", branch: "renovate/npm-sharp" }), false);
   assert.equal(run({ title: "Bump x", body: "", branch: "dependabot/npm_and_yarn/x" }), false);
+  assert.equal(run({ title: "Tidy", body: "", branch: "tidy", labels: ["No-Issue"] }), false, "the label, whatever its case");
+  assert.equal(run({ title: "Tidy", body: "", branch: "tidy", labels: ["dependencies"] }), true, "another label does not count");
   assert.equal(run({ title: "Mention ADOM-12 or DOM-", body: "", branch: "x" }), true, "only a whole key counts");
+  assert.equal(run({ title: "Fix the form (DOM-12)", body: "see DOM-12", branch: "x" }), true, "a key in passing is not a Closes or Part of line: the relay ignores it");
+  assert.equal(run({ title: "Closes ABC-12", body: "Part of #12", branch: "x" }), true);
+  assert.equal(run({ title: "x", body: null, branch: "x" }), true);
   assert.equal(run(undefined), false, "no pull request: not checked");
+});
+
+// Cases from dd-relay's own issueKeys tests (src/github-webhook/webhook.test.ts): what the relay
+// counts as naming an issue, LIN-001 counts too.
+test("issueKeysOf reads keys the way dd-relay does", () => {
+  const named = (title, body, branch) => issueKeysOf({ title, body, branch }).named.sort();
+  assert.deepEqual(named("t", "Closes DOM-1054\n\nPart of cro-12. Fixed: DOM-7 too.", "dom-1060-x"), ["CRO-12", "DOM-1054", "DOM-1060", "DOM-7"]);
+  assert.deepEqual(named("x", "Part of DOM-5. closes DOM-5", "dom-5-thing"), ["DOM-5"]);
+  assert.deepEqual(named("x", "", "dom-1054-foo"), ["DOM-1054"]);
+  assert.deepEqual(named("x", "", "feature/random"), []);
+  assert.deepEqual(named("x", "discloses DOM-9, prefix DOM-10", "main"), []);
+  assert.deepEqual(named("x", "", "worktree/dom-77.fix"), ["DOM-77"]);
+});
+
+// 26 October 2026: dd-claude-kit#178 quoted another PR's closing line and Linear closed DOM-1014.
+test("LIN-002 flags a closing word in a quote beside a key the pull request does not own", () => {
+  const foreign = (body, branch = "dom-1363-x", title = "x") => issueKeysOf({ title, body, branch }).foreign;
+  for (const body of [
+    "Part of DOM-1363\n\nThe other PR said `Closes DOM-1014`.",
+    "Part of DOM-1363\n\n> Closes DOM-1014",
+    'Part of DOM-1363\n\nIt wrote "Closes DOM-1014" in its body.',
+    "Part of DOM-1363\n\n```\nCloses DOM-1014\n```",
+    "Part of DOM-1363\n\nIt wrote “Fixes DOM-1014” in its body.",
+    "Part of DOM-1363\n\nIt is `closing DOM-1014` in a quote.",
+  ]) assert.deepEqual(foreign(body), ["DOM-1014"], body);
+  assert.deepEqual(foreign("Closes DOM-5\nCloses DOM-6\nSee `Closes DOM-5`", ""), [], "its own key, quoted");
+  assert.deepEqual(foreign("see `Closes DOM-5`", "dom-5-x"), [], "the branch's key");
+  assert.deepEqual(foreign("The word `closes` and then DOM-1014 outside the quote"), []);
+  assert.deepEqual(foreign("Part of DOM-1363 names DOM-1014"), [], "names is the safe word");
+  assert.deepEqual(foreign("see `Closes DOM-1014`", "tidy"), ["DOM-1014"], "a quoted key is all it names: LIN-001 passes, LIN-002 warns");
+  assert.deepEqual(issueKeysOf({ title: "x", body: "see `Closes DOM-1014`", branch: "tidy" }).named, ["DOM-1014"]);
+  const run = (pr, today) => runDoctor(FIXTURES["LIN-002"].fail, rulebook, { ...base, today, pr }).findings.filter((f) => f.rule === "LIN-002");
+  const pr = { title: "x", body: "Part of DOM-1363\n`Closes DOM-1014`", branch: "tidy" };
+  assert.equal(run(pr, "2026-10-27")[0].level, "warn");
+  assert.equal(run(pr, "2026-10-26").length, 0, "off before its warn date");
+  assert.equal(run({ ...pr, branch: "renovate/x" }, "2026-10-27").length, 0, "bots are exempt");
 });
 
 test("CI-001 checks only repos the organisation owns, since only they can use its runners", () => {
@@ -407,4 +452,26 @@ test("doppler-identities.json: one row per repo, each well formed, every house A
   }
   const missing = [...new Set(deploys.workers.filter((w) => w.path === "actions" && /^doman-digital\//i.test(w.repo || "")).map((w) => w.repo))].filter((r) => !repos.includes(r.toLowerCase()));
   assert.deepEqual(missing, [], `Actions deploys with no Doppler identity row: ${missing.join(", ")}`);
+});
+
+// The acceptance for DOM-1363, end to end: the doctor as the policy workflow runs it, reading the
+// pull request event file. A PR with no issue is refused, Part of passes, the no-issue label passes.
+test("dd doctor refuses a pull request event with no issue, passes Part of and the no-issue label", () => {
+  const dir = mkdtempSync(join(tmpdir(), "dd-lin-"));
+  const doctor = (pull_request, today = "2026-10-28") => {
+    const file = join(dir, "event.json");
+    writeFileSync(file, JSON.stringify({ pull_request }));
+    const r = spawnSync(process.execPath, [new URL("../bin/dd.mjs", import.meta.url).pathname, "doctor", new URL("..", import.meta.url).pathname, "--today", today, "--format", "json"], {
+      encoding: "utf8", env: { ...process.env, GITHUB_EVENT_NAME: "pull_request", GITHUB_EVENT_PATH: file },
+    });
+    return { code: r.status, out: r.stdout };
+  };
+  const pr = (over) => ({ title: "Tidy the README", body: "", head: { ref: "tidy" }, labels: [], ...over });
+  const bad = doctor(pr({}));
+  assert.equal(bad.code, 1);
+  assert.match(bad.out, /LIN-001/);
+  assert.equal(doctor(pr({}), "2026-10-27").code, 0, "before its enforce date it only warns");
+  for (const ok of [pr({ title: "Part of DOM-1363: the check" }), pr({ body: "Closes DOM-1363" }), pr({ head: { ref: "dom-1363-check" } }), pr({ labels: [{ name: "no-issue" }] })]) {
+    assert.doesNotMatch(doctor(ok).out, /LIN-001/, JSON.stringify(ok));
+  }
 });

@@ -421,13 +421,37 @@ has to pass a policy check to merge, not get caught in the next audit.
   Raise both together. Where a claude-kit checkout is present, `dd doctor`
   says when they differ.
 
-## Every pull request names its issue (LIN-001)
+## Every pull request names its issue (LIN-001, LIN-002)
 
 The policy check reads the pull request it runs on (the Actions event file)
-and fails one that names no Linear issue: a key such as `DOM-123` or `CRO-7`
-in the title, the body or the branch name, the same keys Linear's GitHub
-integration links on. Renovate and Dependabot branches are exempt. It warns
-from 21 October 2026 and fails from 28 October.
+and fails one that names no Linear issue. It reads the title and description
+the way dd-relay does when it moves Linear on a merge (`CLOSES_RE`,
+`PART_OF_RE` and `BRANCH_RE` in `dd-relay/src/github-webhook/webhook.ts`,
+copied into `lib/rules.mjs`):
+
+- a `Closes DOM-123` or `Part of DOM-123` line (also `Fixes`, `Resolves`;
+  `CRO-7` works too) in the title or description, or
+- the key at the start of the branch name, `dom-123-short-name`, or
+- the `no-issue` label, for work that has no issue.
+
+A key mentioned in passing (`see DOM-123`) does not count, because the relay
+ignores it too. Renovate and Dependabot branches are exempt. It warns from
+21 October 2026 and fails from 28 October (27 October 2026, DOM-1363: the
+reading tightened to the relay's, and the `no-issue` label arrived).
+
+**LIN-002** warns when a closing word sits inside backticks, a code block, a
+`>` quote or double quotes beside a key the pull request does not claim as its
+own (a Closes or Part of line outside the quote, or the branch). The Linear
+GitHub app, installed on the whole org, reads closing words anywhere, so a
+quoted `Closes DOM-1014` in dd-claude-kit#178 closed DOM-1014 on 26 October
+2026. When you mention another issue write `names DOM-n`, never `closes DOM-n`.
+It warns until 25 January 2027, the 90-day limit, then fails.
+
+**Where it runs.** In the org, the `dd-policy-required` ruleset (DOM-1084, active
+from 27 October 2026) runs `policy.yml@v1` on every private repo, so the check
+needs nothing in the repo. The workflow's `pull_request` types include `edited`,
+`labeled` and `unlabeled`, so fixing the description or adding the label clears
+the ruleset run without a push. Client repos on other accounts keep their caller.
 
 Why: on 20 October 2026 the founder found client work shipping with nothing
 in Linear or HubSpot to show for it. Since 22 July, 640 of the 869 pull
@@ -435,9 +459,9 @@ requests merged into the client repos named no issue (DOM-1100). The rule
 runs wherever the policy check runs, so every client repo that calls it, and
 every private org repo through the org ruleset, is covered at once.
 
-Editing the title does not start a new run (callers trigger on opened,
-synchronize and reopened), so add the key and re-run the check, or push a
-commit. Outside a pull request (`dd doctor` on a machine, the estate sweep)
+A caller's own run does not start again on an edit (callers trigger on
+opened, synchronize and reopened), so in a repo that still has a caller, push a
+commit after adding the key. Outside a pull request (`dd doctor` on a machine, the estate sweep)
 there is no pull request to read, and the rule is not checked.
 
 ## Repo description and tags

@@ -306,6 +306,12 @@ jobs:
     ctx: { pr: { title: "Add the booking page", body: "", branch: "feat/booking" } },
     passCtx: { pr: { title: "Add the booking page", body: "Closes DOM-123", branch: "feat/booking" } },
   },
+  "LIN-002": {
+    fail: view({}),
+    pass: view({}),
+    ctx: { pr: { title: "Add the booking page", body: "Part of DOM-123\n\nThe other PR said `Closes DOM-1014`.", branch: "feat/booking" } },
+    passCtx: { pr: { title: "Add the booking page", body: "Part of DOM-123\n\nThe other PR names DOM-1014.", branch: "feat/booking" } },
+  },
   "REG-004": {
     // Settings, not files: the view is empty and the settings come in the context.
     fail: view({}),

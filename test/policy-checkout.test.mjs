@@ -87,3 +87,7 @@ test("Semgrep runs only for a repo scanners.json lists, read before the doctor",
   assert.match(policy, /steps\.scanners\.outputs\.semgrep == 'true' && github\.event_name == 'pull_request'/);
   assert.match(policy, /SEMGREP_IMAGE: semgrep\/semgrep@sha256:[0-9a-f]{64}/);
 });
+
+test("the ruleset run starts again when the title, description or labels change, so a fixed PR clears LIN-001 without a push (DOM-1363)", () => {
+  assert.match(policy, /\n  pull_request:\n    types: \[opened, synchronize, reopened, edited, labeled, unlabeled\]\n  merge_group:/);
+});
