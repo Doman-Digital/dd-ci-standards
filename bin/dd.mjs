@@ -125,13 +125,13 @@ async function context(args) {
   return { dir, repo, ctx: { today, kind, visibility, repo, repoName, budget, meta, taxonomy, pr: pullRequest(), vars } };
 }
 
-/** The pull request this run checks (LIN-001), from the Actions event file; null outside a pull request run. */
+/** The pull request this run checks (LIN-001, LIN-002), from the Actions event file; null outside a pull request run. */
 function pullRequest() {
   const path = process.env.GITHUB_EVENT_PATH;
   if (!path || !/^pull_request/.test(process.env.GITHUB_EVENT_NAME || "")) return null;
   try {
     const pr = JSON.parse(readFileSync(path, "utf8")).pull_request;
-    return pr ? { title: pr.title || "", body: pr.body || "", branch: pr.head?.ref || "" } : null;
+    return pr ? { title: pr.title || "", body: pr.body || "", branch: pr.head?.ref || "", labels: (pr.labels || []).map((l) => l.name) } : null;
   } catch {
     return null;
   }
