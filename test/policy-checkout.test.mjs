@@ -88,6 +88,8 @@ test("Semgrep runs only for a repo scanners.json lists, read before the doctor",
   assert.match(policy, /SEMGREP_IMAGE: semgrep\/semgrep@sha256:[0-9a-f]{64}/);
 });
 
-test("the ruleset run starts again when the title, description or labels change, so a fixed PR clears LIN-001 without a push (DOM-1363)", () => {
-  assert.match(policy, /\n  pull_request:\n    types: \[opened, synchronize, reopened, edited, labeled, unlabeled\]\n  merge_group:/);
+test("the failure message and the docs tell the author to push: a ruleset run ignores types, and a re-run reads the old PR (DOM-1363 probe)", () => {
+  assert.match(policy, /\n  pull_request:\n  merge_group:/, "types here would promise a re-run the ruleset never does");
+  const rules = readFileSync(new URL("../lib/rules.mjs", import.meta.url), "utf8");
+  assert.match(rules, /Then push a commit .*editing the description or labels does not start this check again/);
 });

@@ -449,9 +449,13 @@ It warns until 25 January 2027, the 90-day limit, then fails.
 
 **Where it runs.** In the org, the `dd-policy-required` ruleset (DOM-1084, active
 from 27 October 2026) runs `policy.yml@v1` on every private repo, so the check
-needs nothing in the repo. The workflow's `pull_request` types include `edited`,
-`labeled` and `unlabeled`, so fixing the description or adding the label clears
-the ruleset run without a push. Client repos on other accounts keep their caller.
+needs nothing in the repo. Client repos on other accounts keep their caller.
+
+**After fixing a failing PR, push a commit** (`git commit --allow-empty` will
+do). Editing the title or description, or adding the label, does not start the
+check again: a ruleset run ignores `edited`, `labeled` and `unlabeled` in its
+workflow's `types` (probed on dd-photo-pack#22, 27 October 2026), and a re-run
+reads the PR as it was when the run began.
 
 Why: on 20 October 2026 the founder found client work shipping with nothing
 in Linear or HubSpot to show for it. Since 22 July, 640 of the 869 pull
@@ -459,9 +463,7 @@ requests merged into the client repos named no issue (DOM-1100). The rule
 runs wherever the policy check runs, so every client repo that calls it, and
 every private org repo through the org ruleset, is covered at once.
 
-A caller's own run does not start again on an edit (callers trigger on
-opened, synchronize and reopened), so in a repo that still has a caller, push a
-commit after adding the key. Outside a pull request (`dd doctor` on a machine, the estate sweep)
+Outside a pull request (`dd doctor` on a machine, the estate sweep)
 there is no pull request to read, and the rule is not checked.
 
 ## Repo description and tags
