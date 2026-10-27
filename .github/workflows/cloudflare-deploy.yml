@@ -19,6 +19,17 @@ name: cloudflare-deploy (reusable)
 # Deploys of one repo queue rather than cancel each other: a deploy stopped
 # halfway can leave one Worker new and the next one old.
 #
+# A run that the guard stops reports `cancelled`, not `success` (DOM-1422).
+# The guard is a step, so GitHub would call the run a success a few seconds
+# after it started, and anything that reads workflow_run events as "this
+# merge is live" (dd-relay's settle()) would believe it. After the deploy job
+# says `superseded`, the last job here cancels the run. Cancelling a run needs
+# `actions: write`, which only the caller can grant (a called workflow cannot
+# ask for more than its caller gave: GitHub refuses to start it), so the
+# caller's deploy job grants it (CI-030) and this workflow's own permissions
+# are the caller's. A caller that has not granted it still works: the cancel
+# is refused, a warning says so, and the run ends as it did before.
+#
 # The CI workflow it follows must run on every push to main, with no paths:
 # filter. A tip commit that CI skipped has no run to deploy it, and the guard
 # stops the run for the commit before it, so nothing ships (CI-014).
@@ -38,6 +49,7 @@ name: cloudflare-deploy (reusable)
 #       permissions:
 #         contents: read
 #         id-token: write # signs in to Doppler
+#         actions: write # cancels the run when a newer commit supersedes it (CI-030)
 #       uses: Doman-Digital/dd-ci-standards/.github/workflows/cloudflare-deploy.yml@v1
 #       with:
 #         doppler-config: relay
@@ -112,9 +124,10 @@ on:
         description: A read-only Doppler service token for the Worker's runtime secrets. Needed only with sync-secrets-to.
         required: false
 
-permissions:
-  contents: read
-
+# No top-level `permissions:` on purpose (SEC-008 accepts that in a reusable
+# workflow whose every job states its permissions or says why it inherits):
+# a top-level block would also be the default of the `superseded` job and
+# stop it holding the caller's `actions: write`. Each job below states its own.
 jobs:
   deploy:
     # A workflow_run deploy runs only for a CI run that passed and that a push to this repo's default branch started,
@@ -137,6 +150,8 @@ jobs:
     permissions:
       contents: read
       id-token: write
+    outputs:
+      deploy: ${{ steps.tip.outputs.deploy }}
     concurrency:
       group: cloudflare-deploy-${{ github.repository }}${{ inputs.concurrency-key != '' && format('-{0}', inputs.concurrency-key) || '' }}
       cancel-in-progress: false
@@ -245,3 +260,15 @@ jobs:
               echo "::endgroup::"
             done <<< "$CONFIGS"
           fi
+
+  # The deploy job's tip guard stopped it: a newer commit is the tip and its own
+  # run deploys it. Cancel this run so it reports cancelled, not success (DOM-1422).
+  superseded:
+    needs: deploy
+    if: needs.deploy.outputs.deploy == 'false'
+    # dd: allow CI-002 until=2027-03-31 reusable workflow: runs on the caller's runner, defaults to GitHub-hosted, caller repos pass their own runner
+    runs-on: ${{ inputs.runner || vars.CI_RUNNER_DEPLOY || vars.CI_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 3
+    # dd: inherit-permissions the caller's actions: write is all this job needs, and it checks out nothing and holds no secret
+    steps:
+      - uses: Doman-Digital/dd-ci-standards/.github/actions/cancel-superseded@v1

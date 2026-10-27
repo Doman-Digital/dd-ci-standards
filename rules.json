@@ -193,6 +193,14 @@
       "enforce_from": "2026-11-20"
     },
     {
+      "id": "CI-030",
+      "title": "A caller of the shared deploy does not grant actions: write",
+      "why": "DOM-1422, 27 October 2026: cloudflare-deploy.yml stops an older commit with a step, so GitHub reported the run as a success a few seconds after it started, and dd-relay's settle() read it as proof a merge was live (DOM-1362). A run that did start can end as something other than a success only by being cancelled, and cancelling needs actions: write, which a called workflow cannot ask for (GitHub refuses to start it) and so only the caller's deploy job can grant. A caller without it still deploys; a superseded run just keeps reporting success. dd adopt --only CI-030 writes the line.",
+      "applies": "full",
+      "warn_from": "2026-10-27",
+      "enforce_from": "2026-11-24"
+    },
+    {
       "id": "CI-023",
       "title": "A workflow still uses Vercel",
       "why": "Vercel was retired for CI and deploys (DOM-555, DOM-776). On 19 October 2026 its leftovers were still in five repos: six VERCEL_TOKEN_* inputs in dd-repo-registry's sweep, a kv.vercel-storage placeholder in the monorepo's lighthouse.yml, and comments in redacted, redacted and redacted-api describing Vercel building main. A workflow that names Vercel either does nothing or depends on an account nobody watches. A portal still served by Vercel records it as an exemption.",

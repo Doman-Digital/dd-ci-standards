@@ -124,6 +124,10 @@ jobs:
     fail: wf("on:\n  workflow_run:\n    workflows: [CI]\n    types: [completed]\n    branches: [main]\nconcurrency:\n  group: deploy-production\n  cancel-in-progress: false\njobs:\n  deploy:\n    steps:\n      - uses: actions/checkout@v4\n      - run: npx wrangler deploy\n", ".github/workflows/deploy.yml"),
     pass: wf("on:\n  workflow_run:\n    workflows: [CI]\n    types: [completed]\n    branches: [main]\nconcurrency:\n  group: deploy-production\n  cancel-in-progress: false\njobs:\n  deploy:\n    steps:\n      - uses: Doman-Digital/dd-ci-standards/.github/actions/deploy-tip@v1\n        id: tip\n        with:\n          sha: ${{ github.event.workflow_run.head_sha }}\n      - uses: actions/checkout@v4\n        with:\n          ref: ${{ github.event.workflow_run.head_sha }}\n      - run: npx wrangler deploy\n", ".github/workflows/deploy.yml"),
   },
+  "CI-030": {
+    fail: wf("on:\n  workflow_run:\n    workflows: [CI]\n    types: [completed]\n    branches: [main]\npermissions:\n  contents: read\njobs:\n  deploy:\n    permissions:\n      contents: read\n      id-token: write\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/cloudflare-deploy.yml@v1\n    with:\n      doppler-config: relay\n", ".github/workflows/deploy.yml"),
+    pass: wf("on:\n  workflow_run:\n    workflows: [CI]\n    types: [completed]\n    branches: [main]\npermissions:\n  contents: read\njobs:\n  deploy:\n    permissions:\n      contents: read\n      id-token: write\n      actions: write\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/cloudflare-deploy.yml@v1\n    with:\n      doppler-config: relay\n", ".github/workflows/deploy.yml"),
+  },
   "CI-015": {
     // redacted's TruffleHog beside the policy caller, on push to main only:
     // the estate sweep already scans what reaches main.

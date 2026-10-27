@@ -111,3 +111,16 @@ test("adopt --only writes that rule's fix and nothing else, and a second run cha
   const again = { ...debt, workflows: debt.workflows.map((w) => (writes[w.path] ? { ...w, text: writes[w.path] } : w)) };
   assert.deepEqual(planAdopt(again, rulebook, ctx, { only: ["CI-022"] }).writes, {});
 });
+
+test("adopt --only CI-030 adds actions: write to the job that calls the shared deploy, and nothing else", () => {
+  const call = (perms) => `on:\n  workflow_run:\n    workflows: [CI]\n    types: [completed]\n    branches: [main]\npermissions:\n  contents: read\njobs:\n  deploy:\n${perms}    uses: Doman-Digital/dd-ci-standards/.github/workflows/cloudflare-deploy.yml@v1\n    with:\n      doppler-config: relay\n`;
+  const plan = (text) => planAdopt({ workflows: [{ path: ".github/workflows/deploy.yml", text }], vercel: [], files: {} }, rulebook, ctx, { only: ["CI-030"] });
+  const own = plan(call("    permissions:\n      contents: read\n      id-token: write\n"));
+  assert.equal(own.writes[".github/workflows/deploy.yml"], call("    permissions:\n      actions: write\n      contents: read\n      id-token: write\n"));
+  assert.deepEqual(own.after.findings.filter((f) => f.rule === "CI-030"), []);
+  const inherited = plan(call(""));
+  assert.equal(inherited.writes[".github/workflows/deploy.yml"], call("    permissions:\n      contents: read\n      actions: write\n"));
+  assert.deepEqual(inherited.after.findings.filter((f) => f.rule === "CI-030"), []);
+  // Already granted: a second run changes nothing.
+  assert.deepEqual(plan(own.writes[".github/workflows/deploy.yml"]).writes, {});
+});
