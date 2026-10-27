@@ -55,10 +55,15 @@ name: ci-standards policy
 # One job, not two (13 October 2026, DOM-776): every job is a fresh VM on a
 # host that runs six at once for the whole estate, and this gate runs on every
 # pull request in every repo, so a second job for a 20-second scan cost a VM
-# boot and a checkout per PR. The `secrets` job stays as a skipped job, which
-# takes no runner and still satisfies rulesets that require
-# `<caller> / secrets`; drop it once no ruleset names it. Semgrep is a step in
-# the same job for the same reason.
+# boot and a checkout per PR. Semgrep is a step in the same job for the same
+# reason. The scan's result is `<caller> / check`.
+#
+# The `secrets` placeholder job was removed on 26 October 2026. It was kept
+# skipped so old rulesets naming `<caller> / secrets` still passed, but no
+# ruleset named it (dd-baseline derives required checks from runs that
+# succeeded, and a skipped run never does), and its permanent "skipped" was
+# read as "this pull request was not scanned for secrets" (twice on
+# Doman-Digital#1257 alone).
 #
 # GitHub-hosted by default: callers include public repos. A private repo
 # passes its own runner. Org repos pass the org's variable (CI_RUNNER); client
@@ -202,12 +207,3 @@ jobs:
             -e GIT_CONFIG_COUNT -e GIT_CONFIG_KEY_0 -e GIT_CONFIG_VALUE_0 -e GIT_CONFIG_KEY_1 -e GIT_CONFIG_VALUE_1 \
             "$SEMGREP_IMAGE" \
             semgrep scan --config p/default --baseline-commit "$BASE_SHA" --error --metrics=off --disable-version-check
-
-  # Kept for rulesets that require `<caller> / secrets`: a skipped job takes no
-  # runner and counts as passed. The scan runs in `check` above.
-  secrets:
-    if: ${{ false }}
-    runs-on: ${{ vars.CI_RUNNER_LIGHT || inputs.runner }}
-    timeout-minutes: 1
-    steps:
-      - run: echo "The secret scan runs in the check job."
