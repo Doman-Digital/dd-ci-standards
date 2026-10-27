@@ -1,6 +1,6 @@
 {
   "$comment": "Every Cloudflare Worker and the one way it is deployed (CF-001, DOM-776). path is how it deploys today: actions (cloudflare-deploy.yml or a reviewed deploy workflow), workers-builds (Cloudflare's GitHub app, simple client static sites only), manual (by hand: listed so it is visible, and moved to target), retired (serves nothing; deletion is the founder's call) or not-deployed (a config with no Worker). Collected 13 October 2026 from all eight accounts. Account ids are identifiers, not secrets.",
-  "updated": "2026-10-20",
+  "updated": "2026-10-27",
   "accounts": {
     "Doman Digital": "30515e0503d5fe494460233cc3535d74",
     "sen-sphere": "27afd0d63cc551836017345fba42762d",
@@ -232,9 +232,9 @@
       "worker": "meridian-web",
       "account": "Doman Digital",
       "repo": "Doman-Digital/meridian",
-      "config": "website/apps/web/wrangler.jsonc",
-      "path": "actions",
-      "note": "deploy-web.yml from main; Doppler dd-deploy/meridian-web. Loses meridianosint.com's apex to meridian-marketing under DOM-808, then is deleted a week later"
+      "config": "website/apps/web/wrangler.jsonc (removed from the repo)",
+      "path": "retired",
+      "note": "no hostname since the apex moved to meridian-marketing on 27 Oct 2026 (DOM-808) and nothing deploys it. retire-meridian-web.yml in Doman-Digital/meridian deletes the Worker on or after 2026-11-03, then stays red until this row is removed (retired, then removed). DOM-1426"
     },
     {
       "worker": "proteam-electrical-astro",
@@ -625,18 +625,18 @@
       "account": "Doman Digital",
       "repo": "Doman-Digital/meridian",
       "config": "website/apps/web/wrangler.app.jsonc",
-      "path": "manual",
-      "target": "actions",
-      "note": "live at app.meridianosint.com behind Access; deployed by hand on 6 Oct (pnpm cf:deploy:app), config on main since PR #5. DOM-808"
+      "path": "actions",
+      "note": "deploy-apps.yml after CI on main (tip guard, Doppler dd-deploy/meridian-web over OIDC), smoke-checked as 302 from Access at app.meridianosint.com. Deployed by hand until 27 Oct 2026. DOM-1426",
+      "workflow": ".github/workflows/deploy-apps.yml"
     },
     {
       "worker": "meridian-admin",
       "account": "Doman Digital",
       "repo": "Doman-Digital/meridian",
       "config": "website/apps/admin/wrangler.jsonc",
-      "path": "manual",
-      "target": "actions",
-      "note": "live at admin.meridianosint.com behind Access (permanently); deployed by hand on 6 Oct, config on main since PR #5. DOM-808"
+      "path": "actions",
+      "note": "deploy-apps.yml after CI on main (tip guard, Doppler dd-deploy/meridian-web over OIDC), smoke-checked as 302 from Access at admin.meridianosint.com. Deployed by hand until 27 Oct 2026. DOM-1426",
+      "workflow": ".github/workflows/deploy-apps.yml"
     },
     {
       "worker": "beep-test",
