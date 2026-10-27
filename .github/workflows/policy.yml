@@ -103,10 +103,11 @@ name: ci-standards policy
 # Every pull request names its issue (LIN-001, LIN-002; DOM-1363, 27 October
 # 2026). The doctor reads this run's pull request event and fails one with no
 # Closes or Part of line for a DOM-n or CRO-n key and no such key in its branch
-# name or `no-issue` label. The types below re-run the ruleset run when the title,
-# description or labels change, so fixing the description clears the check
-# without a push. A caller's own `pull_request` has the default types, so its
-# `<caller> / check` clears on the next push, as it always did.
+# name or `no-issue` label. Only a push starts it again: a ruleset run ignores
+# `edited`, `labeled` and `unlabeled` in `types` (probed on dd-photo-pack#22,
+# 27 October 2026: neither a label nor a title edit started a run), and
+# re-running a run reads the pull request as it was when the run began. So the
+# failure message tells the author to push a commit, an empty one will do.
 #
 # The `check` job skips in this repo itself: here the pull_request trigger
 # would run it with no runner variable (a public repo sees none), and
@@ -120,7 +121,6 @@ on:
         type: string
         default: ubuntu-latest
   pull_request:
-    types: [opened, synchronize, reopened, edited, labeled, unlabeled]
   merge_group:
 
 concurrency:
