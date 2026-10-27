@@ -1,0 +1,38 @@
+name: cancel superseded run
+description: Cancels the workflow run when its deploy was skipped because a newer commit is the tip, so the run reports cancelled, not success (DOM-1422).
+
+# The last job of cloudflare-deploy.yml. A deploy that the tip guard (deploy-tip)
+# skips is a step that does nothing, and GitHub calls a run whose steps all pass
+# a success, a few seconds after it started. Anything that reads workflow_run
+# events as "this commit is live" believes it. Cancelling the run is the one
+# way a run that did start can end as something other than a success.
+#
+# Needs `actions: write` for the token, which a called workflow cannot ask for on
+# its own: it comes from the caller's job (CI-030). Without it nothing breaks;
+# the run ends as a success with a warning. Never fails the job. See cancel.sh
+# for when it holds back.
+#
+# Use it as the only step of a job with no permissions block of its own:
+#
+#   superseded:
+#     needs: deploy
+#     if: needs.deploy.outputs.deploy == 'false'
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: Doman-Digital/dd-ci-standards/.github/actions/cancel-superseded@v1
+
+inputs:
+  token:
+    description: Token that can cancel the run (actions write)
+    default: ${{ github.token }}
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        REPO: ${{ github.repository }}
+        RUN_ID: ${{ github.run_id }}
+        ACTION_PATH: ${{ github.action_path }}
+      run: bash "$ACTION_PATH/cancel.sh"
