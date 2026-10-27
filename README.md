@@ -336,6 +336,7 @@ has to pass a policy check to merge, not get caught in the next audit.
       permissions:
         contents: read
         id-token: write
+        actions: write                 # a superseded deploy cancels its run (CI-030)
       uses: Doman-Digital/dd-ci-standards/.github/workflows/cloudflare-deploy.yml@v1
       with:
         doppler-config: relay          # Doppler dd-deploy/relay holds CLOUDFLARE_DEPLOY_VALUE
@@ -343,6 +344,32 @@ has to pass a policy check to merge, not get caught in the next audit.
           wrangler.jsonc
         pre-deploy: node scripts/check-migrations.mjs   # optional
   ```
+
+  **A deploy the guard skips reports `cancelled`, not `success` (CI-030,
+  DOM-1422).** The tip guard is a step, so a run for a commit that is no
+  longer the tip used to end a few seconds after it started with a green
+  `success`, and a consumer that reads `workflow_run` events as "this merge is
+  live" (dd-relay's `settle()`) believed it. Making the guard a job does not
+  help: a run with one job that ran and one that was skipped is still a
+  success. The only way a run that started can end as something else is to
+  be cancelled, so the last job of the workflow (`superseded`, through
+  `.github/actions/cancel-superseded`) cancels the run when the deploy job says
+  it was superseded. It holds back while another job of the run is still going,
+  so a caller with two Workers never stops one mid-deploy for the other.
+  Cancelling needs `actions: write`, and a called workflow cannot ask for it:
+  GitHub refuses to start a workflow that requests more than its caller gave,
+  which would break every caller on `@v1`. So the caller's deploy job grants it,
+  `cloudflare-deploy.yml` has no top-level `permissions:` (a top-level block
+  would be the cancelling job's default and cap it), and SEC-008 accepts that
+  in a reusable workflow whose every job states its permissions or carries
+  `# dd: inherit-permissions <reason>`. A caller that has not granted it still
+  deploys exactly as before: the cancel is refused, a warning says so, and a
+  superseded run keeps reporting success. CI-030 warns from 27 October 2026 and
+  fails from 24 November; `dd adopt --only CI-030` writes the line. Until a
+  caller has it, a reader of `workflow_run` events cannot tell its skipped run
+  from a deploy except by how long it took. The guard for all of this is
+  `test/cancel-superseded.test.mjs` (the script against a fake API, and the
+  shape of the workflow) and the CI-030 fixtures.
 
   Runtime secret sync can opt into `sync-secrets-filter`, a repository Node
   script receiving Doppler JSON on stdin and emitting a filtered JSON object.

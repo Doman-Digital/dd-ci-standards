@@ -285,6 +285,32 @@ test("SEC-008 requires workflow-level permissions, accepting empty and block map
   assert.deepEqual(run("permissions:\n  contents: read\njobs: {}\n"), []);
 });
 
+test("SEC-008 lets a reusable workflow inherit its caller's permissions only where each job says so", () => {
+  const run = (text) => ids(runDoctor({ workflows: [{ path: ".github/workflows/deploy.yml", text }], vercel: [], files: {} }, rulebook, base)).filter((id) => id === "SEC-008");
+  const head = "on:\n  workflow_call:\njobs:\n";
+  const explicit = "  deploy:\n    permissions:\n      contents: read\n    steps:\n      - run: x\n";
+  const marked = "  superseded:\n    # dd: inherit-permissions the caller's actions: write is all it needs\n    steps:\n      - run: x\n";
+  const bare = "  superseded:\n    steps:\n      - run: x\n";
+  assert.deepEqual(run(head + explicit + marked), []);
+  assert.deepEqual(run(head + explicit + bare), ["SEC-008"]);
+  assert.deepEqual(run(head + "  superseded:\n    # dd: inherit-permissions\n    steps:\n      - run: x\n"), ["SEC-008"], "a marker with no reason does not count");
+  // Only a reusable workflow may: the same jobs in a workflow a push starts still need the block.
+  assert.deepEqual(run("on:\n  push:\njobs:\n" + explicit + marked), ["SEC-008"]);
+});
+
+test("CI-030 reads the permissions of the job that calls the shared deploy, or the workflow's when the job has none", () => {
+  const call = (perms, top = "permissions:\n  contents: read\n") => `on:\n  workflow_run:\n    workflows: [CI]\n    types: [completed]\n${top}jobs:\n  deploy:\n${perms}    uses: Doman-Digital/dd-ci-standards/.github/workflows/cloudflare-deploy.yml@v1\n    with:\n      doppler-config: relay\n`;
+  const run = (text) => runDoctor({ workflows: [{ path: ".github/workflows/deploy.yml", text }], vercel: [], files: {} }, rulebook, base).findings.filter((f) => f.rule === "CI-030");
+  assert.equal(run(call("    permissions:\n      contents: read\n      id-token: write\n")).length, 1);
+  assert.equal(run(call("    permissions:\n      contents: read\n      id-token: write\n      actions: write\n")).length, 0);
+  assert.equal(run(call("    permissions:\n      actions: read\n      id-token: write\n")).length, 1, "actions: read cannot cancel");
+  assert.equal(run(call("", "permissions:\n  contents: read\n  actions: write\n")).length, 0, "no job block: the workflow's applies");
+  assert.equal(run(call("", "permissions:\n  contents: read\n")).length, 1);
+  assert.equal(run(call("    permissions: write-all\n")).length, 0);
+  // The shared workflow itself is not a caller.
+  assert.equal(run("on:\n  workflow_call:\njobs:\n  deploy:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/cloudflare-deploy.yml@v1\n").length, 0);
+});
+
 test("CI-022 puts a job on a pool from its own timeout, and names the expression to use", () => {
   const job = (runsOn, extra = "    timeout-minutes: 5\n") => ({ workflows: [{ path: ".github/workflows/ci.yml", text: `on:\n  pull_request:\njobs:\n  a:\n    runs-on: ${runsOn}\n${extra}    steps:\n      - run: x\n        timeout-minutes: 1\n` }], vercel: [], files: {} });
   const ci022 = (v, over = {}) => runDoctor(v, rulebook, { ...base, ...over }).findings.filter((f) => f.rule === "CI-022");
