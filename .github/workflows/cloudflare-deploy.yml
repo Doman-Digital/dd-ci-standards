@@ -242,7 +242,7 @@ jobs:
         run: |
           set -euo pipefail
           # Exported only when set: wrangler would read an empty CLOUDFLARE_ENV as an environment named "".
-          if [ -n "$WRANGLER_ENV" ]; then export CLOUDFLARE_ENV="$WRANGLER_ENV"; fi
+          if [ -n "${WRANGLER_ENV:-}" ]; then export CLOUDFLARE_ENV="$WRANGLER_ENV"; fi
           if [ -z "$DOPPLER_TOKEN" ]; then
             echo "::error::sync-secrets-to is set but DOPPLER_RUNTIME_TOKEN was not passed."
             exit 1
@@ -263,7 +263,7 @@ jobs:
           WRANGLER_ENV: ${{ inputs.wrangler-env }}
         run: |
           set -euo pipefail
-          if [ -n "$WRANGLER_ENV" ]; then export CLOUDFLARE_ENV="$WRANGLER_ENV"; fi
+          if [ -n "${WRANGLER_ENV:-}" ]; then export CLOUDFLARE_ENV="$WRANGLER_ENV"; fi
           if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
             echo "::error::Doppler ${FROM} has no CLOUDFLARE_DEPLOY_VALUE."
             exit 1
