@@ -192,7 +192,9 @@ jobs:
         run: |
           set -euo pipefail
           # A package inside a pnpm workspace (apps/site) has its lockfile at the workspace root: walk up to it, no
-          # further than the checkout, and install only that package and what it depends on (DOM-1490).
+          # further than the checkout, and install the whole workspace there. Not a filter: a package's build can read
+          # other workspace packages it does not list (apps/site extends a tsconfig from @doman/config through
+          # apps/marketing), and a narrower install failed the first CI deploy twice (DOM-1490).
           root="$PWD"
           while [ ! -f "$root/pnpm-lock.yaml" ] && [ "$root" != "${GITHUB_WORKSPACE:-$PWD}" ] && [ "$root" != "/" ]; do
             root="$(dirname "$root")"
@@ -203,8 +205,7 @@ jobs:
             echo "wrangler=pnpm exec wrangler" >> "$GITHUB_OUTPUT"
           elif [ ! -f package-lock.json ] && [ -f "$root/pnpm-lock.yaml" ]; then
             corepack enable
-            rel="${PWD#"$root"/}"
-            (cd "$root" && pnpm install --frozen-lockfile --filter "{./${rel}}...")
+            (cd "$root" && pnpm install --frozen-lockfile)
             echo "wrangler=pnpm exec wrangler" >> "$GITHUB_OUTPUT"
           elif [ -f package-lock.json ]; then
             npm ci
