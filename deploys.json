@@ -658,18 +658,20 @@
     {
       "worker": "dd-halfspace-astro-preview",
       "account": "Doman Digital",
-      "repo": "",
-      "config": "",
+      "repo": "Doman-Digital/client-previews",
+      "config": "gate-worker/wrangler.jsonc",
       "path": "manual",
-      "note": "halfspace.domandigital.co.uk outreach demo, still live: the founder said on 28 Oct 2026 the demos are not done, so it is not retired (DOM-1529). No repo recorded; deploy path unknown"
+      "target": "actions",
+      "note": "halfspace.domandigital.co.uk outreach demo, still live (the founder said on 28 Oct 2026 the demos are not done: DOM-1529). A client-previews gate Worker (gate and SITE_PASSWORD bindings), last deployed 30 Sep 2026 by wrangler; its sites/ folder is no longer in the repo, so deploy-sites.yml cannot redeploy it"
     },
     {
       "worker": "dd-blossom-outreach-pilot",
       "account": "Doman Digital",
-      "repo": "",
-      "config": "",
+      "repo": "Doman-Digital/client-previews",
+      "config": "gate-worker/wrangler.jsonc",
       "path": "manual",
-      "note": "blossom.domandigital.co.uk outreach demo, still live: the founder said on 28 Oct 2026 the demos are not done, so it is not retired (DOM-1529). No repo recorded; deploy path unknown"
+      "target": "actions",
+      "note": "blossom.domandigital.co.uk outreach demo, still live (the founder said on 28 Oct 2026 the demos are not done: DOM-1529). A client-previews gate Worker (gate and SITE_PASSWORD bindings), last deployed 28 Sep 2026 by wrangler; its sites/ folder is no longer in the repo, so deploy-sites.yml cannot redeploy it"
     },
     {
       "worker": "chair-and-blade-astro",
