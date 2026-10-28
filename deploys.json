@@ -660,16 +660,16 @@
       "account": "Doman Digital",
       "repo": "",
       "config": "",
-      "path": "retired",
-      "note": "delete pending (founder): no repo"
+      "path": "manual",
+      "note": "halfspace.domandigital.co.uk outreach demo, still live: the founder said on 28 Oct 2026 the demos are not done, so it is not retired (DOM-1529). No repo recorded; deploy path unknown"
     },
     {
       "worker": "dd-blossom-outreach-pilot",
       "account": "Doman Digital",
       "repo": "",
       "config": "",
-      "path": "retired",
-      "note": "delete pending (founder): no repo"
+      "path": "manual",
+      "note": "blossom.domandigital.co.uk outreach demo, still live: the founder said on 28 Oct 2026 the demos are not done, so it is not retired (DOM-1529). No repo recorded; deploy path unknown"
     },
     {
       "worker": "chair-and-blade-astro",
