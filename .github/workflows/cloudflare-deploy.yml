@@ -115,6 +115,20 @@ on:
           the first Worker cannot replace its waiting job. Empty keeps the one lane per repo.
         type: string
         default: ""
+      wrangler-env:
+        description: >-
+          The wrangler environment to deploy (`env.<name>` in the config), for a Worker whose production sits in an
+          environment of a config that also holds a preview. Passed to wrangler as CLOUDFLARE_ENV, to the secret sync
+          as well as the deploy. Empty deploys the top-level config.
+        type: string
+        default: ""
+      post-deploy:
+        description: >-
+          A command run right after the last wrangler deploy, with the deployed commit in DEPLOY_SHA (e.g. a check that
+          the live site reports it). It runs inside the deploy lane, so no other deploy of the repo can land before it
+          has looked; a failure fails the run, and the deploy it follows has happened.
+        type: string
+        default: ""
       runner:
         description: Runner label. Defaults to the CI_RUNNER variable, then ubuntu-latest.
         type: string
@@ -224,8 +238,11 @@ jobs:
           WRANGLER: ${{ steps.install.outputs.wrangler }}
           CONFIG: ${{ inputs.sync-secrets-to }}
           FILTER: ${{ inputs.sync-secrets-filter }}
+          WRANGLER_ENV: ${{ inputs.wrangler-env }}
         run: |
           set -euo pipefail
+          # Exported only when set: wrangler would read an empty CLOUDFLARE_ENV as an environment named "".
+          if [ -n "$WRANGLER_ENV" ]; then export CLOUDFLARE_ENV="$WRANGLER_ENV"; fi
           if [ -z "$DOPPLER_TOKEN" ]; then
             echo "::error::sync-secrets-to is set but DOPPLER_RUNTIME_TOKEN was not passed."
             exit 1
@@ -243,8 +260,10 @@ jobs:
           WRANGLER: ${{ steps.install.outputs.wrangler }}
           CONFIGS: ${{ inputs.configs }}
           FROM: ${{ inputs.doppler-project }}/${{ inputs.doppler-config }}
+          WRANGLER_ENV: ${{ inputs.wrangler-env }}
         run: |
           set -euo pipefail
+          if [ -n "$WRANGLER_ENV" ]; then export CLOUDFLARE_ENV="$WRANGLER_ENV"; fi
           if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
             echo "::error::Doppler ${FROM} has no CLOUDFLARE_DEPLOY_VALUE."
             exit 1
@@ -260,6 +279,12 @@ jobs:
               echo "::endgroup::"
             done <<< "$CONFIGS"
           fi
+      - name: Post-deploy check
+        if: steps.tip.outputs.deploy == 'true' && inputs.post-deploy != ''
+        env:
+          CMD: ${{ inputs.post-deploy }}
+          DEPLOY_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+        run: bash -euo pipefail -c "$CMD"
 
   # The deploy job's tip guard stopped it: a newer commit is the tip and its own
   # run deploys it. Cancel this run so it reports cancelled, not success (DOM-1422).
