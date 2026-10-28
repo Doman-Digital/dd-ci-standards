@@ -209,6 +209,7 @@ test("deploys.json lists each Worker once per account, with a known path", () =>
     assert.ok(w.worker && typeof w.repo === "string", `entry without a worker or repo: ${JSON.stringify(w)}`);
     assert.ok(paths.has(w.path), `${w.worker}: unknown path ${w.path}`);
     if (w.target) assert.ok(paths.has(w.target) && w.path === "manual", `${w.worker}: target is only for manual Workers`);
+    if (w.path === "manual" && !w.repo) assert.ok(/no repo|delete pending|source:/i.test(w.note || ""), `${w.worker}: a manual Worker with no repo must say where its source is, or that it has none`);
     if (w.workflow) assert.ok(/^\.github\/workflows\/[\w.-]+\.ya?ml$/.test(w.workflow), `${w.worker}: workflow must be a .github/workflows/ path`);
     const key = `${w.account}/${w.worker}`;
     assert.ok(!seen.has(key), `${key} is listed twice`);
