@@ -42,6 +42,10 @@ repos:
         cron: "41 6 * * *"
         owner: "Doman Digital / Marketing Site"
         reason: "daily live check that every Stripe Price the site sells matches brand-facts (DOM-1059), no install, 5min cap on the light pool"
+      - workflow: dd-site-drift.yml
+        cron: "7,27,47 * * * *"
+        owner: "Doman Digital / Marketing Site"
+        reason: "every 20 minutes: red when the live site lags main (DOM-1490); one checkout and one curl, no install, 5min cap on the light pool, off the hour"
       # DOM-847 (Doman-Digital #1159): the first three days of the quarter, so a
       # dropped run is caught; the entry above goes when #1159 merges.
       - workflow: security-rotation-reminder.yml

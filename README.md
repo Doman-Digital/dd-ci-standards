@@ -371,6 +371,15 @@ has to pass a policy check to merge, not get caught in the next audit.
   `test/cancel-superseded.test.mjs` (the script against a fake API, and the
   shape of the workflow) and the CI-030 fixtures.
 
+  **A Worker whose production is an environment of its config** (`env.production`
+  beside a preview at the top level) passes `wrangler-env: production`; it
+  reaches wrangler as `CLOUDFLARE_ENV` for the deploy and for the secret sync.
+  **`post-deploy`** is a command run right after the last `wrangler deploy`
+  with the deployed commit in `DEPLOY_SHA` (the site's check that
+  `/api/health` reports it). It runs inside the deploy lane, so a failure is
+  about this deploy and no other deploy of the repo can have landed first
+  (DOM-1490).
+
   Runtime secret sync can opt into `sync-secrets-filter`, a repository Node
   script receiving Doppler JSON on stdin and emitting a filtered JSON object.
   Use it to keep CLI credentials, metadata and unused provider keys out of a

@@ -446,6 +446,23 @@
       "note": "preview; by hand"
     },
     {
+      "worker": "dd-site",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/Doman-Digital",
+      "config": "apps/site/wrangler.jsonc (env production)",
+      "path": "actions",
+      "note": "www.domandigital.co.uk and the apex; dd-site-deploy.yml on every push to main when a change to the site is not live, then checks /api/health reports the commit (DOM-1490); dd-site-drift.yml goes red when live lags main"
+    },
+    {
+      "worker": "dd-site-rehearsal",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/Doman-Digital",
+      "config": "apps/site/wrangler.jsonc (env rehearsal)",
+      "path": "manual",
+      "target": "actions",
+      "note": "the release build on workers.dev behind Access, for a rehearsal before a launch; by hand"
+    },
+    {
       "worker": "dd-cron",
       "account": "Doman Digital",
       "repo": "Doman-Digital/Doman-Digital",
