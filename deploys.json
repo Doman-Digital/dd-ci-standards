@@ -348,15 +348,6 @@
       "workflow": ".github/workflows/deploy-sites.yml"
     },
     {
-      "worker": "dd-meridian-preview",
-      "account": "Doman Digital",
-      "repo": "Doman-Digital/client-previews",
-      "config": "sites/meridian (tools/batch.mjs)",
-      "path": "actions",
-      "note": "deploy-sites.yml (dispatch from main, tip guard); Doppler dd-deploy/previews",
-      "workflow": ".github/workflows/deploy-sites.yml"
-    },
-    {
       "worker": "dd-olivetree-preview",
       "account": "Doman Digital",
       "repo": "Doman-Digital/client-previews",
