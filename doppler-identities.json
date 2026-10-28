@@ -9,7 +9,8 @@
         "dd-deploy/doman-digital"
       ],
       "service_account": "ci-Doman-Digital",
-      "identity": "e067aae0-bf80-4066-a014-169e617a16d4"
+      "identity": "e067aae0-bf80-4066-a014-169e617a16d4",
+      "cloudflare_account": "30515e0503d5fe494460233cc3535d74"
     },
     {
       "repo": "Doman-Digital/dd-relay",
