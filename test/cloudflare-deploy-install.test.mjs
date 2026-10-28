@@ -60,9 +60,10 @@ test("a package with its own pnpm lockfile installs there, as before", () => {
 test("a package in a workspace installs from the workspace root, filtered to itself and what it needs", () => {
   const r = run(["pnpm-lock.yaml", "apps/site/package.json"], "apps/site");
   assert.equal(r.status, 0, r.stderr);
-  // `{./apps/site}...`, not `./apps/site...`: only the braces form pulls in the workspace packages it depends on
-  // (@doman/shared); the bare path selected apps/site alone and the first CI deploy failed building shared.
-  assert.match(r.calls, /pnpm install --frozen-lockfile --filter \{\.\/apps\/site\}\.\.\. @ \S+install-\S+$/m, r.calls);
+  // The whole workspace, no filter: apps/site's build reads @doman/config through apps/marketing, which a filter
+  // on the site and its dependencies leaves out (the first two CI deploys failed on that and on @doman/shared).
+  assert.match(r.calls, /pnpm install --frozen-lockfile @ \S+install-\S+$/m, r.calls);
+  assert.doesNotMatch(r.calls, /--filter/);
   assert.match(r.output, /wrangler=pnpm exec wrangler/);
 });
 
