@@ -204,7 +204,7 @@ jobs:
           elif [ ! -f package-lock.json ] && [ -f "$root/pnpm-lock.yaml" ]; then
             corepack enable
             rel="${PWD#"$root"/}"
-            (cd "$root" && pnpm install --frozen-lockfile --filter "./${rel}...")
+            (cd "$root" && pnpm install --frozen-lockfile --filter "{./${rel}}...")
             echo "wrangler=pnpm exec wrangler" >> "$GITHUB_OUTPUT"
           elif [ -f package-lock.json ]; then
             npm ci
