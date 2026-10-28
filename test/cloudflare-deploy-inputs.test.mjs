@@ -11,7 +11,8 @@ const WORKFLOW = readFileSync(new URL("../.github/workflows/cloudflare-deploy.ym
 test("wrangler-env reaches the deploy and the secret sync as CLOUDFLARE_ENV, and only when set", () => {
   assert.match(WORKFLOW, /\n {6}wrangler-env:\n/);
   assert.equal(WORKFLOW.match(/WRANGLER_ENV: \$\{\{ inputs\.wrangler-env \}\}/g)?.length, 2, "the sync step and the deploy step");
-  assert.equal(WORKFLOW.match(/if \[ -n "\$WRANGLER_ENV" \]; then export CLOUDFLARE_ENV="\$WRANGLER_ENV"; fi/g)?.length, 2);
+  // `:-` because the secret-filter test runs the sync script under `set -u` without the variable.
+  assert.equal(WORKFLOW.match(/if \[ -n "\$\{WRANGLER_ENV:-\}" \]; then export CLOUDFLARE_ENV="\$WRANGLER_ENV"; fi/g)?.length, 2);
   // An empty CLOUDFLARE_ENV would be an environment named "", so it is never set to the empty string.
   assert.doesNotMatch(WORKFLOW, /CLOUDFLARE_ENV: \$\{\{/);
 });
