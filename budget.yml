@@ -16,21 +16,9 @@ repos:
       - workflow: ci.yml
         cron: "43 4 * * 1"
         reason: "weekly comprehensive full-suite sweep — deliberate, catches regressions on repos that haven't shipped in a week; paths-filter is intentionally bypassed on this trigger"
-      - workflow: coverage-audit.yml
+      - workflow: dd-site-live-scan.yml
         cron: "17 4 * * 2"
-        reason: "weekly content coverage crawl of production, 15min cap, now Tuesday"
-      - workflow: review-calibration-weekly.yml
-        cron: "23 5 * * 3"
-        owner: "Doman Digital / Marketing Site"
-        reason: "weekly live review calibration against independent referees, 120min cap, now Wednesday"
-      - workflow: client-stack-weekly.yml
-        cron: "37 4 * * 4"
-        owner: "Doman Digital / Marketing Site"
-        reason: "weekly live browser capture of client sites for stack drift, 90min cap, now Thursday"
-      - workflow: client-screenshots-weekly.yml
-        cron: "47 4 * * 5"
-        owner: "Doman Digital / Marketing Site"
-        reason: "weekly live re-capture of the client screenshots, 90min cap, now Friday"
+        reason: "weekly live scan of the served pages of www.domandigital.co.uk against the business-model facts (DOM-1512), replaces coverage-audit, 15min cap"
       - workflow: company-os.yml
         cron: "15 7 * * 1"
         owner: "Doman Digital / Company OS"
