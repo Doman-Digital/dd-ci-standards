@@ -1,6 +1,6 @@
 {
   "$comment": "Every Cloudflare Worker and the one way it is deployed (CF-001, DOM-776). path is how it deploys today: actions (cloudflare-deploy.yml or a reviewed deploy workflow), workers-builds (Cloudflare's GitHub app, simple client static sites only), manual (by hand: listed so it is visible, and moved to target), retired (serves nothing; deletion is the founder's call) or not-deployed (a config with no Worker). Collected 13 October 2026 from all eight accounts. Account ids are identifiers, not secrets.",
-  "updated": "2026-10-27",
+  "updated": "2026-10-28",
   "accounts": {
     "Doman Digital": "30515e0503d5fe494460233cc3535d74",
     "sen-sphere": "27afd0d63cc551836017345fba42762d",
@@ -734,6 +734,95 @@
       "config": "dd-base/wrangler.jsonc",
       "path": "not-deployed",
       "note": "a config with no Worker in any account"
+    },
+    {
+      "worker": "sensphere-portal",
+      "account": "sen-sphere",
+      "repo": "sensphere/sen-sphere",
+      "config": "apps/portal/wrangler.jsonc",
+      "path": "actions",
+      "note": "portal.sensphere.co.uk; portal-cloudflare-production.yml. Listed 28 Oct 2026 (DOM-1525): live since the portal moved off Vercel, never registered",
+      "workflow": ".github/workflows/portal-cloudflare-production.yml"
+    },
+    {
+      "worker": "sensphere-portal-staging",
+      "account": "sen-sphere",
+      "repo": "sensphere/sen-sphere",
+      "config": "apps/portal/wrangler.jsonc (env staging)",
+      "path": "manual",
+      "note": "staging; deploy path not recorded. Listed 28 Oct 2026 (DOM-1525)"
+    },
+    {
+      "worker": "sensphere-v2-staging",
+      "account": "sen-sphere",
+      "repo": "",
+      "config": "",
+      "path": "manual",
+      "note": "staging.sensphere.co.uk; no repo or deploy path recorded. Listed 28 Oct 2026 (DOM-1525): find its source, or retire it and detach the domain"
+    },
+    {
+      "worker": "sensphere-v2-prototype",
+      "account": "Doman Digital",
+      "repo": "",
+      "config": "",
+      "path": "manual",
+      "note": "prototype; no repo or deploy path recorded. Listed 28 Oct 2026 (DOM-1525): find its source, or retire it"
+    },
+    {
+      "worker": "mmm-redesign-preview",
+      "account": "MMM Beauty",
+      "repo": "Megameehunnah/MMM-Beauty",
+      "config": "astro/wrangler.redesign.jsonc",
+      "path": "manual",
+      "note": "preview.mmm-beauty.co.uk, behind Access; by hand. Listed 28 Oct 2026 (DOM-1525)"
+    },
+    {
+      "worker": "mmm-prototype-preview",
+      "account": "Doman Digital",
+      "repo": "Megameehunnah/MMM-Beauty",
+      "config": "buyer-panel-mmm/worker/wrangler.jsonc",
+      "path": "manual",
+      "note": "buyer-panel prototype in the DD account; by hand. Listed 28 Oct 2026 (DOM-1525)"
+    },
+    {
+      "worker": "chair-and-blade-preview",
+      "account": "Chair and Blade",
+      "repo": "chairandblade/chair-and-blade",
+      "config": "astro/wrangler.jsonc (env preview)",
+      "path": "manual",
+      "note": "staging.chairandblade.co.uk; by hand. Listed 28 Oct 2026 (DOM-1525)"
+    },
+    {
+      "worker": "beautyops-app-staging",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/beautyops",
+      "config": "wrangler.jsonc (env staging)",
+      "path": "manual",
+      "note": "staging; deploy path not recorded. Listed 28 Oct 2026 (DOM-1525)"
+    },
+    {
+      "worker": "dd-portal-staging",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/Doman-Digital",
+      "config": "apps/portal/wrangler.jsonc (env staging)",
+      "path": "manual",
+      "note": "staging; deploy path not recorded. Listed 28 Oct 2026 (DOM-1525)"
+    },
+    {
+      "worker": "verqan-api-staging",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/verqan-api",
+      "config": "deploy/cloudflare (cf deploy, Containers)",
+      "path": "manual",
+      "note": "staging API; scripts/cf-deploy-staging.sh by hand. Listed 28 Oct 2026 (DOM-1525)"
+    },
+    {
+      "worker": "verqan-dashboard-staging",
+      "account": "Doman Digital",
+      "repo": "Doman-Digital/Verqan-Platform",
+      "config": "apps/dashboard/wrangler.jsonc (env staging)",
+      "path": "manual",
+      "note": "staging dashboard; scripts/cf-deploy-staging.sh by hand. Listed 28 Oct 2026 (DOM-1525)"
     }
   ]
 }
