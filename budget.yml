@@ -105,10 +105,6 @@ repos:
 
   meridian:
     github_actions_crons:
-      - workflow: retire-meridian-web.yml
-        cron: "23 6 * * *"
-        owner: "Meridian"
-        reason: "daily check that deletes the retired Worker meridian-web on or after 2026-11-03 and stays red until deploys.json drops its row (DOM-1426); one curl-and-node job, no build, 10min cap. Disables itself when done, then the file is deleted"
       - workflow: nightly-live-modules.yml
         cron: "17 3 * * *"
         owner: "Meridian"
