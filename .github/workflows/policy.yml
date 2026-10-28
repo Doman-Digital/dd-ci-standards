@@ -98,7 +98,12 @@ name: ci-standards policy
 # The concurrency group is keyed on github.workflow_ref, which names the file
 # that started the run: the caller's in a called run, this file in a ruleset
 # run. So the two never share a group and cancel each other while both run,
-# and neither shares the caller's own group.
+# and neither shares the caller's own group. It also carries the repository and
+# the ref. In a ruleset run workflow_ref is this file at this repo's main, the
+# same string for every pull request in the org, so on its own it put them all
+# in one group and each new run cancelled the one before. On 28 October 2026 a
+# Renovate run rebased nine meridian and redacted-Platform pull requests within
+# two minutes and every one of their `check` runs ended cancelled.
 #
 # Every pull request names its issue (LIN-001, LIN-002; DOM-1363, 27 October
 # 2026). The doctor reads this run's pull request event and fails one with no
@@ -124,7 +129,7 @@ on:
   merge_group:
 
 concurrency:
-  group: dd-policy-${{ github.workflow_ref }}
+  group: dd-policy-${{ github.workflow_ref }}-${{ github.repository }}-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
