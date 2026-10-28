@@ -14,6 +14,7 @@
 
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
+import { grantsByProject } from "../lib/doppler-grants.mjs";
 
 const TABLE = new URL("../doppler-identities.json", import.meta.url);
 const repo = process.argv[2];
@@ -73,15 +74,15 @@ if (!sa) {
   console.log(`service account ${saName} exists`);
 }
 
-for (const ref of row.reads) {
-  const [project, config] = ref.split("/");
-  const m = await call("POST", `/v3/projects/project/members?project=${project}`, { type: "service_account", slug: sa, role: "viewer", environments: [config] });
+for (const { project, environments } of grantsByProject(row.reads)) {
+  const refs = environments.map((e) => `${project}/${e}`).join(", ");
+  const m = await call("POST", `/v3/projects/project/members?project=${project}`, { type: "service_account", slug: sa, role: "viewer", environments });
   // An existing member is reported as a conflict; update its environments instead.
   if (m.failed === 409 || (m.failed && /already/i.test(m.messages.join(" ")))) {
-    const u = await call("PATCH", `/v3/projects/project/members/member/service_account/${sa}?project=${project}`, { role: "viewer", environments: [config] });
-    if (u.failed) fail(`updating access to ${ref}`, u);
-  } else if (m.failed) fail(`granting access to ${ref}`, m);
-  console.log(`  reads ${ref}`);
+    const u = await call("PATCH", `/v3/projects/project/members/member/service_account/${sa}?project=${project}`, { role: "viewer", environments });
+    if (u.failed) fail(`updating access to ${refs}`, u);
+  } else if (m.failed) fail(`granting access to ${refs}`, m);
+  console.log(`  reads ${refs}`);
 }
 
 // GitHub may put the owner and repo ids in the subject, so ask it for the prefix.
