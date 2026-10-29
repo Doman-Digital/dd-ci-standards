@@ -237,6 +237,12 @@ jobs:
     // A comment recording why Vercel went is history, not a dependency.
     pass: wf("on: [schedule]\njobs:\n  sweep:\n    steps:\n      # Vercel was retired on 2 September 2026.\n      - run: node sweep.mjs\n"),
   },
+  "CI-031": {
+    // MMM-Beauty's enforce-commit-author.yml, cut down.
+    fail: wf("on: [pull_request]\njobs:\n  check-author:\n    steps:\n      - run: |\n          author_email=$(git show -s --format='%ae' \"$sha\")\n", ".github/workflows/enforce-commit-author.yml"),
+    // A comment recording why the check went is history, and a short hash in a log format is not an author.
+    pass: wf("on: [pull_request]\njobs:\n  build:\n    steps:\n      # The commit-author check was retired on 29 October 2026 (DOM-1451).\n      - run: git log -1 --format='%h %s'\n"),
+  },
   "CI-024": {
     fail: wf("jobs:\n  lh:\n    steps:\n      - if: runner.name != 'dd-ci-01-h'\n        run: pnpm lhci\n"),
     // The host's own name is not a runner name.
