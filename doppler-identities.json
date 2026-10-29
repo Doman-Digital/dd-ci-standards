@@ -110,7 +110,7 @@
         "dd-deploy/tardi"
       ],
       "service_account": "ci-Tardi-Group",
-      "identity": null
+      "identity": "80f92af6-fdf3-4da3-9bd7-707ce4f5f833"
     }
   ]
 }
