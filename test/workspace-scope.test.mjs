@@ -59,3 +59,10 @@ test("documentation alone runs nothing; include adds a workspace", () => {
   assert.deepEqual(scope({ "docs/notes.md": "x\n" }), { run: "false" });
   assert.equal(scope({ "docs/notes.md": "x\n" }, { INCLUDE: "admin" })["turbo-filters"], "--filter=admin");
 });
+
+test("a very long list of files outside every workspace still runs everything (no SIGPIPE from head)", () => {
+  // Past the 64 KiB pipe buffer, `printf | head -20` under pipefail killed the script. Deleting a whole app is one such change.
+  const change = {};
+  for (let i = 0; i < 1500; i++) change[`gone/${"d".repeat(60)}/file-${i}.txt`] = "x\n";
+  assert.deepEqual(scope(change), { run: "true", "turbo-filters": "", "pnpm-filters": "--filter=!mono" });
+});
