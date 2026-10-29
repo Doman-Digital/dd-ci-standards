@@ -33,7 +33,8 @@ outside=$(git diff --name-only "$base" HEAD | node -e '
   });' "$dirs" "$DOCS")
 if [ -n "$outside" ]; then
   echo "Changed outside every workspace:"
-  printf '%s\n' "$outside" | head -20
+  # sed reads all of its input; `head -20` closes the pipe early, and under pipefail a long list kills the script with SIGPIPE.
+  printf '%s\n' "$outside" | sed -n '1,20p'
   all "a shared file changed"
 fi
 names=$(TURBO_SCM_BASE="$base" TURBO_SCM_HEAD=HEAD pnpm exec turbo ls --affected --output=json 2>/dev/null \
