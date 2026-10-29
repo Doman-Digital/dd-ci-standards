@@ -309,7 +309,7 @@ has to pass a policy check to merge, not get caught in the next audit.
   | Path | For | How |
   | --- | --- | --- |
   | `actions` | every internal Worker, and anything with checks, migrations, secrets or several Workers to deploy | `.github/workflows/cloudflare-deploy.yml` after CI passes on main |
-  | `workers-builds` | a simple client static site, nothing to gate | Cloudflare's GitHub app builds main |
+  | `workers-builds` | none by choice since 29 October 2026 (DOM-1644): every client site moves to `actions`, one at a time | Cloudflare's GitHub app builds main |
   | `manual` | none by choice: listed so it is visible, with the path it moves to in `target` | `wrangler deploy` from a workstation |
   | `retired` | a Worker that no longer serves anything; deleting it is the founder's call | nothing |
   | `not-deployed` | a wrangler config with no Worker in any account (a template or a spike) | nothing |
@@ -321,6 +321,13 @@ has to pass a policy check to merge, not get caught in the next audit.
   than cancel (CI-013). Main CI is never cancelled by a newer push (CI-012):
   each run finishes, and the guard lets only the newest one deploy, so a
   burst of merges ends with the newest commit live.
+
+  A client site that rebuilds on a content change (a Sanity publish, a daily
+  cron) adds `repository_dispatch` with its event types to `on:`. Its Worker
+  asks dd-rebuild-relay, which holds the only GitHub credential, to send the
+  dispatch. That run rebuilds the tip of main and runs `manual-check` first,
+  because the tip's own CI run may not have finished. `release-var:
+  SENTRY_RELEASE` sets that Worker variable to the deployed commit.
 
   ```yaml
   on:

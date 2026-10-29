@@ -26,3 +26,24 @@ test("post-deploy runs after the last deploy, on a deploying run only, with the 
   assert.match(step, /steps\.tip\.outputs\.deploy == 'true' && inputs\.post-deploy != ''/);
   assert.match(step, /DEPLOY_SHA: \$\{\{ github\.event\.workflow_run\.head_sha \|\| github\.sha \}\}/);
 });
+
+// DOM-1644: client sites move off Workers Builds. A Sanity publish reaches the deploy as a repository_dispatch from
+// dd-rebuild-relay, so the guard admits it on the default branch only, and it runs the manual checks because the
+// tip's own CI run may not have finished. The Sentry release the Workers Builds deploy set travels as release-var.
+test("a content rebuild deploys from the default branch only, after the manual checks", () => {
+  assert.match(
+    WORKFLOW,
+    /\(github\.event_name == 'repository_dispatch' && github\.ref_name == github\.event\.repository\.default_branch\)/,
+  );
+  const checks = WORKFLOW.slice(WORKFLOW.indexOf("      - name: Manual run checks"), WORKFLOW.indexOf("      - name: Pre-deploy check"));
+  assert.match(checks, /github\.event_name == 'workflow_dispatch' \|\| github\.event_name == 'repository_dispatch'/);
+});
+
+test("release-var sets one Worker variable to the deployed commit, on every config, and only when set", () => {
+  assert.match(WORKFLOW, /\n {6}release-var:\n/);
+  const step = WORKFLOW.slice(WORKFLOW.indexOf("      - name: Deploy\n"), WORKFLOW.indexOf("      - name: Post-deploy check\n"));
+  assert.match(step, /RELEASE_VAR: \$\{\{ inputs\.release-var \}\}/);
+  assert.match(step, /DEPLOY_SHA: \$\{\{ github\.event\.workflow_run\.head_sha \|\| github\.sha \}\}/);
+  assert.match(step, /if \[ -n "\$\{RELEASE_VAR:-\}" \]; then extra=\(--var "\$\{RELEASE_VAR\}:\$\{DEPLOY_SHA\}"\); fi/);
+  assert.equal(step.match(/deploy[^\n]*"\$\{extra\[@\]\}"/g)?.length, 2, "both the default config and each listed config");
+});
