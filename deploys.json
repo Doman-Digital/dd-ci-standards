@@ -1,6 +1,6 @@
 {
   "$comment": "Every Cloudflare Worker and the one way it is deployed (CF-001, DOM-776). path is how it deploys today: actions (cloudflare-deploy.yml or a reviewed deploy workflow), workers-builds (Cloudflare's GitHub app, simple client static sites only), manual (by hand: listed so it is visible, and moved to target), retired (serves nothing; deletion is the founder's call) or not-deployed (a config with no Worker). Collected 13 October 2026 from all eight accounts. Account ids are identifiers, not secrets.",
-  "updated": "2026-10-28",
+  "updated": "2026-10-29",
   "accounts": {
     "Doman Digital": "30515e0503d5fe494460233cc3535d74",
     "sen-sphere": "27afd0d63cc551836017345fba42762d",
@@ -113,8 +113,8 @@
       "account": "Tardi",
       "repo": "joetardi/Tardi-Group",
       "config": "astro/wrangler.jsonc (env)",
-      "path": "workers-builds",
-      "note": "main; trigger created 13 Oct"
+      "path": "actions",
+      "note": "main; moving off Workers Builds to cloudflare-deploy.yml, Doppler dd-deploy/tardi (DOM-1644)"
     },
     {
       "worker": "rise-and-bloom-astro",

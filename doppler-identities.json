@@ -1,6 +1,6 @@
 {
   "about": "Every repo that signs in to Doppler with its GitHub identity (OIDC), the branch Doppler trusts it on, the Doppler configs its service account reads, and the identity id the repo variable DOPPLER_IDENTITY_ID must hold, and the Cloudflare account its deploy token is on (CLOUDFLARE_ACCOUNT_ID), when it deploys a Worker. IDs only: an identity id is useless without a GitHub OIDC token from that repo and branch. SEC-009 fails a repo whose workflows sign in without a row here, without the variable, or with a different value. bin/doppler-identity.mjs creates the service account and identity for a row and sets the variable (DOM-1265).",
-  "updated": "2026-10-21",
+  "updated": "2026-10-29",
   "identities": [
     {
       "repo": "Doman-Digital/Doman-Digital",
@@ -102,6 +102,15 @@
       "service_account": "ci-proteam-electrical",
       "identity": "fb99e1ab-1ffc-4fad-bef4-cb9e9fadd5d1",
       "cloudflare_account": "30515e0503d5fe494460233cc3535d74"
+    },
+    {
+      "repo": "joetardi/Tardi-Group",
+      "branch": "main",
+      "reads": [
+        "dd-deploy/tardi"
+      ],
+      "service_account": "ci-Tardi-Group",
+      "identity": null
     }
   ]
 }
