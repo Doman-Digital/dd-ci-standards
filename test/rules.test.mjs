@@ -502,3 +502,12 @@ test("dd doctor refuses a pull request event with no issue, passes Part of and t
     assert.doesNotMatch(doctor(ok).out, /LIN-001/, JSON.stringify(ok));
   }
 });
+
+test("the public inventories hold no Cloudflare account id (DOM-1643)", () => {
+  // This repo is public. The ids live in dd-repo-registry registry.yaml accounts.cloudflare.
+  for (const f of ["deploys.json", "doppler-identities.json"]) {
+    const text = readFileSync(new URL(`../${f}`, import.meta.url), "utf8");
+    assert.ok(!/\b[0-9a-f]{32}\b/.test(text), `${f} holds something shaped like a Cloudflare account id`);
+    assert.ok(!/"accounts"\s*:\s*\{|"cloudflare_account"/.test(text), `${f} carries an account-id field`);
+  }
+});

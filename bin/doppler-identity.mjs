@@ -2,10 +2,14 @@
 // Owner-run. Gives one repo in doppler-identities.json its Doppler sign-in: a read-only
 // service account, viewer on each config the row `reads`, and a GitHub OIDC identity that
 // trusts only the row's branch. Then sets the repo variables DOPPLER_IDENTITY_ID (and
-// CLOUDFLARE_ACCOUNT_ID when the row has `cloudflare_account`) and writes the identity id
+// CLOUDFLARE_ACCOUNT_ID when given --cloudflare-account) and writes the identity id
 // back into the row, so the change is committed with the table (SEC-009, DOM-1265).
 //
-//   node bin/doppler-identity.mjs Doman-Digital/redacted-electrical
+//   node bin/doppler-identity.mjs Doman-Digital/redacted-electrical [--cloudflare-account <id>]
+//
+// --cloudflare-account is for a repo that deploys a Worker: the account id from dd-repo-registry
+// registry.yaml accounts.cloudflare. It is not kept in the table, because this repo is public
+// (DOM-1643).
 //
 // Needs a Doppler sign-in that can manage service accounts (the owner's `doppler login`,
 // or DOPPLER_TOKEN in the environment) and gh signed in as a repo admin. Prints ids only,
@@ -18,8 +22,10 @@ import { grantsByProject } from "../lib/doppler-grants.mjs";
 
 const TABLE = new URL("../doppler-identities.json", import.meta.url);
 const repo = process.argv[2];
-if (!repo) {
-  console.error("usage: node bin/doppler-identity.mjs <owner/repo>");
+const cfAt = process.argv.indexOf("--cloudflare-account");
+const cloudflareAccount = cfAt > 0 ? process.argv[cfAt + 1] : null;
+if (!repo || repo.startsWith("--") || (cfAt > 0 && !/^[0-9a-f]{32}$/.test(cloudflareAccount || ""))) {
+  console.error("usage: node bin/doppler-identity.mjs <owner/repo> [--cloudflare-account <32-hex account id>]");
   process.exit(2);
 }
 const table = JSON.parse(readFileSync(TABLE, "utf8"));
@@ -114,7 +120,7 @@ const id = saved.identity.slug;
 console.log(`  identity ${identityName} ${id}, trusts ${body.config.claims.sub[0]}`);
 
 execFileSync("gh", ["variable", "set", "DOPPLER_IDENTITY_ID", "-R", row.repo, "--body", id], { stdio: "inherit" });
-if (row.cloudflare_account) execFileSync("gh", ["variable", "set", "CLOUDFLARE_ACCOUNT_ID", "-R", row.repo, "--body", row.cloudflare_account], { stdio: "inherit" });
+if (cloudflareAccount) execFileSync("gh", ["variable", "set", "CLOUDFLARE_ACCOUNT_ID", "-R", row.repo, "--body", cloudflareAccount], { stdio: "inherit" });
 console.log(`  repo variables set on ${row.repo}`);
 
 row.identity = id;
