@@ -403,9 +403,11 @@ has to pass a policy check to merge, not get caught in the next audit.
   row; commit it. SEC-009 fails a repo that signs in without its row, without
   the variable, or with a value that differs from the row. Rows with no
   `service_account` were made by hand before the script; rerunning it for
-  them creates a new `ci-<repo>` account. `tokens.json` records every Cloudflare token by
-  name, account, observed scope, where it is stored and a verdict (keep,
-  narrow or retire): never a value.
+  them creates a new `ci-<repo>` account. The register of every Cloudflare token (name,
+  granted policy, where it is stored, a verdict, never a value) is
+  `cloudflare-tokens.yaml` in the private Doman-Digital/dd-repo-registry,
+  checked daily against the live token list (DOM-1641). It moved there from
+  `tokens.json` here on 29 Oct 2026 because this repo is public.
 
   A deploy that has its own workflow (a monorepo service with staging first)
   keeps it, with the same three properties: the
