@@ -404,13 +404,15 @@ has to pass a policy check to merge, not get caught in the next audit.
   `DOPPLER_IDENTITY_ID`, plus `CLOUDFLARE_ACCOUNT_ID` when the token can see
   more than one account. The identity and both variables come from one row
   in `doppler-identities.json`: add the row (repo, branch, the configs it
-  reads, the Cloudflare account), then `node bin/doppler-identity.mjs
-  <owner/repo>` with the owner's Doppler sign-in creates the service account
+  reads), then `node bin/doppler-identity.mjs <owner/repo>
+  [--cloudflare-account <id>]` with the owner's Doppler sign-in creates the service account
   and identity, sets the variables and writes the identity id back into the
   row; commit it. SEC-009 fails a repo that signs in without its row, without
   the variable, or with a value that differs from the row. Rows with no
   `service_account` were made by hand before the script; rerunning it for
-  them creates a new `ci-<repo>` account. `tokens.json` records every Cloudflare token by
+  them creates a new `ci-<repo>` account. The account id comes from
+  dd-repo-registry registry.yaml `accounts.cloudflare`: this repo is public,
+  so neither table holds a Cloudflare account id (DOM-1643). `tokens.json` records every Cloudflare token by
   name, account, observed scope, where it is stored and a verdict (keep,
   narrow or retire): never a value.
 
