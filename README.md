@@ -229,9 +229,9 @@ has to pass a policy check to merge, not get caught in the next audit.
     above it.
   - A deliberate double-run is accepted with a
     `# ci-standards: allow-double-run <reason>` comment anywhere in the
-    workflow. Use it for a genuine backstop: a secret scan or commit-author
-    check that re-runs on push to main catches whatever reaches main without
-    a PR, which is the exact case branch protection can be bypassed for.
+    workflow. Use it for a genuine backstop: a secret scan that re-runs on
+    push to main catches whatever reaches main without a PR, which is the
+    exact case branch protection can be bypassed for.
     Scoping push to a non-overlapping branch there would delete the coverage,
     not the waste.
 
@@ -596,6 +596,11 @@ them also runs daily over the whole estate in the estate sweep
 - **FW-004** (fails from 27 October): a house workflow or action
   (`Doman-Digital/...` or `redacted/...`) is pinned to a branch. Use
   `@v1`, a release tag or a full commit SHA.
+- **CI-031** (DOM-1451, fails from 5 November): a workflow reads a commit's
+  author or committer (a `%ae`-style log format, `author.email`, or a
+  `check-author` job). The commit-author checks were a Vercel-era necessity
+  and were retired on 29 October 2026; the address is self-asserted, so such a
+  check proves nothing.
 - **CI-025** (fails from 20 November): a Turbo monorepo's PR job runs
   `turbo run` over every workspace.
 - **CI-026** (fails from 20 November): budget.yml registers a schedule the

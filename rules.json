@@ -201,6 +201,14 @@
       "enforce_from": "2026-11-24"
     },
     {
+      "id": "CI-031",
+      "title": "A workflow checks who wrote a commit",
+      "why": "DOM-1451, founder, 27 October 2026: the commit-author checks were a Vercel-era necessity (Vercel refused to build a preview for a commit author outside the client's Vercel team) and are no longer needed. redacted's enforce-commit-author.yml was the last one; on 27 October the squash merge of redacted#767 turned its push-to-main run red for a commit nothing was wrong with. Author and committer addresses are self-asserted, so a check on them proves nothing about who wrote the code. A workflow that reads a commit's author or committer to pass or fail it comes back only by mistake. GitHub's own refusal of a push carrying a private address is a different rule and stays (dd-claude-kit config/git-identity.json).",
+      "applies": "full",
+      "warn_from": "2026-10-29",
+      "enforce_from": "2026-11-05"
+    },
+    {
       "id": "CI-023",
       "title": "A workflow still uses Vercel",
       "why": "Vercel was retired for CI and deploys (DOM-555, DOM-776). On 19 October 2026 its leftovers were still in five repos: six VERCEL_TOKEN_* inputs in dd-repo-registry's sweep, a kv.vercel-storage placeholder in the monorepo's lighthouse.yml, and comments in redacted, redacted and redacted-api describing Vercel building main. A workflow that names Vercel either does nothing or depends on an account nobody watches. A portal still served by Vercel records it as an exemption.",
