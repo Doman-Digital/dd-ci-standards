@@ -332,7 +332,7 @@
     {
       "id": "CF-001",
       "title": "A Worker has no registered deploy path, or two",
-      "why": "13 October 2026 (DOM-776): some Workers were built by Cloudflare's GitHub app, some by Actions, and seven repos had no trace of how they deploy. deploys.json lists every Worker with its one path: Actions (cloudflare-deploy.yml) for internal Workers and anything gated, Workers Builds only for simple static client sites, or retired.",
+      "why": "13 October 2026 (DOM-776): some Workers were built by Cloudflare's GitHub app, some by Actions, and seven repos had no trace of how they deploy. deploys.json lists every Worker with its one path: Actions (cloudflare-deploy.yml) for internal Workers and anything gated, or retired. From 29 October 2026 client sites move off Workers Builds to Actions too, so every client deploy runs after CI with a narrow token per client (DOM-1644).",
       "applies": "full",
       "warn_from": "2026-10-14",
       "enforce_from": "2026-12-31"
