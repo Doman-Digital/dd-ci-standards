@@ -103,8 +103,8 @@
       "account": "Tardi Group",
       "repo": "joetardi/Tardi-Group",
       "config": "astro/wrangler.jsonc (env)",
-      "path": "workers-builds",
-      "note": "main; trigger created 13 Oct"
+      "path": "actions",
+      "note": "main; moving off Workers Builds to cloudflare-deploy.yml, Doppler dd-deploy/tardi (DOM-1644)"
     },
     {
       "worker": "rise-and-bloom-astro",

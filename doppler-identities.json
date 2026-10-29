@@ -93,6 +93,15 @@
       ],
       "service_account": "ci-proteam-electrical",
       "identity": "fb99e1ab-1ffc-4fad-bef4-cb9e9fadd5d1"
+    },
+    {
+      "repo": "joetardi/Tardi-Group",
+      "branch": "main",
+      "reads": [
+        "dd-deploy/tardi"
+      ],
+      "service_account": "ci-Tardi-Group",
+      "identity": "80f92af6-fdf3-4da3-9bd7-707ce4f5f833"
     }
   ]
 }
