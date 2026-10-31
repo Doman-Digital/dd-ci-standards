@@ -3,9 +3,10 @@ import assert from "node:assert/strict";
 import { readFileSync, writeFileSync, mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
 import { runDoctor, levelOn, exemptionState } from "../lib/engine.mjs";
-import { scheduleCrons, issueKeysOf } from "../lib/rules.mjs";
+import { scheduleCrons, issueKeysOf, inventoryHash as h } from "../lib/rules.mjs";
 import { FIXTURES } from "./fixtures.mjs";
 
 const rulebook = JSON.parse(readFileSync(new URL("../rules.json", import.meta.url), "utf8"));
@@ -201,19 +202,34 @@ test("CI-014 wants the tip guard on push deploys too, and the tested commit afte
   assert.equal(run("on:\n  push:\n    branches: [main]\njobs:\n  d:\n    steps:\n      # - run: npx wrangler deploy\n      - run: echo\n").length, 0);
 });
 
-test("deploys.json lists each Worker once per account, with a known path", () => {
+// The full tables, and the tests of what they hold (one row per Worker per account, every house Actions
+// deploy with a Doppler identity), live in dd-repo-registry. This repo is public: what is here is the
+// projection the registry's bin/inventory.mjs writes, with only what CF-001 and SEC-009 read (DOM-1643).
+const SHA = /^[0-9a-f]{64}$/;
+test("deploys.json is the projection: hashed repo and Worker, a known path, nothing else", () => {
   const reg = JSON.parse(readFileSync(new URL("../deploys.json", import.meta.url), "utf8"));
+  assert.deepEqual(Object.keys(reg).sort(), ["$comment", "workers"]);
   const paths = new Set(["actions", "workers-builds", "manual", "retired", "not-deployed"]);
-  const seen = new Set();
+  assert.ok(reg.workers.length > 0);
   for (const w of reg.workers) {
-    assert.ok(w.worker && typeof w.repo === "string", `entry without a worker or repo: ${JSON.stringify(w)}`);
-    assert.ok(paths.has(w.path), `${w.worker}: unknown path ${w.path}`);
-    if (w.target) assert.ok(paths.has(w.target) && w.path === "manual", `${w.worker}: target is only for manual Workers`);
-    if (w.path === "manual" && !w.repo) assert.ok(/no repo|delete pending|source:/i.test(w.note || ""), `${w.worker}: a manual Worker with no repo must say where its source is, or that it has none`);
-    if (w.workflow) assert.ok(/^\.github\/workflows\/[\w.-]+\.ya?ml$/.test(w.workflow), `${w.worker}: workflow must be a .github/workflows/ path`);
-    const key = `${w.account}/${w.worker}`;
-    assert.ok(!seen.has(key), `${key} is listed twice`);
-    seen.add(key);
+    assert.deepEqual(Object.keys(w).filter((k) => !["repo", "worker", "path", "workflow"].includes(k)), [], `a projected row carries more than CF-001 reads: ${Object.keys(w)}`);
+    assert.match(w.repo, SHA, "repo is a sha256");
+    assert.match(w.worker, SHA, "worker is a sha256");
+    assert.ok(paths.has(w.path), `unknown path ${w.path}`);
+    if (w.workflow) assert.ok(/^\.github\/workflows\/[\w.-]+\.ya?ml$/.test(w.workflow), "workflow must be a .github/workflows/ path");
+  }
+});
+
+test("doppler-identities.json is the projection: hashed repo and identity, nothing else", () => {
+  const table = JSON.parse(readFileSync(new URL("../doppler-identities.json", import.meta.url), "utf8"));
+  assert.deepEqual(Object.keys(table).sort(), ["$comment", "identities"]);
+  assert.ok(table.identities.length > 0);
+  const repos = table.identities.map((r) => r.repo);
+  assert.equal(new Set(repos).size, repos.length, "a repo appears twice");
+  for (const r of table.identities) {
+    assert.deepEqual(Object.keys(r).sort(), ["identity", "repo"], `a projected row carries more than SEC-009 reads: ${Object.keys(r)}`);
+    assert.match(r.repo, SHA, "repo is a sha256");
+    assert.ok(r.identity === null || SHA.test(r.identity), "identity is a sha256 or null");
   }
 });
 
@@ -226,7 +242,7 @@ test("tokens.json records names and scopes, never a value", () => {
 });
 
 test("CF-001 ignores registry entries with no repo", () => {
-  const ctx = { repo: "Doman-Digital/demo", deploys: { workers: [{ worker: "orphan", repo: "", path: "retired" }, { worker: "demo-site", repo: "Doman-Digital/demo", path: "manual" }] } };
+  const ctx = { repo: "Doman-Digital/demo", deploys: { workers: [{ worker: h("orphan"), repo: "", path: "retired" }, { worker: h("demo-site"), repo: h("Doman-Digital/demo"), path: "manual" }] } };
   const r = runDoctor({ workflows: [], vercel: [], files: {}, wrangler: [{ path: "wrangler.jsonc", name: "demo-site" }] }, rulebook, { ...base, ...ctx });
   assert.ok(!ids(r).includes("CF-001"));
 });
@@ -256,11 +272,15 @@ test("CI-005 accepts push and pull_request on a CI that a workflow_run deploy wa
 });
 
 test("CF-001 accepts an Actions deploy that runs wrangler inside a script, when deploys.json names its workflow", () => {
-  const deploys = { workers: [{ worker: "demo-site", repo: "Doman-Digital/demo", path: "actions", workflow: ".github/workflows/deploy-sites.yml" }] };
+  const deploys = { workers: [{ worker: h("demo-site"), repo: h("Doman-Digital/demo"), path: "actions", workflow: ".github/workflows/deploy-sites.yml" }] };
   const wf = { path: ".github/workflows/deploy-sites.yml", text: "on:\n  workflow_dispatch:\njobs:\n  deploy:\n    steps:\n      - run: node tools/deploy.mjs\n" };
   const v = (workflows) => ({ workflows, vercel: [], files: {}, wrangler: [{ path: "wrangler.jsonc", name: "demo-site" }] });
   assert.ok(!ids(runDoctor(v([wf]), rulebook, { ...base, repo: "Doman-Digital/demo", deploys })).includes("CF-001"));
-  assert.ok(ids(runDoctor(v([]), rulebook, { ...base, repo: "Doman-Digital/demo", deploys })).includes("CF-001"));
+  const missing = runDoctor(v([]), rulebook, { ...base, repo: "Doman-Digital/demo", deploys }).findings.filter((f) => f.rule === "CF-001");
+  assert.equal(missing.length, 1);
+  // The name comes from the repo's own wrangler config, never from the register.
+  assert.match(missing[0].message, /Worker "demo-site"/);
+  assert.doesNotMatch(missing[0].message, /[0-9a-f]{64}/);
 });
 
 test("an OpenNext deploy counts as a production deploy (CI-013, SEC-007)", () => {
@@ -452,33 +472,24 @@ test("CI-029 puts a deploy job on the deploy slot, and CI-022 leaves it alone", 
 
 test("SEC-009: registration, the variable and drift (DOM-1265)", () => {
   const deploy = { workflows: [{ path: ".github/workflows/deploy.yml", text: "on:\n  workflow_dispatch:\njobs:\n  d:\n    steps:\n      - uses: dopplerhq/secrets-fetch-action@451892f16195f9ac360e1a5bcbf0b5fd0e957534\n        with:\n          doppler-identity-id: ${{ vars.DOPPLER_IDENTITY_ID }}\n" }], vercel: [], files: {} };
-  const table = { identities: [{ repo: "Doman-Digital/demo", branch: "main", reads: ["dd-deploy/demo"], identity: "11111111-1111-4111-8111-111111111111" }] };
+  const table = { identities: [{ repo: h("Doman-Digital/demo"), identity: h("11111111-1111-4111-8111-111111111111") }] };
   const run = (v, ctx) => runDoctor(v, rulebook, { ...base, dopplerIdentities: table, ...ctx }).findings.filter((f) => f.rule === "SEC-009").map((f) => f.message);
   // A house repo with no row fails even where the variables cannot be read.
   assert.match(run(deploy, { repo: "Doman-Digital/other", vars: null })[0], /no row/);
   // A client repo signs in to its own Doppler: no row needed, the variable still is.
   assert.deepEqual(run(deploy, { repo: "rmp474/RMP-Electrical", vars: null }), []);
   assert.match(run(deploy, { repo: "rmp474/RMP-Electrical", vars: { DOPPLER_IDENTITY_ID: "" } })[0], /no such variable/);
-  assert.match(run(deploy, { repo: "Doman-Digital/demo", vars: { DOPPLER_IDENTITY_ID: "22222222-2222-4222-8222-222222222222" } })[0], /doppler-identities.json says 1111/);
+  // Drift names neither value: the register's is private, and the message prints in a public log.
+  const drift = run(deploy, { repo: "Doman-Digital/demo", vars: { DOPPLER_IDENTITY_ID: "22222222-2222-4222-8222-222222222222" } })[0];
+  assert.match(drift, /differs from the registered identity/);
+  assert.doesNotMatch(drift, /1111|2222|[0-9a-f]{64}/);
+  // The lookup ignores case, as it did before the hashes.
+  assert.deepEqual(run(deploy, { repo: "doman-digital/DEMO", vars: { DOPPLER_IDENTITY_ID: "11111111-1111-4111-8111-111111111111" } }), []);
+  assert.match(run(deploy, { repo: "Doman-Digital/demo", vars: { DOPPLER_IDENTITY_ID: "33333333-3333-4333-8333-333333333333" } })[0], /differs/);
   assert.deepEqual(run(deploy, { repo: "Doman-Digital/demo", vars: { DOPPLER_IDENTITY_ID: "11111111-1111-4111-8111-111111111111" } }), []);
   // A commented-out sign-in, and the reusable workflow itself, do not count.
   const quiet = { workflows: [{ path: ".github/workflows/a.yml", text: "on: [push]\n# doppler-identity-id: ${{ vars.DOPPLER_IDENTITY_ID }}\njobs: {}\n" }, { path: ".github/workflows/policy.yml", text: "on:\n  pull_request:\njobs:\n  c:\n    env:\n      DD_DOPPLER_IDENTITY_ID: ${{ vars.DOPPLER_IDENTITY_ID }}\n" }, { path: ".github/workflows/cloudflare-deploy.yml", text: "on:\n  workflow_call:\njobs:\n  d:\n    steps:\n      - with:\n          doppler-identity-id: ${{ vars.DOPPLER_IDENTITY_ID }}\n" }], vercel: [], files: {} };
   assert.deepEqual(run(quiet, { repo: "Doman-Digital/other", vars: {} }), []);
-});
-
-test("doppler-identities.json: one row per repo, each well formed, every house Actions deploy registered", () => {
-  const table = JSON.parse(readFileSync(new URL("../doppler-identities.json", import.meta.url), "utf8"));
-  const deploys = JSON.parse(readFileSync(new URL("../deploys.json", import.meta.url), "utf8"));
-  const repos = table.identities.map((r) => r.repo.toLowerCase());
-  assert.equal(new Set(repos).size, repos.length, "a repo appears twice");
-  for (const r of table.identities) {
-    assert.match(r.repo, /^[^/\s]+\/[^/\s]+$/, `${r.repo}: owner/name`);
-    assert.match(r.branch, /^[\w./-]+$/, `${r.repo}: branch`);
-    assert.ok(Array.isArray(r.reads) && r.reads.length && r.reads.every((c) => /^[\w-]+\/[\w-]+$/.test(c)), `${r.repo}: reads lists project/config`);
-    assert.ok(r.identity === null || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(r.identity), `${r.repo}: identity is a UUID or null`);
-  }
-  const missing = [...new Set(deploys.workers.filter((w) => w.path === "actions" && /^doman-digital\//i.test(w.repo || "")).map((w) => w.repo))].filter((r) => !repos.includes(r.toLowerCase()));
-  assert.deepEqual(missing, [], `Actions deploys with no Doppler identity row: ${missing.join(", ")}`);
 });
 
 // The acceptance for DOM-1363, end to end: the doctor as the policy workflow runs it, reading the
@@ -503,11 +514,32 @@ test("dd doctor refuses a pull request event with no issue, passes Part of and t
   }
 });
 
-test("the public inventories hold no Cloudflare account id (DOM-1643)", () => {
-  // This repo is public. The ids live in dd-repo-registry registry.yaml accounts.cloudflare.
+test("the public inventories hold no Cloudflare account id, no plain repo, Worker or identity (DOM-1643)", () => {
+  // This repo is public. The ids live in dd-repo-registry registry.yaml accounts.cloudflare, the
+  // full tables in dd-repo-registry beside it.
   for (const f of ["deploys.json", "doppler-identities.json"]) {
     const text = readFileSync(new URL(`../${f}`, import.meta.url), "utf8");
     assert.ok(!/\b[0-9a-f]{32}\b/.test(text), `${f} holds something shaped like a Cloudflare account id`);
-    assert.ok(!/"accounts"\s*:\s*\{|"cloudflare_account"/.test(text), `${f} carries an account-id field`);
+    assert.ok(!/"accounts"\s*:\s*\{|"cloudflare_account"|"account"|"note"|"target"|"reads"|"service_account"|"branch"|"config"/.test(text), `${f} carries a field no rule reads`);
+    assert.ok(!/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/.test(text), `${f} holds a plain identity id`);
+    assert.ok(!/"[\w.-]+\/[\w.-]+"/.test(text.replace(/"\.github\/workflows\/[\w.-]+"/g, "")), `${f} holds a plain owner/name`);
+  }
+});
+
+// Generate, then check: the projection here is exactly what dd-repo-registry's generator writes from
+// its private tables. Runs when a registry checkout sits beside this one (or DD_REPO_REGISTRY names
+// one); the registry's daily sweep runs the same comparison as PUB-001.
+test("the projection matches what dd-repo-registry would write, if a checkout sits beside this one", async (t) => {
+  const dir = process.env.DD_REPO_REGISTRY || new URL("../../dd-repo-registry/", import.meta.url).pathname;
+  let gen;
+  try {
+    gen = await import(pathToFileURL(join(dir, "bin/inventory.mjs")).href);
+  } catch {
+    t.skip("no dd-repo-registry checkout beside this one");
+    return;
+  }
+  const want = gen.projectionFiles(gen.loadInventory(dir));
+  for (const [f, text] of Object.entries(want)) {
+    assert.equal(readFileSync(new URL(`../${f}`, import.meta.url), "utf8"), text, `${f} differs from the registry's projection: run node bin/inventory.mjs --write <this checkout> in dd-repo-registry`);
   }
 });

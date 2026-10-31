@@ -4,6 +4,9 @@
 // guards there were found unable to catch theirs).
 //
 // ctx is merged over a default context: private dd-tooling repo "demo".
+// The inventories are hashed projections (DOM-1643), so their rows are built with h().
+
+import { inventoryHash as h } from "../lib/rules.mjs";
 
 const wf = (text, path = ".github/workflows/ci.yml") => ({ workflows: [{ path, text }], vercel: [], files: {} });
 const view = (over) => ({ workflows: [], vercel: [], files: {}, ...over });
@@ -170,7 +173,7 @@ jobs:
     pass: wf("on:\n  pull_request:\njobs:\n  verify:\n    steps:\n      - run: pnpm install --frozen-lockfile\n      - run: pnpm lint\n      - run: pnpm test\n  e2e:\n    services:\n      postgres:\n        image: postgres:16\n    steps:\n      - run: pnpm install --frozen-lockfile\n      - run: pnpm e2e\n  smoke:\n    steps:\n      - run: npm install -g wrangler\n"),
   },
   "CF-001": {
-    ctx: { repo: "Doman-Digital/demo", deploys: { workers: [{ worker: "demo-site", repo: "Doman-Digital/demo", path: "workers-builds" }] } },
+    ctx: { repo: "Doman-Digital/demo", deploys: { workers: [{ worker: h("demo-site"), repo: h("Doman-Digital/demo"), path: "workers-builds" }] } },
     // An unregistered Worker, and an Actions deploy beside the app's build.
     fail: { workflows: [{ path: ".github/workflows/deploy.yml", text: "on:\n  push:\n    branches: [main]\njobs:\n  d:\n    steps:\n      - run: npx wrangler deploy\n" }], vercel: [], files: {}, wrangler: [{ path: "wrangler.jsonc", name: "demo-site" }, { path: "worker/wrangler.toml", name: "demo-cron" }] },
     pass: { workflows: [{ path: ".github/workflows/ci.yml", text: "on:\n  pull_request:\njobs:\n  b:\n    steps:\n      - run: npx wrangler deploy --dry-run\n" }], vercel: [], files: {}, wrangler: [{ path: "wrangler.jsonc", name: "demo-site" }] },
@@ -289,9 +292,9 @@ jobs:
   },
   "SEC-009": {
     // The shared deploy reads the variable in the caller's repo, which has none.
-    ctx: { repo: "Doman-Digital/demo", vars: {}, dopplerIdentities: { identities: [{ repo: "Doman-Digital/demo", branch: "main", reads: ["dd-deploy/demo"], identity: null }] } },
+    ctx: { repo: "Doman-Digital/demo", vars: {}, dopplerIdentities: { identities: [{ repo: h("Doman-Digital/demo"), identity: null }] } },
     fail: wf("on:\n  workflow_run:\n    workflows: [CI]\njobs:\n  deploy:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/cloudflare-deploy.yml@v1\n    with:\n      doppler-config: demo\n", ".github/workflows/deploy.yml"),
-    passCtx: { vars: { DOPPLER_IDENTITY_ID: "0f0f0f0f-0000-4000-8000-000000000000" }, dopplerIdentities: { identities: [{ repo: "Doman-Digital/demo", branch: "main", reads: ["dd-deploy/demo"], identity: "0f0f0f0f-0000-4000-8000-000000000000" }] } },
+    passCtx: { vars: { DOPPLER_IDENTITY_ID: "0f0f0f0f-0000-4000-8000-000000000000" }, dopplerIdentities: { identities: [{ repo: h("Doman-Digital/demo"), identity: h("0f0f0f0f-0000-4000-8000-000000000000") }] } },
     pass: wf("on:\n  workflow_run:\n    workflows: [CI]\njobs:\n  deploy:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/cloudflare-deploy.yml@v1\n    with:\n      doppler-config: demo\n", ".github/workflows/deploy.yml"),
   },
   "SEC-007": {
