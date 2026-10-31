@@ -8,7 +8,7 @@ import { spawn, execFileSync } from "node:child_process";
 import { createServer } from "node:http";
 
 const policy = readFileSync(new URL("../.github/workflows/policy.yml", import.meta.url), "utf8");
-const scan = policy.split("      - name: Scan the commits this pull request adds\n")[1].split("\n\n      # Was redacted")[0];
+const scan = policy.split("      - name: Scan the commits this pull request adds\n")[1].split("\n\n      # Was a client repo")[0];
 const script = scan.split("        run: |\n")[1].split("\n").map((s) => s.replace(/^ {10}/, "")).join("\n");
 
 test("policy checkout retains commit history and uses read-only, non-persistent blob filtering", () => {

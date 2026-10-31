@@ -39,8 +39,8 @@ name: ci-standards policy
 # branch without a pull request, and all of history once a week, is scanned
 # centrally by the estate sweep in Doman-Digital/dd-repo-registry, over every
 # repo it sees. A repo that runs a scanner of its own fails CI-015
-# (DOM-776, 20 October 2026: the monorepo, redacted, redacted-app,
-# redacted and redacted each did, a VM and a clone apiece).
+# (DOM-776, 20 October 2026: the monorepo and four client repos each did,
+# a VM and a clone apiece).
 #
 # gitleaks reads the calling repo's .gitleaks.toml and .gitleaksignore if
 # there are any. The binary is fetched at a fixed version and checked against
@@ -102,7 +102,7 @@ name: ci-standards policy
 # the ref. In a ruleset run workflow_ref is this file at this repo's main, the
 # same string for every pull request in the org, so on its own it put them all
 # in one group and each new run cancelled the one before. On 28 October 2026 a
-# Renovate run rebased nine meridian and redacted-Platform pull requests within
+# Renovate run rebased nine pull requests in two of our repos within
 # two minutes and every one of their `check` runs ended cancelled.
 #
 # Every pull request names its issue (LIN-001, LIN-002; DOM-1363, 27 October
@@ -143,7 +143,7 @@ jobs:
     env:
       GITLEAKS_VERSION: "8.30.1"
       GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
-      # semgrep/semgrep, the image redacted's own workflow pulled on 19 October 2026.
+      # semgrep/semgrep, the image a client repo's own workflow pulled on 19 October 2026.
       SEMGREP_IMAGE: semgrep/semgrep@sha256:529ee8a277ec8adc5b534d7c74eea0a47e9de21d62852b6ba7ac6ba9566845c3
       # SEC-009: the Doppler identity the repo's deploys sign in with. A
       # ruleset run sees the target repo's variables, a called run the caller's.
@@ -198,7 +198,7 @@ jobs:
           export GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 | tr -d '\n')"
           gitleaks git --log-opts="$range" --redact --no-banner .
 
-      # Was redacted's security-semgrep.yml, its own VM and container on
+      # Was a client repo's security-semgrep.yml, its own VM and container on
       # every pull request (DOM-776). p/secrets is left out: gitleaks above
       # already scans the same commits for secrets.
       - name: Semgrep (the files this pull request changes)

@@ -19,7 +19,7 @@ name: post-deploy-checks (reusable)
 #       needs: deploy
 #       uses: Doman-Digital/dd-ci-standards/.github/workflows/post-deploy-checks.yml@v1
 #       with:
-#         client: redacted
+#         client: example-client
 #       secrets:
 #         ADMIN_RUN_TOKEN: ${{ secrets.ADMIN_RUN_TOKEN }}
 #

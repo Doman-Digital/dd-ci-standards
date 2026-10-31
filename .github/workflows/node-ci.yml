@@ -55,7 +55,7 @@ on:
         default: "pnpm run build"
       # Set when a private git+https dependency needs a short-lived GitHub
       # App token minted before `pnpm install` (mirrors the pattern already
-      # used by redacted, redacted, Doman-Digital for dd-graph).
+      # used by two client sites and Doman-Digital for dd-graph).
       private_dep_owner:
         type: string
         default: ""

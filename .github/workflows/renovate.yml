@@ -3,7 +3,7 @@ name: Renovate (self-hosted)
 # Runs Renovate directly via GitHub Actions instead of depending on Mend's
 # hosted service. Built 2026-08-17 after the hosted onboarding flow at
 # developer.mend.io returned a 403 on "Failed to onboard organizations" for
-# at least one account (redacted) and every repo across the portfolio
+# at least one account, and every repo across the portfolio
 # showed zero Renovate activity days after install — a CLI dry-run against
 # Doman-Digital (see the ci-standards README) had already proven the
 # renovate.json config itself resolves correctly, so the fault was Mend's
@@ -61,7 +61,7 @@ jobs:
         # by having renovate.json (dd adopt writes one) and leaves by losing
         # it. Until 2026-10-03 this was a hand-kept list; it still named
         # dmitridoman/Doman-Digital after the move and three archived repos,
-        # and left out the monorepo, dd-relay and redacted-app.
+        # and left out the monorepo, dd-relay and a client app.
         owner:
           - dmitridoman
           - Doman-Digital
