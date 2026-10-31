@@ -330,6 +330,15 @@
       "enforce_from": "2026-10-21"
     },
     {
+      "id": "SEC-010",
+      "title": "A pull request adds a client's, a client's person's or a staff member's name to a public org repo",
+      "why": "29 to 31 October 2026 (DOM-1643): the two public org repos carried a map of every client, Worker and Doppler identity, and prose and fixtures that named clients, their people and our staff. A public repo publishes its history for good, and taking names out of it means a history rewrite and a GitHub Support request. The founder asked for prevention as well as the clean-up. This fails a pull request into a public Doman-Digital repo when its diff, a path it adds, a commit message, its title or its description holds a name on the list. The list is kept in the private dd-repo-registry; this repo holds public-names.json, salted sha256 hashes of each name's forms and the allowlisted lines with their reasons, so the check names nobody and runs on pull requests from forks, which get no secret. The same list feeds the kit's pre-push hook and the registry sweep (PUB-002 to PUB-004). Name a client by its trade and a person by their role. A merge queue run is not checked: it has no pull request in its event, and the pull request was.",
+      "applies": "all",
+      "visibility": "public",
+      "warn_from": "2026-10-31",
+      "enforce_from": "2026-10-31"
+    },
+    {
       "id": "CF-001",
       "title": "A Worker has no registered deploy path, or two",
       "why": "13 October 2026 (DOM-776): some Workers were built by Cloudflare's GitHub app, some by Actions, and seven repos had no trace of how they deploy. dd-repo-registry deploys.json lists every Worker with its one path, and deploys.json here is its projection (DOM-1643: repo and Worker as sha256 hashes, because this repo is public): Actions (cloudflare-deploy.yml) for internal Workers and anything gated, or retired. From 29 October 2026 client sites move off Workers Builds to Actions too, so every client deploy runs after CI with a narrow token per client (DOM-1644).",

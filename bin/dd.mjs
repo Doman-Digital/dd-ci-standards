@@ -122,16 +122,16 @@ async function context(args) {
   const budget = budgetForRepo(readFileSync(join(HOME, "budget.yml"), "utf8"), repoName);
   // The repo's variables, when the policy job passed them in (SEC-009); null elsewhere.
   const vars = process.env.DD_VARS_SEEN === "true" ? { DOPPLER_IDENTITY_ID: process.env.DD_DOPPLER_IDENTITY_ID || "" } : null;
-  return { dir, repo, ctx: { today, kind, visibility, repo, repoName, budget, meta, taxonomy, pr: pullRequest(), vars } };
+  return { dir, repo, ctx: { today, kind, visibility, repo, repoName, budget, meta, taxonomy, pr: pullRequest(), vars, dir } };
 }
 
-/** The pull request this run checks (LIN-001, LIN-002), from the Actions event file; null outside a pull request run. */
+/** The pull request this run checks (LIN-001, LIN-002, SEC-010), from the Actions event file; null outside a pull request run. */
 function pullRequest() {
   const path = process.env.GITHUB_EVENT_PATH;
   if (!path || !/^pull_request/.test(process.env.GITHUB_EVENT_NAME || "")) return null;
   try {
     const pr = JSON.parse(readFileSync(path, "utf8")).pull_request;
-    return pr ? { title: pr.title || "", body: pr.body || "", branch: pr.head?.ref || "", labels: (pr.labels || []).map((l) => l.name) } : null;
+    return pr ? { title: pr.title || "", body: pr.body || "", branch: pr.head?.ref || "", labels: (pr.labels || []).map((l) => l.name), base: pr.base?.sha || null, head: pr.head?.sha || null } : null;
   } catch {
     return null;
   }
