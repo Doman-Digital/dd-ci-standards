@@ -418,8 +418,8 @@ has to pass a policy check to merge, not get caught in the next audit.
   dd-repo-registry registry.yaml `accounts.cloudflare`. This repo is public,
   so it holds no account id, plain repo list or identity id (DOM-1643). The register of
   every Cloudflare token (name, granted policy, where it is stored, a verdict,
-  never a value) is `cloudflare-tokens.yaml` in the private
-  Doman-Digital/dd-repo-registry, checked daily against the live token list
+  never a value) lives in dd-repo-registry as `cloudflare-tokens.yaml`,
+  checked daily against the live token list
   (DOM-1641). It moved there from `tokens.json` here on 29 Oct 2026 because
   this repo is public.
 
