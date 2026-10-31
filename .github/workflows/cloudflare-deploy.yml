@@ -7,7 +7,9 @@ name: cloudflare-deploy (reusable)
 #   1. Ships only the commit CI tested (the CI run's head_sha after
 #      workflow_run), and only while it is still the tip of the default
 #      branch. After a burst of merges every CI run finishes and calls this;
-#      the older ones stop here, and the newest one deploys.
+#      the older ones stop here, and the newest one deploys. A content
+#      rebuild (repository_dispatch from dd-rebuild-relay) and a manual run
+#      ship the tip and run the caller's manual-check first.
 #   2. Installs, runs the caller's checks (pre-deploy, and on a manual run
 #      the manual-check too), builds.
 #   3. Fetches the Cloudflare deploy token from Doppler `dd-deploy/<config>`
@@ -93,7 +95,9 @@ on:
         type: string
         default: ""
       manual-check:
-        description: A command run only on a manual run, which has no CI run behind it (e.g. `pnpm run typecheck && pnpm test`).
+        description: >-
+          A command run only on a manual run or a content rebuild (repository_dispatch), which have no CI run of their
+          own behind them (e.g. `pnpm run typecheck && pnpm test`).
         type: string
         default: ""
       build:
@@ -129,6 +133,12 @@ on:
           has looked; a failure fails the run, and the deploy it follows has happened.
         type: string
         default: ""
+      release-var:
+        description: >-
+          Optional name of a Worker variable set to the deployed commit on every deploy (`wrangler deploy --var
+          NAME:<sha>`), e.g. SENTRY_RELEASE, so errors carry the release that served them. Empty sets nothing.
+        type: string
+        default: ""
       runner:
         description: Runner label. Defaults to the CI_RUNNER variable, then ubuntu-latest.
         type: string
@@ -145,12 +155,16 @@ on:
 jobs:
   deploy:
     # A workflow_run deploy runs only for a CI run that passed and that a push to this repo's default branch started,
-    # whatever the fork or branch that triggered CI; a manual run only from the default branch. After workflow_run,
+    # whatever the fork or branch that triggered CI; a manual run only from the default branch. A repository_dispatch
+    # (a content rebuild sent by dd-rebuild-relay, DOM-1644) rebuilds the tip of the default branch. GitHub runs it only
+    # from the default branch, the tip guard still applies, and it runs manual-check like a manual run, because the
+    # tip's own CI run may not have finished. After workflow_run,
     # github.sha is the tip of the default branch when CI finished: a run for an older commit is skipped here, before
     # it waits for a VM, and the tip guard below catches a merge that lands while it waits.
     if: >-
       (github.event_name == 'workflow_dispatch' && github.ref_name == github.event.repository.default_branch) ||
       (github.event_name == 'push' && github.ref_name == github.event.repository.default_branch) ||
+      (github.event_name == 'repository_dispatch' && github.ref_name == github.event.repository.default_branch) ||
       (github.event_name == 'workflow_run' &&
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'push' &&
@@ -215,7 +229,9 @@ jobs:
             exit 1
           fi
       - name: Manual run checks (no CI run behind it)
-        if: steps.tip.outputs.deploy == 'true' && github.event_name == 'workflow_dispatch' && inputs.manual-check != ''
+        if: >-
+          steps.tip.outputs.deploy == 'true' && inputs.manual-check != '' &&
+          (github.event_name == 'workflow_dispatch' || github.event_name == 'repository_dispatch')
         env:
           CMD: ${{ inputs.manual-check }}
         run: bash -euo pipefail -c "$CMD"
@@ -273,6 +289,8 @@ jobs:
           CONFIGS: ${{ inputs.configs }}
           FROM: ${{ inputs.doppler-project }}/${{ inputs.doppler-config }}
           WRANGLER_ENV: ${{ inputs.wrangler-env }}
+          RELEASE_VAR: ${{ inputs.release-var }}
+          DEPLOY_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
         run: |
           set -euo pipefail
           if [ -n "${WRANGLER_ENV:-}" ]; then export CLOUDFLARE_ENV="$WRANGLER_ENV"; fi
@@ -280,14 +298,16 @@ jobs:
             echo "::error::Doppler ${FROM} has no CLOUDFLARE_DEPLOY_VALUE."
             exit 1
           fi
+          extra=()
+          if [ -n "${RELEASE_VAR:-}" ]; then extra=(--var "${RELEASE_VAR}:${DEPLOY_SHA}"); fi
           if [ -z "${CONFIGS//[[:space:]]/}" ]; then
-            $WRANGLER deploy
+            $WRANGLER deploy "${extra[@]}"
           else
             while IFS= read -r c; do
               c="${c#"${c%%[![:space:]]*}"}"; c="${c%"${c##*[![:space:]]}"}"
               [ -n "$c" ] || continue
               echo "::group::wrangler deploy --config $c"
-              $WRANGLER deploy --config "$c"
+              $WRANGLER deploy --config "$c" "${extra[@]}"
               echo "::endgroup::"
             done <<< "$CONFIGS"
           fi

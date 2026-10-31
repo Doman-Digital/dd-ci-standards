@@ -1,16 +1,6 @@
 {
-  "$comment": "Every Cloudflare Worker and the one way it is deployed (CF-001, DOM-776). path is how it deploys today: actions (cloudflare-deploy.yml or a reviewed deploy workflow), workers-builds (Cloudflare's GitHub app, simple client static sites only), manual (by hand: listed so it is visible, and moved to target), retired (serves nothing; deletion is the founder's call) or not-deployed (a config with no Worker). Collected 13 October 2026 from all eight accounts. Account ids are identifiers, not secrets.",
-  "updated": "2026-10-28",
-  "accounts": {
-    "Doman Digital": "30515e0503d5fe494460233cc3535d74",
-    "sen-sphere": "27afd0d63cc551836017345fba42762d",
-    "Tardi": "4777a254228d942d3300385aa72c6407",
-    "Rise and Bloom": "6a030a56610cd333052118f39c784809",
-    "RMP Electrical": "711edb77af8819fc8fc66d2b9b0bef3c",
-    "Chair and Blade": "7bfddf590378bd94de48e6f6e551a072",
-    "MMM Beauty": "97d2f96737243566437318a7e7d274b8",
-    "Harrison James": "c1df12ab3f8e21a03fe6566a1e3f62ee"
-  },
+  "$comment": "Every Cloudflare Worker and the one way it is deployed (CF-001, DOM-776). path is how it deploys today: actions (cloudflare-deploy.yml or a reviewed deploy workflow), workers-builds (Cloudflare's GitHub app, simple client static sites only), manual (by hand: listed so it is visible, and moved to target), retired (serves nothing; deletion is the founder's call) or not-deployed (a config with no Worker). Collected 13 October 2026 from all eight accounts. account is the account's name as dd-repo-registry registry.yaml accounts.cloudflare writes it; the ids live there, in the private registry, not in this public file (DOM-1643).",
+  "updated": "2026-10-29",
   "workers": [
     {
       "worker": "dd-relay",
@@ -94,7 +84,7 @@
     },
     {
       "worker": "sensphere-web-astro",
-      "account": "sen-sphere",
+      "account": "Sensphere",
       "repo": "sensphere/sen-sphere",
       "config": "astro/wrangler.jsonc",
       "path": "workers-builds",
@@ -102,7 +92,7 @@
     },
     {
       "worker": "sensphere-voice",
-      "account": "sen-sphere",
+      "account": "Sensphere",
       "repo": "sensphere/sen-sphere",
       "config": "workers/voice/wrangler.jsonc",
       "path": "actions",
@@ -110,11 +100,11 @@
     },
     {
       "worker": "tardi-web",
-      "account": "Tardi",
+      "account": "Tardi Group",
       "repo": "joetardi/Tardi-Group",
       "config": "astro/wrangler.jsonc (env)",
-      "path": "workers-builds",
-      "note": "main; trigger created 13 Oct"
+      "path": "actions",
+      "note": "main; moving off Workers Builds to cloudflare-deploy.yml, Doppler dd-deploy/tardi (DOM-1644)"
     },
     {
       "worker": "rise-and-bloom-astro",
@@ -550,7 +540,7 @@
     },
     {
       "worker": "sensphere-web-astro-staging",
-      "account": "sen-sphere",
+      "account": "Sensphere",
       "repo": "sensphere/sen-sphere",
       "config": "astro/wrangler.jsonc (deployed by name)",
       "path": "manual",
@@ -558,7 +548,7 @@
     },
     {
       "worker": "tardi-portal-preview",
-      "account": "Tardi",
+      "account": "Tardi Group",
       "repo": "joetardi/Tardi-Group",
       "config": "wrangler.jsonc",
       "path": "manual",
@@ -730,7 +720,7 @@
     },
     {
       "worker": "sensphere-portal",
-      "account": "sen-sphere",
+      "account": "Sensphere",
       "repo": "sensphere/sen-sphere",
       "config": "apps/portal/wrangler.jsonc",
       "path": "actions",
@@ -739,7 +729,7 @@
     },
     {
       "worker": "sensphere-portal-staging",
-      "account": "sen-sphere",
+      "account": "Sensphere",
       "repo": "sensphere/sen-sphere",
       "config": "apps/portal/wrangler.jsonc (env staging)",
       "path": "manual",
@@ -747,7 +737,7 @@
     },
     {
       "worker": "sensphere-v2-staging",
-      "account": "sen-sphere",
+      "account": "Sensphere",
       "repo": "sensphere/sen-sphere",
       "config": "v2/wrangler.jsonc",
       "path": "manual",

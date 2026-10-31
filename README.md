@@ -309,7 +309,7 @@ has to pass a policy check to merge, not get caught in the next audit.
   | Path | For | How |
   | --- | --- | --- |
   | `actions` | every internal Worker, and anything with checks, migrations, secrets or several Workers to deploy | `.github/workflows/cloudflare-deploy.yml` after CI passes on main |
-  | `workers-builds` | a simple client static site, nothing to gate | Cloudflare's GitHub app builds main |
+  | `workers-builds` | none by choice since 29 October 2026 (DOM-1644): every client site moves to `actions`, one at a time | Cloudflare's GitHub app builds main |
   | `manual` | none by choice: listed so it is visible, with the path it moves to in `target` | `wrangler deploy` from a workstation |
   | `retired` | a Worker that no longer serves anything; deleting it is the founder's call | nothing |
   | `not-deployed` | a wrangler config with no Worker in any account (a template or a spike) | nothing |
@@ -321,6 +321,13 @@ has to pass a policy check to merge, not get caught in the next audit.
   than cancel (CI-013). Main CI is never cancelled by a newer push (CI-012):
   each run finishes, and the guard lets only the newest one deploy, so a
   burst of merges ends with the newest commit live.
+
+  A client site that rebuilds on a content change (a Sanity publish, a daily
+  cron) adds `repository_dispatch` with its event types to `on:`. Its Worker
+  asks dd-rebuild-relay, which holds the only GitHub credential, to send the
+  dispatch. That run rebuilds the tip of main and runs `manual-check` first,
+  because the tip's own CI run may not have finished. `release-var:
+  SENTRY_RELEASE` sets that Worker variable to the deployed commit.
 
   ```yaml
   on:
@@ -397,17 +404,20 @@ has to pass a policy check to merge, not get caught in the next audit.
   `DOPPLER_IDENTITY_ID`, plus `CLOUDFLARE_ACCOUNT_ID` when the token can see
   more than one account. The identity and both variables come from one row
   in `doppler-identities.json`: add the row (repo, branch, the configs it
-  reads, the Cloudflare account), then `node bin/doppler-identity.mjs
-  <owner/repo>` with the owner's Doppler sign-in creates the service account
+  reads), then `node bin/doppler-identity.mjs <owner/repo>
+  [--cloudflare-account <id>]` with the owner's Doppler sign-in creates the service account
   and identity, sets the variables and writes the identity id back into the
   row; commit it. SEC-009 fails a repo that signs in without its row, without
   the variable, or with a value that differs from the row. Rows with no
   `service_account` were made by hand before the script; rerunning it for
-  them creates a new `ci-<repo>` account. The register of every Cloudflare token (name,
-  granted policy, where it is stored, a verdict, never a value) is
-  `cloudflare-tokens.yaml` in the private Doman-Digital/dd-repo-registry,
-  checked daily against the live token list (DOM-1641). It moved there from
-  `tokens.json` here on 29 Oct 2026 because this repo is public.
+  them creates a new `ci-<repo>` account. The account id comes from
+  dd-repo-registry registry.yaml `accounts.cloudflare`: this repo is public,
+  so neither table holds a Cloudflare account id (DOM-1643). The register of
+  every Cloudflare token (name, granted policy, where it is stored, a verdict,
+  never a value) is `cloudflare-tokens.yaml` in the private
+  Doman-Digital/dd-repo-registry, checked daily against the live token list
+  (DOM-1641). It moved there from `tokens.json` here on 29 Oct 2026 because
+  this repo is public.
 
   A deploy that has its own workflow (a monorepo service with staging first)
   keeps it, with the same three properties: the
