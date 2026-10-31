@@ -412,9 +412,12 @@ has to pass a policy check to merge, not get caught in the next audit.
   `service_account` were made by hand before the script; rerunning it for
   them creates a new `ci-<repo>` account. The account id comes from
   dd-repo-registry registry.yaml `accounts.cloudflare`: this repo is public,
-  so neither table holds a Cloudflare account id (DOM-1643). `tokens.json` records every Cloudflare token by
-  name, account, observed scope, where it is stored and a verdict (keep,
-  narrow or retire): never a value.
+  so neither table holds a Cloudflare account id (DOM-1643). The register of
+  every Cloudflare token (name, granted policy, where it is stored, a verdict,
+  never a value) is `cloudflare-tokens.yaml` in the private
+  Doman-Digital/dd-repo-registry, checked daily against the live token list
+  (DOM-1641). It moved there from `tokens.json` here on 29 Oct 2026 because
+  this repo is public.
 
   A deploy that has its own workflow (a monorepo service with staging first)
   keeps it, with the same three properties: the
