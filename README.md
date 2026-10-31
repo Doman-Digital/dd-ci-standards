@@ -473,6 +473,33 @@ has to pass a policy check to merge, not get caught in the next audit.
   Raise both together. Where a claude-kit checkout is present, `dd doctor`
   says when they differ.
 
+## Public repos name no client and no staff member (SEC-010)
+
+This repo and dd-packages are public, and a public repo publishes its history
+for good. On 29 October 2026 both still named clients, their people and our
+staff; taking the names out took a history rewrite and a GitHub Support
+request (DOM-1643). SEC-010 fails a pull request into a public Doman-Digital
+repo when a line it adds, a path it adds, one of its commit messages, its title
+or its description holds a name on the list.
+
+The list is private: `public-names.yaml` and the clients in `registry.yaml`, in
+dd-repo-registry. `public-names.json` here is what that repo writes with
+`node bin/public-names.mjs --write <this checkout>`: salted sha256 hashes of
+each name's forms (run together, with and without "and", and its first two
+words), a canary, and the allowlisted lines with their reasons. So the check
+names nobody, and it runs on pull requests from forks, which get no secret.
+The registry sweep reports drift (PUB-003). The same list feeds the kit's
+pre-push hook, which refuses such a push from a DD machine, and the sweep's
+PUB-002 (names already in a public repo) and PUB-004 (a public repo without a
+reason in its registry row).
+
+Name a client by its trade and a person by their role. A commit message
+counts, so rewrite the branch rather than adding a commit on top. A line that
+has to name one (renovate.yml's owners, budget.yml's repo keys) goes on the
+allow list in dd-repo-registry, with its reason, and `public-names.json` is
+regenerated here. A client's own public repo is not checked here: the sweep's
+PUB-002 reads it against the plain list, which knows whose repo is whose.
+
 ## Every pull request names its issue (LIN-001, LIN-002)
 
 The policy check reads the pull request it runs on (the Actions event file)

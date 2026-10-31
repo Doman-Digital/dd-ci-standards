@@ -6,7 +6,15 @@
 // ctx is merged over a default context: private dd-tooling repo "demo".
 // The inventories are hashed projections (DOM-1643), so their rows are built with h().
 
-import { inventoryHash as h } from "../lib/rules.mjs";
+import { inventoryHash as h, nameHash } from "../lib/rules.mjs";
+
+// SEC-010's list, built the way dd-repo-registry builds public-names.json, for made-up names only.
+const NAMES_SALT = "0123456789abcdef0123456789abcdef";
+export const TEST_NAMES = {
+  salt: NAMES_SALT,
+  hashes: ["quillonplumbing", "quillon plumbing", "zedora"].map((f) => nameHash(NAMES_SALT, f)),
+  allow: [{ repo: "Doman-Digital/demo", path: "^owners\\.yml$", line: "^\\s*-\\s*[\\w-]+\\s*$", reason: "a data key" }],
+};
 
 const wf = (text, path = ".github/workflows/ci.yml") => ({ workflows: [{ path, text }], vercel: [], files: {} });
 const view = (over) => ({ workflows: [], vercel: [], files: {}, ...over });
@@ -318,6 +326,13 @@ jobs:
     pass: view({}),
     ctx: { pr: { title: "Add the booking page", body: "", branch: "feat/booking" } },
     passCtx: { pr: { title: "Add the booking page", body: "Closes DOM-123", branch: "feat/booking" } },
+  },
+  "SEC-010": {
+    // What the pull request adds comes in the context (lib/rules.mjs pullRequestAdditions reads the checkout).
+    fail: view({}),
+    pass: view({}),
+    ctx: { repo: "Doman-Digital/demo", visibility: "public", publicNames: TEST_NAMES, added: [{ file: "README.md", line: 3, text: "Built for Quillon Plumbing in 2026." }] },
+    passCtx: { added: [{ file: "README.md", line: 3, text: "Built for a plumber in 2026." }, { file: "owners.yml", line: 2, text: "  - zedora" }] },
   },
   "LIN-002": {
     fail: view({}),
