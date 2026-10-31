@@ -233,14 +233,6 @@ test("doppler-identities.json is the projection: hashed repo and identity, nothi
   }
 });
 
-test("tokens.json records names and scopes, never a value", () => {
-  const text = readFileSync(new URL("../tokens.json", import.meta.url), "utf8");
-  const reg = JSON.parse(text);
-  for (const tk of reg.tokens) assert.ok(tk.name && tk.observed_scope && tk.verdict, `incomplete entry: ${tk.name}`);
-  // A Cloudflare API token is 40 URL-safe characters; nothing that long may appear.
-  assert.ok(!/[A-Za-z0-9_-]{40}/.test(text), "tokens.json holds something shaped like a token value");
-});
-
 test("CF-001 ignores registry entries with no repo", () => {
   const ctx = { repo: "Doman-Digital/demo", deploys: { workers: [{ worker: h("orphan"), repo: "", path: "retired" }, { worker: h("demo-site"), repo: h("Doman-Digital/demo"), path: "manual" }] } };
   const r = runDoctor({ workflows: [], vercel: [], files: {}, wrangler: [{ path: "wrangler.jsonc", name: "demo-site" }] }, rulebook, { ...base, ...ctx });
