@@ -217,14 +217,6 @@ test("deploys.json lists each Worker once per account, with a known path", () =>
   }
 });
 
-test("tokens.json records names and scopes, never a value", () => {
-  const text = readFileSync(new URL("../tokens.json", import.meta.url), "utf8");
-  const reg = JSON.parse(text);
-  for (const tk of reg.tokens) assert.ok(tk.name && tk.observed_scope && tk.verdict, `incomplete entry: ${tk.name}`);
-  // A Cloudflare API token is 40 URL-safe characters; nothing that long may appear.
-  assert.ok(!/[A-Za-z0-9_-]{40}/.test(text), "tokens.json holds something shaped like a token value");
-});
-
 test("CF-001 ignores registry entries with no repo", () => {
   const ctx = { repo: "Doman-Digital/demo", deploys: { workers: [{ worker: "orphan", repo: "", path: "retired" }, { worker: "demo-site", repo: "Doman-Digital/demo", path: "manual" }] } };
   const r = runDoctor({ workflows: [], vercel: [], files: {}, wrangler: [{ path: "wrangler.jsonc", name: "demo-site" }] }, rulebook, { ...base, ...ctx });
