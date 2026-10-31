@@ -32,7 +32,7 @@
       "groupName": "all non-major dependencies"
     },
     {
-      "description": "Group major updates by manager instead of one PR per package — this is the fix for the 18-PR fan-out found on MMM-Beauty 2026-08-10, where every major landed as its own PR despite dependencyDashboard-style grouping already being configured for minors",
+      "description": "Group major updates by manager instead of one PR per package — this is the fix for the 18-PR fan-out found on a client site on 2026-08-10, where every major landed as its own PR despite dependencyDashboard-style grouping already being configured for minors",
       "matchUpdateTypes": ["major"],
       "groupName": "{{manager}} major dependencies"
     },
@@ -55,7 +55,7 @@
       "pinDigests": false
     },
     {
-      "description": "House packages (@domandigital/*, craft above all) as soon as they are published, in their own group, merged once CI is green. They used to sit in the Monday group with 70 third-party packages, not automerged, so the Doman-Digital monorepo stayed on craft 0.5.0 while npm had 0.20.5 and copy-check ran old rules (DOM-1043). Last among the grouping rules so it wins; the rule above already skips the release-age wait for our own packages. No hourly or concurrent cap: on the first run sen-sphere's house PR was skipped because security PRs had used the hour's two, and a house release is one PR a repo",
+      "description": "House packages (@domandigital/*, craft above all) as soon as they are published, in their own group, merged once CI is green. They used to sit in the Monday group with 70 third-party packages, not automerged, so the Doman-Digital monorepo stayed on craft 0.5.0 while npm had 0.20.5 and copy-check ran old rules (DOM-1043). Last among the grouping rules so it wins; the rule above already skips the release-age wait for our own packages. No hourly or concurrent cap: on the first run a client repo's house PR was skipped because security PRs had used the hour's two, and a house release is one PR a repo",
       "matchPackageNames": ["@domandigital/**"],
       "groupName": "house packages",
       "schedule": ["at any time"],

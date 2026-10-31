@@ -86,7 +86,7 @@ test("REG-004 says nothing when the token cannot read the merge settings", () =>
 
 test("REG-004 does not require auto-merge on a private personal-account repo, but still wants delete-on-merge", () => {
   const fail = FIXTURES["REG-004"].fail;
-  const m = (over) => ({ ...base, meta: { full_name: "sensphere/x", private: true, owner: { type: "User" }, allow_auto_merge: false, delete_branch_on_merge: true, ...over } });
+  const m = (over) => ({ ...base, meta: { full_name: "client-owner/x", private: true, owner: { type: "User" }, allow_auto_merge: false, delete_branch_on_merge: true, ...over } });
   assert.ok(!ids(runDoctor(fail, rulebook, m({}))).includes("REG-004"));
   assert.match(runDoctor(fail, rulebook, m({ delete_branch_on_merge: false })).findings.find((f) => f.rule === "REG-004").message, /^delete branch on merge is off/);
   assert.ok(ids(runDoctor(fail, rulebook, m({ owner: { type: "Organization" } }))).includes("REG-004"), "org repos still need it");
@@ -151,13 +151,13 @@ test("CI-001 checks only repos the organisation owns, since only they can use it
   const owned = (login) => ({ ...base, meta: { owner: { login } } });
   assert.ok(ids(runDoctor(fail, rulebook, owned("Doman-Digital"))).includes("CI-001"));
   assert.ok(ids(runDoctor(fail, rulebook, base)).includes("CI-001"), "owner unknown: still checked");
-  assert.ok(!ids(runDoctor(fail, rulebook, owned("sensphere"))).includes("CI-001"), "client account: nowhere else to run");
+  assert.ok(!ids(runDoctor(fail, rulebook, owned("client-owner"))).includes("CI-001"), "client account: nowhere else to run");
   assert.ok(!ids(runDoctor(fail, rulebook, { ...owned("dmitridoman"), kind: "dd-site" })).includes("CI-001"), "personal account");
 });
 
 test("SEC-007 catches the shapes in the estate and leaves non-deploys alone", () => {
   const run = (text) => ids(runDoctor({ workflows: [{ path: ".github/workflows/deploy-astro.yml", text }], vercel: [], files: {} }, rulebook, base)).filter((id) => id === "SEC-007");
-  // RMP: the token set in the workflow env, the deploy further down.
+  // A client site: the token set in the workflow env, the deploy further down.
   assert.deepEqual(run("env:\n  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}\njobs:\n  deploy:\n    steps:\n      - run: pnpm exec wrangler deploy\n"), ["SEC-007"]);
   // The wrangler action takes it as an input.
   assert.deepEqual(run("jobs:\n  deploy:\n    steps:\n      - uses: cloudflare/wrangler-action@0000000000000000000000000000000000000000\n        with:\n          apiToken: ${{ secrets.CF_TOKEN }}\n"), ["SEC-007"]);
@@ -347,7 +347,7 @@ test("CI-022 puts a job on a pool from its own timeout, and names the expression
   // An expression the rulebook did not write is left alone.
   assert.equal(ci022(job("${{ matrix.os }}")).length, 0);
   // Not the organisation's runners: another owner's repo, or a reusable workflow's jobs.
-  assert.equal(ci022(job(STANDARD), { meta: { owner: { login: "Tardi-Group" } } }).length, 0);
+  assert.equal(ci022(job(STANDARD), { meta: { owner: { login: "Client-Owner" } } }).length, 0);
   const reusable = job(STANDARD);
   reusable.workflows[0].text = reusable.workflows[0].text.replace("  pull_request:", "  workflow_call:");
   assert.equal(ci022(reusable).length, 0);
@@ -469,8 +469,8 @@ test("SEC-009: registration, the variable and drift (DOM-1265)", () => {
   // A house repo with no row fails even where the variables cannot be read.
   assert.match(run(deploy, { repo: "Doman-Digital/other", vars: null })[0], /no row/);
   // A client repo signs in to its own Doppler: no row needed, the variable still is.
-  assert.deepEqual(run(deploy, { repo: "rmp474/RMP-Electrical", vars: null }), []);
-  assert.match(run(deploy, { repo: "rmp474/RMP-Electrical", vars: { DOPPLER_IDENTITY_ID: "" } })[0], /no such variable/);
+  assert.deepEqual(run(deploy, { repo: "client-owner/site", vars: null }), []);
+  assert.match(run(deploy, { repo: "client-owner/site", vars: { DOPPLER_IDENTITY_ID: "" } })[0], /no such variable/);
   // Drift names neither value: the register's is private, and the message prints in a public log.
   const drift = run(deploy, { repo: "Doman-Digital/demo", vars: { DOPPLER_IDENTITY_ID: "22222222-2222-4222-8222-222222222222" } })[0];
   assert.match(drift, /differs from the registered identity/);

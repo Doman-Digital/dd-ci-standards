@@ -121,7 +121,7 @@
     {
       "id": "CI-015",
       "title": "A repo that calls the policy check runs a scanner of its own",
-      "why": "13 October 2026 (DOM-776 audit): the monorepo's secret-scan job, beautyops' gitleaks.yml, Tardi-Group's gitleaks job and MMM-Beauty's TruffleHog each scanned the same commits as the policy check, a full-history clone and another VM for a one-second scan. The monorepo's alone was about 1,350 VM-minutes a month, on a pool of six VMs. From 20 October (step 5) the estate has one scanner per kind of commit: the policy check for pull requests (gitleaks, plus Semgrep for the repos in scanners.json) and the estate sweep in dd-repo-registry for default branches (new commits daily, all history weekly). Any other scanner workflow, whatever starts it, is a duplicate.",
+      "why": "13 October 2026 (DOM-776 audit): the monorepo's secret-scan job and three client repos' gitleaks and TruffleHog jobs each scanned the same commits as the policy check, a full-history clone and another VM for a one-second scan. The monorepo's alone was about 1,350 VM-minutes a month, on a pool of six VMs. From 20 October (step 5) the estate has one scanner per kind of commit: the policy check for pull requests (gitleaks, plus Semgrep for the repos in scanners.json) and the estate sweep in dd-repo-registry for default branches (new commits daily, all history weekly). Any other scanner workflow, whatever starts it, is a duplicate.",
       "applies": "full",
       "warn_from": "2026-10-14",
       "enforce_from": "2026-11-14"
@@ -129,7 +129,7 @@
     {
       "id": "CI-016",
       "title": "A workflow still works around the persistent runners",
-      "why": "DOM-555 replaced the eight runners sharing dd-ci-01 with a fresh VM per job. Port offsets from the runner's name, a pnpm folder per runner, workspace clean-ups and hand-off folders on the host now do nothing, or lose what they keep, and the comments around them describe a machine that is gone (DOM-776 audit: the monorepo, beautyops, osint-engine, verqan-api).",
+      "why": "DOM-555 replaced the eight runners sharing dd-ci-01 with a fresh VM per job. Port offsets from the runner's name, a pnpm folder per runner, workspace clean-ups and hand-off folders on the host now do nothing, or lose what they keep, and the comments around them describe a machine that is gone (DOM-776 audit: the monorepo, osint-engine and two other repos).",
       "applies": "full",
       "warn_from": "2026-10-14",
       "enforce_from": "2026-12-31"
@@ -161,7 +161,7 @@
     {
       "id": "CI-020",
       "title": "Three or more pull request jobs each install the same dependencies",
-      "why": "13 October 2026 (DOM-776 audit): on the shared pool each job waits for its own VM, then boots, checks out and installs before it does seconds of work. sen-sphere ran 9 to 11 jobs per push, Harrison-james 7, RMP 5, beautyops 6, each installing the same lockfile; in the monorepo 58% of job time was setup. One job with several steps does the same checks with one wait and one install.",
+      "why": "13 October 2026 (DOM-776 audit): on the shared pool each job waits for its own VM, then boots, checks out and installs before it does seconds of work. client repos ran 5 to 11 jobs per push, each installing the same lockfile; in the monorepo 58% of job time was setup. One job with several steps does the same checks with one wait and one install.",
       "applies": "full",
       "warn_from": "2026-10-14",
       "enforce_from": "2027-01-12"
@@ -203,7 +203,7 @@
     {
       "id": "CI-031",
       "title": "A workflow checks who wrote a commit",
-      "why": "DOM-1451, founder, 27 October 2026: the commit-author checks were a Vercel-era necessity (Vercel refused to build a preview for a commit author outside the client's Vercel team) and are no longer needed. MMM-Beauty's enforce-commit-author.yml was the last one; on 27 October the squash merge of MMM-Beauty#767 turned its push-to-main run red for a commit nothing was wrong with. Author and committer addresses are self-asserted, so a check on them proves nothing about who wrote the code. A workflow that reads a commit's author or committer to pass or fail it comes back only by mistake. GitHub's own refusal of a push carrying a private address is a different rule and stays (dd-claude-kit config/git-identity.json).",
+      "why": "DOM-1451, founder, 27 October 2026: the commit-author checks were a Vercel-era necessity (Vercel refused to build a preview for a commit author outside the client's Vercel team) and are no longer needed. A client repo's enforce-commit-author.yml was the last one; on 27 October a squash merge there turned its push-to-main run red for a commit nothing was wrong with. Author and committer addresses are self-asserted, so a check on them proves nothing about who wrote the code. A workflow that reads a commit's author or committer to pass or fail it comes back only by mistake. GitHub's own refusal of a push carrying a private address is a different rule and stays (dd-claude-kit config/git-identity.json).",
       "applies": "full",
       "warn_from": "2026-10-29",
       "enforce_from": "2026-11-05"
@@ -211,7 +211,7 @@
     {
       "id": "CI-023",
       "title": "A workflow still uses Vercel",
-      "why": "Vercel was retired for CI and deploys (DOM-555, DOM-776). On 19 October 2026 its leftovers were still in five repos: six VERCEL_TOKEN_* inputs in dd-repo-registry's sweep, a kv.vercel-storage placeholder in the monorepo's lighthouse.yml, and comments in Tardi, sen-sphere and verqan-api describing Vercel building main. A workflow that names Vercel either does nothing or depends on an account nobody watches. A portal still served by Vercel records it as an exemption.",
+      "why": "Vercel was retired for CI and deploys (DOM-555, DOM-776). On 19 October 2026 its leftovers were still in five repos: six VERCEL_TOKEN_* inputs in dd-repo-registry's sweep, a kv.vercel-storage placeholder in the monorepo's lighthouse.yml, and comments in three other repos describing Vercel building main. A workflow that names Vercel either does nothing or depends on an account nobody watches. A portal still served by Vercel records it as an exemption.",
       "applies": "full",
       "warn_from": "2026-10-20",
       "enforce_from": "2026-10-27"
@@ -219,7 +219,7 @@
     {
       "id": "CI-024",
       "title": "A workflow names one of the old persistent runners",
-      "why": "The eight persistent runners on dd-ci-01 (dd-ci-01-a to dd-ci-01-h) were replaced by a fresh VM per job (DOM-555). On 19 October 2026 beautyops and the monorepo's lighthouse.yml still branched on their names, so the branch never ran and the comment beside it described a machine that is gone. CI-016 catches the workarounds by shape; this catches the names.",
+      "why": "The eight persistent runners on dd-ci-01 (dd-ci-01-a to dd-ci-01-h) were replaced by a fresh VM per job (DOM-555). On 19 October 2026 a client repo and the monorepo's lighthouse.yml still branched on their names, so the branch never ran and the comment beside it described a machine that is gone. CI-016 catches the workarounds by shape; this catches the names.",
       "applies": "full",
       "warn_from": "2026-10-20",
       "enforce_from": "2026-10-27"
@@ -235,7 +235,7 @@
     {
       "id": "CI-026",
       "title": "budget.yml registers a schedule the repo no longer has",
-      "why": "DOM-776 step 5, 19 October 2026: budget.yml still listed seven monorepo crons that #1104 had replaced, and MMM-Beauty's lighthouse.yml long after the workflow was deleted. CI-007 catches a cron with no line; this catches a line with no cron, so the register stays the truth.",
+      "why": "DOM-776 step 5, 19 October 2026: budget.yml still listed seven monorepo crons that #1104 had replaced, and a client site's lighthouse.yml long after the workflow was deleted. CI-007 catches a cron with no line; this catches a line with no cron, so the register stays the truth.",
       "applies": "all",
       "warn_from": "2026-10-20",
       "enforce_from": "2026-11-20"
@@ -348,7 +348,7 @@
     {
       "id": "PKG-002",
       "title": "A nested pnpm lockfile sits inside the root workspace without being one of its packages",
-      "why": "21 October 2026: Renovate's house packages PR (MMM-Beauty #722) bumped astro/package.json but not astro/pnpm-lock.yaml, and every Workers Build of the live site failed until #731 (DOM-1273). astro/ is installed with --ignore-workspace, but Renovate runs `pnpm install --lockfile-only` in the folder with no way to add that flag, so pnpm installed the root workspace, exited 0 and left the nested lockfile stale. A nested project outside the root workspace gets its own pnpm-workspace.yaml (`packages: []`), as sen-sphere, Tardi-Group, osint-engine and verqan-api already do; with it the same command updates the right lockfile.",
+      "why": "21 October 2026: Renovate's house packages PR on a client site bumped astro/package.json but not astro/pnpm-lock.yaml, and every Workers Build of the live site failed until #731 (DOM-1273). astro/ is installed with --ignore-workspace, but Renovate runs `pnpm install --lockfile-only` in the folder with no way to add that flag, so pnpm installed the root workspace, exited 0 and left the nested lockfile stale. A nested project outside the root workspace gets its own pnpm-workspace.yaml (`packages: []`), as osint-engine and three client repos already do; with it the same command updates the right lockfile.",
       "applies": "all",
       "warn_from": "2026-10-21",
       "enforce_from": "2026-10-28"
@@ -397,7 +397,7 @@
     {
       "id": "REG-007",
       "title": "The ruleset requires a check no workflow produces",
-      "why": "DOM-776 step 5, 19 October 2026: beautyops' ruleset required `scan`, the job of gitleaks.yml, which the step was about to delete. A required check that never reports holds every pull request open with no error to read. The estate sweep and the policy check read the default branch's rules and compare them with the jobs the workflows define.",
+      "why": "DOM-776 step 5, 19 October 2026: a client repo's ruleset required `scan`, the job of gitleaks.yml, which the step was about to delete. A required check that never reports holds every pull request open with no error to read. The estate sweep and the policy check read the default branch's rules and compare them with the jobs the workflows define.",
       "applies": "all",
       "warn_from": "2026-10-20",
       "enforce_from": "2026-10-27"
