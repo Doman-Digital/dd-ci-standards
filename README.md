@@ -207,9 +207,8 @@ has to pass a policy check to merge, not get caught in the next audit.
   Doman-Digital/dd-repo-registry, over every repo the GitHub App sees: the
   last 26 hours daily, all of history weekly. A repo needs no gitleaks,
   TruffleHog or Semgrep workflow of its own, and CI-015 fails one. On
-  20 October 2026 (DOM-776) the separate scans in the monorepo,
-  MMM-Beauty, mmm-beauty-app, beautyops and sen-sphere went, a VM and a
-  full-history clone each.
+  20 October 2026 (DOM-776) the separate scans in the monorepo and
+  four client repos went, a VM and a full-history clone each.
 
   **Turbo monorepos** scope pull request work with
   `.github/actions/workspace-scope` (`uses:
@@ -252,7 +251,7 @@ has to pass a policy check to merge, not get caught in the next audit.
   - name: Request post-deploy checks
     uses: Doman-Digital/dd-ci-standards/.github/actions/post-deploy-checks@v1
     with:
-      client: rmp-electrical
+      client: example-client
       delay_seconds: "30"
     env:
       ADMIN_RUN_TOKEN: ${{ secrets.ADMIN_RUN_TOKEN }}
@@ -278,7 +277,7 @@ has to pass a policy check to merge, not get caught in the next audit.
     needs: deploy
     uses: Doman-Digital/dd-ci-standards/.github/workflows/post-deploy-checks.yml@v1
     with:
-      client: rmp-electrical   # the slug in config/clients.registry.json
+      client: example-client   # the slug in config/clients.registry.json
     secrets:
       ADMIN_RUN_TOKEN: ${{ secrets.ADMIN_RUN_TOKEN }}
   ```
@@ -299,12 +298,16 @@ has to pass a policy check to merge, not get caught in the next audit.
   of a client's `syntheticSignOff` cannot be forced from here.
 
 - **Deploying a Worker** (DOM-776, 13 October 2026). Every Cloudflare
-  Worker has one deploy path, and **`deploys.json`** lists them all: the
-  Worker, its account, its repo and config, and the path. CF-001 fails a repo
-  with a wrangler config that is not listed, or deployed both ways. When an
-  Actions deploy runs wrangler inside a script (client-previews'
-  `deploy-sites.yml`), the entry's `workflow` field names that workflow, so
-  CF-001 can see it.
+  Worker has one deploy path, and the Workers register lists them all: the
+  Worker, its account, its repo and config, and the path. The register is
+  `deploys.json` in the private Doman-Digital/dd-repo-registry (DOM-1643).
+  `deploys.json` here is a projection that the registry generates with
+  `node bin/inventory.mjs --write <this checkout>`: the repo and the Worker
+  as sha256 of the lower-case name, the path and the workflow in plain text.
+  Nobody edits it by hand; the registry's daily sweep reports drift (PUB-001).
+  CF-001 fails a repo with a wrangler config that is not listed, or deployed
+  both ways. When an Actions deploy runs wrangler inside a script, the entry's
+  `workflow` field names that workflow, so CF-001 can see it.
 
   | Path | For | How |
   | --- | --- | --- |
@@ -403,19 +406,20 @@ has to pass a policy check to merge, not get caught in the next audit.
   identity that trusts the repo's default branch, and the repo variable
   `DOPPLER_IDENTITY_ID`, plus `CLOUDFLARE_ACCOUNT_ID` when the token can see
   more than one account. The identity and both variables come from one row
-  in `doppler-identities.json`: add the row (repo, branch, the configs it
-  reads), then `node bin/doppler-identity.mjs <owner/repo>
-  [--cloudflare-account <id>]` with the owner's Doppler sign-in creates the service account
-  and identity, sets the variables and writes the identity id back into the
-  row; commit it. SEC-009 fails a repo that signs in without its row, without
-  the variable, or with a value that differs from the row. Rows with no
-  `service_account` were made by hand before the script; rerunning it for
-  them creates a new `ci-<repo>` account. The account id comes from
-  dd-repo-registry registry.yaml `accounts.cloudflare`: this repo is public,
-  so neither table holds a Cloudflare account id (DOM-1643). The register of
+  in the Doppler identity register, `doppler-identities.json` in
+  dd-repo-registry: add the row there (repo, branch, the configs it reads),
+  then run `node bin/doppler-identity.mjs <owner/repo>` from dd-repo-registry
+  with the owner's Doppler sign-in. It creates the service account and
+  identity, sets the variables, writes the identity id back into the row and
+  regenerates the projection here (`doppler-identities.json`, the repo and
+  the identity as sha256 only). SEC-009 fails a repo that signs in without its
+  row, without the variable, or with a value whose hash differs from the
+  row's; it never prints a registered value. The account id comes from
+  dd-repo-registry registry.yaml `accounts.cloudflare`. This repo is public,
+  so it holds no account id, plain repo list or identity id (DOM-1643). The register of
   every Cloudflare token (name, granted policy, where it is stored, a verdict,
-  never a value) is `cloudflare-tokens.yaml` in the private
-  Doman-Digital/dd-repo-registry, checked daily against the live token list
+  never a value) lives in dd-repo-registry as `cloudflare-tokens.yaml`,
+  checked daily against the live token list
   (DOM-1641). It moved there from `tokens.json` here on 29 Oct 2026 because
   this repo is public.
 
@@ -464,7 +468,7 @@ has to pass a policy check to merge, not get caught in the next audit.
   inside the root pnpm workspace without being one of its packages (an
   `astro/` beside `apps/*`) therefore never gets its lockfile updated: pnpm
   installs the root workspace and exits 0, and the next frozen install fails
-  (MMM-Beauty #722, DOM-1273). PKG-002 reports that layout; the fix is a
+  (DOM-1273). PKG-002 reports that layout; the fix is a
   `pnpm-workspace.yaml` with `packages: []` in the nested folder.
   Raise both together. Where a claude-kit checkout is present, `dd doctor`
   says when they differ.
@@ -571,7 +575,7 @@ The repo view through the API (`lib/view-github.mjs`), used by the estate sweep.
 The rulebook (`rules.json`), `dd doctor`, the `doctor` action, `release.yml`.
 The six original checks keep their behaviour and gain ids (CI-003 to CI-007,
 CI-011), with one fix: the cron check read only the first cron under
-`schedule:`, which hid this repo's own Renovate cron and one in sen-sphere.
+`schedule:`, which hid this repo's own Renovate cron and one in a client repo.
 New rules, warning until 31 December 2026: CI-001, CI-008, SEC-001,
 SEC-002, SEC-003, SEC-005, SEC-006, REG-003. SEC-004 (a tracked file of
 secrets) enforces from 18 October 2026. CI-002 (self-hosted runners in a public repo)
@@ -606,7 +610,7 @@ them also runs daily over the whole estate in the estate sweep
 - **CI-024** (fails from 27 October): a workflow or composite action names
   one of the persistent runners, `dd-ci-01-a` to `dd-ci-01-h`.
 - **FW-004** (fails from 27 October): a house workflow or action
-  (`Doman-Digital/...` or `Megameehunnah/...`) is pinned to a branch. Use
+  (`Doman-Digital/...` or the second house owner's) is pinned to a branch. Use
   `@v1`, a release tag or a full commit SHA.
 - **CI-031** (DOM-1451, fails from 5 November): a workflow reads a commit's
   author or committer (a `%ae`-style log format, `author.email`, or a

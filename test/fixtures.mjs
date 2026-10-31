@@ -4,6 +4,9 @@
 // guards there were found unable to catch theirs).
 //
 // ctx is merged over a default context: private dd-tooling repo "demo".
+// The inventories are hashed projections (DOM-1643), so their rows are built with h().
+
+import { inventoryHash as h } from "../lib/rules.mjs";
 
 const wf = (text, path = ".github/workflows/ci.yml") => ({ workflows: [{ path, text }], vercel: [], files: {} });
 const view = (over) => ({ workflows: [], vercel: [], files: {}, ...over });
@@ -129,7 +132,7 @@ jobs:
     pass: wf("on:\n  workflow_run:\n    workflows: [CI]\n    types: [completed]\n    branches: [main]\npermissions:\n  contents: read\njobs:\n  deploy:\n    permissions:\n      contents: read\n      id-token: write\n      actions: write\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/cloudflare-deploy.yml@v1\n    with:\n      doppler-config: relay\n", ".github/workflows/deploy.yml"),
   },
   "CI-015": {
-    // MMM-Beauty's TruffleHog beside the policy caller, on push to main only:
+    // A client repo's TruffleHog beside the policy caller, on push to main only:
     // the estate sweep already scans what reaches main.
     fail: { workflows: [
       { path: ".github/workflows/ci-standards-policy.yml", text: "on:\n  pull_request:\njobs:\n  policy:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1\n" },
@@ -170,7 +173,7 @@ jobs:
     pass: wf("on:\n  pull_request:\njobs:\n  verify:\n    steps:\n      - run: pnpm install --frozen-lockfile\n      - run: pnpm lint\n      - run: pnpm test\n  e2e:\n    services:\n      postgres:\n        image: postgres:16\n    steps:\n      - run: pnpm install --frozen-lockfile\n      - run: pnpm e2e\n  smoke:\n    steps:\n      - run: npm install -g wrangler\n"),
   },
   "CF-001": {
-    ctx: { repo: "Doman-Digital/demo", deploys: { workers: [{ worker: "demo-site", repo: "Doman-Digital/demo", path: "workers-builds" }] } },
+    ctx: { repo: "Doman-Digital/demo", deploys: { workers: [{ worker: h("demo-site"), repo: h("Doman-Digital/demo"), path: "workers-builds" }] } },
     // An unregistered Worker, and an Actions deploy beside the app's build.
     fail: { workflows: [{ path: ".github/workflows/deploy.yml", text: "on:\n  push:\n    branches: [main]\njobs:\n  d:\n    steps:\n      - run: npx wrangler deploy\n" }], vercel: [], files: {}, wrangler: [{ path: "wrangler.jsonc", name: "demo-site" }, { path: "worker/wrangler.toml", name: "demo-cron" }] },
     pass: { workflows: [{ path: ".github/workflows/ci.yml", text: "on:\n  pull_request:\njobs:\n  b:\n    steps:\n      - run: npx wrangler deploy --dry-run\n" }], vercel: [], files: {}, wrangler: [{ path: "wrangler.jsonc", name: "demo-site" }] },
@@ -199,7 +202,7 @@ jobs:
     passCtx: { hostedJobs: { jobs: [{ repo: "demo", workflow: "ci.yml", job: "test" }] } },
   },
   "REG-007": {
-    // beautyops: the ruleset still requires gitleaks.yml's `scan` after the file went.
+    // A client repo: the ruleset still requires gitleaks.yml's `scan` after the file went.
     fail: { workflows: [{ path: ".github/workflows/ci.yml", text: "on:\n  pull_request:\njobs:\n  lint:\n    steps:\n      - run: x\n" }], vercel: [], files: {}, required: ["lint", "scan"] },
     // A job's name:, a matrix leg and a reusable caller's "<job> / <called job>" all count.
     pass: { workflows: [
@@ -233,12 +236,12 @@ jobs:
     pass: wf("on: [push]\njobs:\n  deploy:\n    steps:\n      - uses: Doman-Digital/dd-ci-standards/.github/actions/post-deploy-checks@v1\n"),
   },
   "CI-023": {
-    fail: wf("on: [schedule]\njobs:\n  sweep:\n    steps:\n      - run: node sweep.mjs\n        env:\n          VERCEL_TOKEN_TARDI: ${{ secrets.VERCEL_TOKEN_TARDI }}\n"),
+    fail: wf("on: [schedule]\njobs:\n  sweep:\n    steps:\n      - run: node sweep.mjs\n        env:\n          VERCEL_TOKEN_CLIENT: ${{ secrets.VERCEL_TOKEN_CLIENT }}\n"),
     // A comment recording why Vercel went is history, not a dependency.
     pass: wf("on: [schedule]\njobs:\n  sweep:\n    steps:\n      # Vercel was retired on 2 September 2026.\n      - run: node sweep.mjs\n"),
   },
   "CI-031": {
-    // MMM-Beauty's enforce-commit-author.yml, cut down.
+    // A client repo's enforce-commit-author.yml, cut down.
     fail: wf("on: [pull_request]\njobs:\n  check-author:\n    steps:\n      - run: |\n          author_email=$(git show -s --format='%ae' \"$sha\")\n", ".github/workflows/enforce-commit-author.yml"),
     // A comment recording why the check went is history, and a short hash in a log format is not an author.
     pass: wf("on: [pull_request]\njobs:\n  build:\n    steps:\n      # The commit-author check was retired on 29 October 2026 (DOM-1451).\n      - run: git log -1 --format='%h %s'\n"),
@@ -289,9 +292,9 @@ jobs:
   },
   "SEC-009": {
     // The shared deploy reads the variable in the caller's repo, which has none.
-    ctx: { repo: "Doman-Digital/demo", vars: {}, dopplerIdentities: { identities: [{ repo: "Doman-Digital/demo", branch: "main", reads: ["dd-deploy/demo"], identity: null }] } },
+    ctx: { repo: "Doman-Digital/demo", vars: {}, dopplerIdentities: { identities: [{ repo: h("Doman-Digital/demo"), identity: null }] } },
     fail: wf("on:\n  workflow_run:\n    workflows: [CI]\njobs:\n  deploy:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/cloudflare-deploy.yml@v1\n    with:\n      doppler-config: demo\n", ".github/workflows/deploy.yml"),
-    passCtx: { vars: { DOPPLER_IDENTITY_ID: "0f0f0f0f-0000-4000-8000-000000000000" }, dopplerIdentities: { identities: [{ repo: "Doman-Digital/demo", branch: "main", reads: ["dd-deploy/demo"], identity: "0f0f0f0f-0000-4000-8000-000000000000" }] } },
+    passCtx: { vars: { DOPPLER_IDENTITY_ID: "0f0f0f0f-0000-4000-8000-000000000000" }, dopplerIdentities: { identities: [{ repo: h("Doman-Digital/demo"), identity: h("0f0f0f0f-0000-4000-8000-000000000000") }] } },
     pass: wf("on:\n  workflow_run:\n    workflows: [CI]\njobs:\n  deploy:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/cloudflare-deploy.yml@v1\n    with:\n      doppler-config: demo\n", ".github/workflows/deploy.yml"),
   },
   "SEC-007": {
