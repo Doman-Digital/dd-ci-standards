@@ -41,6 +41,15 @@ test("the forms: spaced, hyphenated, run together, possessive, and \"and\" dropp
   assert.ok(!nameFormsOfLine("quillons plumb").some((f) => TEST_NAMES.hashes.includes(nameHash(TEST_NAMES.salt, f))));
 });
 
+test("SEC-010 catches a name wrapped across adjacent added lines, but not across a blank line or a gap", () => {
+  const lines = (a, b, gap = 1) => [{ file: "docs/notes.md", line: 4, text: a }, { file: "docs/notes.md", line: 4 + gap, text: b }];
+  const found = sec010({ publicNames: TEST_NAMES, added: lines("A line about Quillon and", "Plumbing, carried on.") });
+  assert.equal(found.length, 1);
+  assert.equal(found[0].line, 4);
+  assert.deepEqual(sec010({ publicNames: TEST_NAMES, added: lines("A line about Quillon", "Plumbing, carried on.", 2) }), []);
+  assert.deepEqual(sec010({ publicNames: TEST_NAMES, added: [...lines("A line about Quillon", ""), { file: "docs/notes.md", line: 6, text: "Plumbing, carried on." }] }), []);
+});
+
 test("SEC-010 checks public Doman-Digital repos only, and an allow entry covers only its repo, path and line", () => {
   const added = [{ file: "owners.yml", line: 2, text: "  - zedora" }];
   const ctx = { publicNames: TEST_NAMES, added };
