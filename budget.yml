@@ -293,5 +293,9 @@ repos:
     vercel_crons: []
 
   verqan-api:
-    github_actions_crons: []
+    github_actions_crons:
+      - workflow: live-drift.yml
+        cron: "23 7 * * *"
+        owner: "Age verification API"
+        reason: "daily check that the live Worker matches main (cron triggers, image, API source), after a merged change sat undeployed for two weeks (DOM-458), 5min cap"
     vercel_crons: []
