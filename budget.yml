@@ -293,5 +293,9 @@ repos:
     vercel_crons: []
 
   verqan-api:
-    github_actions_crons: []
+    github_actions_crons:
+      - workflow: live-drift.yml
+        cron: "23 7 * * *"
+        owner: "Verqan"
+        reason: "daily check that the live verqan-api-cf matches main (cron triggers, image, apps/api), after PR #30 sat merged and undeployed for two weeks (DOM-458), 5min cap"
     vercel_crons: []
