@@ -441,6 +441,31 @@ test("CI-028 reports a registered job that left CI_RUNNER_HOSTED, and a register
   assert.ok(bare.findings.some((f) => f.rule === "CI-028" && /valve can send it back/.test(f.message)));
 });
 
+test("a hosted-jobs.json row with runs_on pins one watcher job to a hosted label, and only that job (DOM-1079)", () => {
+  const pin = { repo: "demo", workflow: "ci.yml", job: "test", runs_on: "ubuntu-latest", why: "watches the self-hosted runners", minutes_a_month: 3000 };
+  const ctx = { today: "2026-11-25", kind: "dd-tooling", visibility: "private", repoName: "demo", budget: { ghCrons: [], vercelCrons: [] }, hostedJobs: { jobs: [pin] } };
+  const view = (runsOn, job = "test") => ({ workflows: [{ path: ".github/workflows/ci.yml", text: `on:\n  pull_request:\njobs:\n  ${job}:\n    runs-on: ${runsOn}\n    timeout-minutes: 5\n    steps:\n      - run: x\n` }], vercel: [], files: {} });
+  const rulesOf = (v, c = ctx) => runDoctor(v, rulebook, c).findings.map((f) => f.rule);
+  const pinned = rulesOf(view("ubuntu-latest"));
+  assert.ok(!pinned.includes("CI-001") && !pinned.includes("CI-022") && !pinned.includes("CI-028"), pinned.join());
+  // another job in the same repo is still held to CI-001
+  assert.ok(rulesOf(view("ubuntu-latest", "other")).includes("CI-001"));
+  // the pinned job moved to a variable: CI-028 wants it back on the label, or the row gone
+  assert.ok(runDoctor(view("${{ vars.CI_RUNNER_LIGHT || vars.CI_RUNNER || 'ubuntu-latest' }}"), rulebook, ctx).findings.some((f) => f.rule === "CI-028" && /pinned to ubuntu-latest/.test(f.message)));
+  // a row cannot pin a job to a self-hosted label
+  const selfPin = { ...ctx, hostedJobs: { jobs: [{ ...pin, runs_on: "dd-ci-light" }] } };
+  assert.ok(rulesOf(view("ubuntu-latest"), selfPin).includes("CI-001"));
+});
+
+test("every pinned row in hosted-jobs.json names a hosted label, why, and its measured minutes", () => {
+  const rows = JSON.parse(readFileSync(new URL("../hosted-jobs.json", import.meta.url), "utf8")).jobs.filter((e) => e.runs_on);
+  for (const e of rows) {
+    assert.match(e.runs_on, /^(ubuntu|windows|macos)-[\w.]+$/, `${e.repo} ${e.job}`);
+    assert.ok(e.why && e.why.length > 20, `${e.repo} ${e.job} has no why`);
+    assert.ok(Number.isFinite(e.minutes_a_month), `${e.repo} ${e.job} has no minutes_a_month`);
+  }
+});
+
 test("CI-029 puts a deploy job on the deploy slot, and CI-022 leaves it alone", () => {
   const wfOf = (on, key, runsOn, timeout = 3) => ({ workflows: [{ path: ".github/workflows/deploy.yml", text: `on:\n  ${on}:\njobs:\n  ${key}:\n    runs-on: ${runsOn}\n    timeout-minutes: ${timeout}\n    steps:\n      - run: x\n` }], vercel: [], files: {} });
   const rules = (v, over = {}) => runDoctor(v, rulebook, { ...base, ...over }).findings.map((f) => f.rule);

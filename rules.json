@@ -17,7 +17,7 @@
     {
       "id": "CI-001",
       "title": "A job in a private Doman-Digital repo names a GitHub-hosted runner directly",
-      "why": "2 October 2026: twelve jobs hard-coded to ubuntu-latest used the organisation's hosted minutes and could not move to the self-hosted VM. Use runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}. Only repos owned by Doman-Digital are checked: the runners are registered to the organisation, so a repo in a client's or a personal account cannot use them.",
+      "why": "2 October 2026: twelve jobs hard-coded to ubuntu-latest used the organisation's hosted minutes and could not move to the self-hosted VM. Use runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}. Only repos owned by Doman-Digital are checked: the runners are registered to the organisation, so a repo in a client's or a personal account cannot use them. A job that hosted-jobs.json pins to a hosted label (runs_on, with a why) is exempt: the runner valve watches the self-hosted runners and must not run on them (DOM-1079).",
       "applies": "full",
       "visibility": "private",
       "warn_from": "2026-10-03",
@@ -251,7 +251,7 @@
     {
       "id": "CI-028",
       "title": "A job uses CI_RUNNER_HOSTED without being in hosted-jobs.json (or is listed and does not)",
-      "why": "DOM-1079, 20 October 2026: the Enterprise plan includes 50,000 GitHub-hosted minutes a month, on an Actions budget of $0 with stop usage on. The whole monorepo would use all of them, so only the jobs listed in dd-ci-standards hosted-jobs.json run there, as runs-on: ${{ vars.CI_RUNNER_HOSTED || vars.CI_RUNNER || 'ubuntu-latest' }}. A timer on dd-work-01 points the variable back at dd-ci-ephemeral at 90% of the allowance. A job on the variable that is not listed spends minutes nobody measured; a listed job that left it reserves minutes for nothing.",
+      "why": "DOM-1079, 20 October 2026: the Enterprise plan includes 50,000 GitHub-hosted minutes a month, on an Actions budget of $0 with stop usage on. The whole monorepo would use all of them, so only the jobs listed in dd-ci-standards hosted-jobs.json run there, as runs-on: ${{ vars.CI_RUNNER_HOSTED || vars.CI_RUNNER || 'ubuntu-latest' }}. The runner valve (dd-repo-registry ci-runner-valve.yml, off the boxes it watches) points the variable back at dd-ci-ephemeral at 90% of the allowance. A job on the variable that is not listed spends minutes nobody measured; a listed job that left it reserves minutes for nothing.",
       "applies": "full",
       "visibility": "private",
       "warn_from": "2026-10-21",

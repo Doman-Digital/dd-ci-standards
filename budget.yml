@@ -73,6 +73,10 @@ repos:
         cron: "40 6 * * *"
         owner: "DD Framework"
         reason: "daily apply of repo-settings.yaml (update-branch, auto-merge, the dd-baseline ruleset) to every repo the GitHub App can see, so new repos are covered and drift is put back and posted to ops (DOM-1037); API calls only, about two minutes, 20min cap"
+      - workflow: ci-runner-valve.yml
+        cron: "4,19,34,49 * * * *"
+        owner: "DD Framework"
+        reason: "every 15 minutes, off the hour: the runner valve (DOM-1079). Points the CI_RUNNER variables at GitHub-hosted runners while dd-ci-01 serves no jobs and back when it does, and keeps CI_RUNNER_HOSTED under the 50,000 included minutes. Pinned to ubuntu-latest (hosted-jobs.json), API calls only, under a minute (about 2,880 included minutes a month), 5min cap"
       - workflow: lighthouse-live.yml
         cron: "17 6 * * 1"
         owner: "DD Framework"
