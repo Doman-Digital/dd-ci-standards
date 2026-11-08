@@ -43,8 +43,9 @@ name: ci-standards policy
 # a VM and a clone apiece).
 #
 # gitleaks reads the calling repo's .gitleaks.toml and .gitleaksignore if
-# there are any. The binary is fetched at a fixed version and checked against
-# its published sha256.
+# there are any. The binary is a fixed version checked against a pinned
+# sha256, from the cache, GitHub releases or the gitleaks image on ghcr.io
+# (gitleaks/action.yml).
 #
 # The checkout is all of history without file contents (a blobless clone):
 # commits and trees come down at once, and git fetches the blobs of the
@@ -141,8 +142,6 @@ jobs:
     runs-on: ${{ vars.CI_RUNNER_LIGHT || inputs.runner }}
     timeout-minutes: 8
     env:
-      GITLEAKS_VERSION: "8.30.1"
-      GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
       # semgrep/semgrep, the image a client repo's own workflow pulled on 19 October 2026.
       SEMGREP_IMAGE: semgrep/semgrep@sha256:529ee8a277ec8adc5b534d7c74eea0a47e9de21d62852b6ba7ac6ba9566845c3
       # SEC-009: the Doppler identity the repo's deploys sign in with. A
@@ -167,16 +166,17 @@ jobs:
         with:
           path: repo
 
+      # Pinned version, cached, retried, with a ghcr.io fallback, sha256 checked
+      # on every path (gitleaks/install.sh). The scan runs only once it has
+      # a binary: on 8 November 2026 a 504 from the release download left the
+      # scan to fail as `gitleaks: command not found` on every open PR.
       - name: Install gitleaks
+        id: gitleaks
         if: ${{ !cancelled() }}
-        run: |
-          curl -sSfL -o gitleaks.tgz "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
-          echo "${GITLEAKS_SHA256}  gitleaks.tgz" | sha256sum -c -
-          mkdir -p "$RUNNER_TEMP/gitleaks" && tar -xzf gitleaks.tgz -C "$RUNNER_TEMP/gitleaks" gitleaks && rm gitleaks.tgz
-          echo "$RUNNER_TEMP/gitleaks" >> "$GITHUB_PATH"
+        uses: Doman-Digital/dd-ci-standards/gitleaks@v1
 
       - name: Scan the commits this pull request adds
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.gitleaks.outcome == 'success' }}
         working-directory: repo
         env:
           GH_TOKEN: ${{ github.token }}
