@@ -34,6 +34,10 @@ repos:
         cron: "7,27,47 * * * *"
         owner: "Doman Digital / Marketing Site"
         reason: "every 20 minutes: red when the live site lags main (DOM-1490); one checkout and one curl, no install, 5min cap on the light pool, off the hour"
+      - workflow: dd-checks-drift.yml
+        cron: "20 6 * * *"
+        owner: "Doman Digital / DD Checks"
+        reason: "daily drift-domains and drift-mfa (the Cyber Essentials MFA guard, DOM-1339), moved off dd-work-01 when it was deleted; one install of services/checks, a few dozen API calls, 20min cap"
       # DOM-847 (Doman-Digital #1159): the first three days of the quarter, so a
       # dropped run is caught; the entry above goes when #1159 merges.
       - workflow: security-rotation-reminder.yml
