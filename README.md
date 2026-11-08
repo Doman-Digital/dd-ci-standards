@@ -210,6 +210,17 @@ has to pass a policy check to merge, not get caught in the next audit.
   20 October 2026 (DOM-776) the separate scans in the monorepo and
   four client repos went, a VM and a full-history clone each.
 
+  **gitleaks survives a release outage** (`gitleaks/action.yml`, 8 November
+  2026). The install tries, in order, the release tarball in the caller's
+  Actions cache, GitHub releases (retried with backoff), and the gitleaks
+  project's own image of the same version on ghcr.io, fetched by layer
+  digest. Every path is checked against a pinned sha256; a mismatch stops
+  the job and is never treated as an outage. With every source down the job
+  fails with `gitleaks download outage` naming both URLs, and the scan does
+  not run. To bump gitleaks, change all four pins in `gitleaks/action.yml`
+  together and the cache key; `test/gitleaks-install.test.mjs` and the
+  self-check's live install fail when they disagree.
+
   **Turbo monorepos** scope pull request work with
   `.github/actions/workspace-scope` (`uses:
   Doman-Digital/dd-ci-standards/.github/actions/workspace-scope@v1`): the
