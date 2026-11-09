@@ -31,6 +31,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { loadFsView } from "../lib/view.mjs";
 import { branchRules } from "../lib/view-github.mjs";
 import { budgetForRepo } from "../lib/budget.mjs";
+import { readCfJobs } from "../lib/cf-jobs.mjs";
 import { craftContext, craftFloor } from "../lib/craft.mjs";
 import { runDoctor, levelOn } from "../lib/engine.mjs";
 import { planAdopt } from "../lib/adopt.mjs";
@@ -123,7 +124,9 @@ async function context(args) {
   const budget = budgetForRepo(readFileSync(join(HOME, "budget.yml"), "utf8"), repoName);
   // The repo's variables, when the policy job passed them in (SEC-009); null elsewhere.
   const vars = process.env.DD_VARS_SEEN === "true" ? { DOPPLER_IDENTITY_ID: process.env.DD_DOPPLER_IDENTITY_ID || "" } : null;
-  return { dir, repo, ctx: { today, kind, visibility, repo, repoName, budget, meta, taxonomy, pr: pullRequest(), vars, dir } };
+  // dd-repo-registry's cf.* rows (CF-002, CF-003): the checkout beside this one, or DD_REPO_REGISTRY.
+  const cfJobs = readCfJobs(process.env.DD_REPO_REGISTRY || resolve(HOME, "..", "dd-repo-registry"));
+  return { dir, repo, ctx: { today, kind, visibility, repo, repoName, budget, meta, taxonomy, pr: pullRequest(), vars, dir, cfJobs } };
 }
 
 /** The pull request this run checks (LIN-001, LIN-002, SEC-010), from the Actions event file; null outside a pull request run. */
