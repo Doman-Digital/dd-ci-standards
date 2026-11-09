@@ -12,7 +12,7 @@ import { FIXTURES } from "./fixtures.mjs";
 const rulebook = JSON.parse(readFileSync(new URL("../rules.json", import.meta.url), "utf8"));
 const taxonomy = JSON.parse(readFileSync(new URL("../repo-topics.json", import.meta.url), "utf8"));
 const TODAY = "2027-01-15"; // every rule past its enforce date
-const base = { today: TODAY, kind: "dd-tooling", visibility: "private", repoName: "demo", budget: { ghCrons: [], vercelCrons: [] }, meta: null, taxonomy };
+const base = { selfHostedRetired: false, today: TODAY, kind: "dd-tooling", visibility: "private", repoName: "demo", budget: { ghCrons: [], vercelCrons: [] }, meta: null, taxonomy };
 const ids = (r) => r.findings.map((f) => f.rule);
 
 test("every rule has a failing and a passing example", () => {
@@ -434,7 +434,7 @@ test("REG-007 is not judged when the rules could not be read", () => {
 });
 
 test("CI-028 reports a registered job that left CI_RUNNER_HOSTED, and a registered job with its own runs-on", () => {
-  const ctx = { today: "2026-11-25", kind: "dd-tooling", visibility: "private", repoName: "demo", budget: { ghCrons: [], vercelCrons: [] }, hostedJobs: { jobs: [{ repo: "demo", workflow: "ci.yml", job: "test" }] } };
+  const ctx = { selfHostedRetired: false, today: "2026-11-25", kind: "dd-tooling", visibility: "private", repoName: "demo", budget: { ghCrons: [], vercelCrons: [] }, hostedJobs: { jobs: [{ repo: "demo", workflow: "ci.yml", job: "test" }] } };
   const own = runDoctor(FIXTURES["CI-001"].pass, rulebook, ctx);
   assert.ok(own.findings.some((f) => f.rule === "CI-028" && /does not run on CI_RUNNER_HOSTED/.test(f.message)));
   const bare = runDoctor({ workflows: [{ path: ".github/workflows/ci.yml", text: FIXTURES["CI-028"].pass.workflows[0].text.replace(/runs-on: .*/, "runs-on: ${{ vars.CI_RUNNER_HOSTED }}") }], vercel: [], files: {} }, rulebook, ctx);
@@ -443,7 +443,7 @@ test("CI-028 reports a registered job that left CI_RUNNER_HOSTED, and a register
 
 test("a hosted-jobs.json row with runs_on pins one watcher job to a hosted label, and only that job (DOM-1079)", () => {
   const pin = { repo: "demo", workflow: "ci.yml", job: "test", runs_on: "ubuntu-latest", why: "watches the self-hosted runners", minutes_a_month: 3000 };
-  const ctx = { today: "2026-11-25", kind: "dd-tooling", visibility: "private", repoName: "demo", budget: { ghCrons: [], vercelCrons: [] }, hostedJobs: { jobs: [pin] } };
+  const ctx = { selfHostedRetired: false, today: "2026-11-25", kind: "dd-tooling", visibility: "private", repoName: "demo", budget: { ghCrons: [], vercelCrons: [] }, hostedJobs: { jobs: [pin] } };
   const view = (runsOn, job = "test") => ({ workflows: [{ path: ".github/workflows/ci.yml", text: `on:\n  pull_request:\njobs:\n  ${job}:\n    runs-on: ${runsOn}\n    timeout-minutes: 5\n    steps:\n      - run: x\n` }], vercel: [], files: {} });
   const rulesOf = (v, c = ctx) => runDoctor(v, rulebook, c).findings.map((f) => f.rule);
   const pinned = rulesOf(view("ubuntu-latest"));

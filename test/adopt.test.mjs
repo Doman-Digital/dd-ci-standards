@@ -7,7 +7,7 @@ import { IGNORE_BLOCK } from "../lib/rules.mjs";
 
 const rulebook = JSON.parse(readFileSync(new URL("../rules.json", import.meta.url), "utf8"));
 const taxonomy = JSON.parse(readFileSync(new URL("../repo-topics.json", import.meta.url), "utf8"));
-const ctx = { today: "2027-01-15", kind: "dd-tooling", visibility: "private", repoName: "demo", budget: { ghCrons: [], vercelCrons: [] }, meta: null, taxonomy };
+const ctx = { selfHostedRetired: false, today: "2027-01-15", kind: "dd-tooling", visibility: "private", repoName: "demo", budget: { ghCrons: [], vercelCrons: [] }, meta: null, taxonomy };
 
 // A repo with debt: no timeout, a hosted runner, no policy caller, an old Renovate preset name.
 const messy = {

@@ -336,3 +336,25 @@ repos:
   verqan-api:
     github_actions_crons: []
     vercel_crons: []
+
+  dd-netcup-config:
+    github_actions_crons:
+      - workflow: client-jobs.yml
+        cron: "40 3 * * *"
+        reason: "Daily client metrics, replacing the removed box; shared state lock, gated until verified recovery. Measure actual hosted minutes after activation."
+      - workflow: client-jobs.yml
+        cron: "0 7 * * *"
+        reason: "Daily client briefing build using the existing script and restored R2 state."
+      - workflow: client-jobs.yml
+        cron: "15 6,7 * * 1"
+        reason: "Weekly client delivery; UK-time guard permits only the 07:15 local run."
+      - workflow: client-jobs.yml
+        cron: "45 2 * * *"
+        reason: "Nightly Neon, Sanity, metrics and capsule backups to Backblaze B2."
+      - workflow: client-jobs.yml
+        cron: "30 6 * * 0"
+        reason: "First-Sunday restore drill; other Sundays skip before installing tools."
+      - workflow: client-jobs.yml
+        cron: "30 7,17 * * *"
+        reason: "Twice-daily beauty-client Drive inbox intake, replacing the removed box."
+    vercel_crons: []
