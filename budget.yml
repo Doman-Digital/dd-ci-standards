@@ -18,6 +18,10 @@ repos:
         cron: "45 8 * * 1"
         owner: "Doman Digital / Portal QA"
         reason: "weekly portal journeys (handover, brief, contract, billing, six keyboard-only) on an isolated runner with service Postgres and Redis and loopback provider shims, plus the main-only Stripe test-mode sandbox job; journeys/ledger.json checked against the report; 45min cap per job, half an hour after journey-capture (Doman-Digital portal-journeys PR, 9 November 2026)"
+      - workflow: site-journeys.yml
+        cron: "30 8 * * 1"
+        owner: "Doman Digital / Website QA"
+        reason: "weekly site journeys at 375 on staging behind Access (J01 the /book calendar plus one booking on the hidden Cal.com test event by a canary attendee, cancelled in the same run; J02 contact; the /order/success receipt), axe at every step, qa/journeys/site/ledger.json checked against the report; 30min cap, a quarter of an hour after journey-capture (Doman-Digital site journeys PR, 9 November 2026)"
       - workflow: journey-capture.yml
         cron: "40 6 * * *"
         owner: "Doman Digital / Website QA"
