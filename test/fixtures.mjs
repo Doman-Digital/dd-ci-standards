@@ -186,6 +186,19 @@ jobs:
     fail: { workflows: [{ path: ".github/workflows/deploy.yml", text: "on:\n  push:\n    branches: [main]\njobs:\n  d:\n    steps:\n      - run: npx wrangler deploy\n" }], vercel: [], files: {}, wrangler: [{ path: "wrangler.jsonc", name: "demo-site" }, { path: "worker/wrangler.toml", name: "demo-cron" }] },
     pass: { workflows: [{ path: ".github/workflows/ci.yml", text: "on:\n  pull_request:\njobs:\n  b:\n    steps:\n      - run: npx wrangler deploy --dry-run\n" }], vercel: [], files: {}, wrangler: [{ path: "wrangler.jsonc", name: "demo-site" }] },
   },
+  "CF-002": {
+    // A */2 trigger in wrangler.jsonc with no row of that schedule for the file; the row beside it is */5.
+    ctx: { repo: "Doman-Digital/demo", cfJobs: [{ id: "cf.demo-site", repo: "Doman-Digital/demo", path: "wrangler.jsonc", schedule: "*/5 * * * *", database: "none", dbGate: null }] },
+    fail: view({ wrangler: [{ path: "wrangler.jsonc", name: "demo-site", crons: ["*/5 * * * *", "*/2 * * * *"] }] }),
+    pass: view({ wrangler: [{ path: "wrangler.jsonc", name: "demo-site", crons: ["*/5 * * * *"] }] }),
+  },
+  "CF-003": {
+    // A */2 job that reads a Neon project with no db_gate; the passing example names the gate.
+    ctx: { repo: "Doman-Digital/demo", cfJobs: [{ id: "cf.demo-queue", repo: "Doman-Digital/demo", path: "wrangler.jsonc", schedule: "*/2 * * * *", database: "fixture-neon-project", dbGate: null }] },
+    fail: view({ wrangler: [{ path: "wrangler.jsonc", name: "demo-site", crons: ["*/2 * * * *"] }] }),
+    pass: view({ wrangler: [{ path: "wrangler.jsonc", name: "demo-site", crons: ["*/2 * * * *"] }] }),
+    passCtx: { cfJobs: [{ id: "cf.demo-queue", repo: "Doman-Digital/demo", path: "wrangler.jsonc", schedule: "*/2 * * * *", database: "fixture-neon-project", dbGate: "a due-time check in the Worker's own state before any query" }] },
+  },
   "PKG-001": {
     // The catalogue comes in the context (lib/craft.mjs reads npm before the rules run).
     fail: view({}),

@@ -355,6 +355,22 @@
       "enforce_from": "2026-12-31"
     },
     {
+      "id": "CF-002",
+      "title": "A Worker cron has no registry row with the same schedule",
+      "why": "9 November 2026: a cron in a Worker's wrangler config runs whether or not anyone registered it, so nothing counted what it woke. Every trigger in wrangler.jsonc or wrangler.toml needs a cf.* row in dd-repo-registry jobs/ whose defined_in names this file and whose schedule is the same string. This is CI-007 for Actions crons, checked against the registry rather than budget.yml.",
+      "applies": "full",
+      "warn_from": "2026-11-09",
+      "enforce_from": "2026-11-09"
+    },
+    {
+      "id": "CF-003",
+      "title": "A job that runs more often than every 15 minutes and reads Neon has no db_gate",
+      "why": "9 November 2026: Neon suspends a database after about five quiet minutes, so a job that runs more often than every 15 minutes and touches Postgres keeps the compute awake all day. A cf.* row whose schedule is more frequent than every 15 minutes and whose database is a Neon project id must name in db_gate the cheap check that runs before Postgres (a due-time check in the Worker's own state, a cache, or a no-op when nothing has changed). Every row needs a database field, a Neon project id or none.",
+      "applies": "full",
+      "warn_from": "2026-11-09",
+      "enforce_from": "2026-11-09"
+    },
+    {
       "id": "PKG-001",
       "title": "The repo runs a craft catalogue older than copy-check trusts",
       "why": "19 October 2026: copy-check passed a client email full of chatbot residue because the machine ran craft catalogue 2026.09.12. Repos were worse: their lockfiles held craft 0.5.0 to 0.20.2 (catalogues none to 2026.10.2) while npm had 0.20.5, because Renovate aborted every repo before opening a PR (DOM-1043). The floor is floors.json, the same number copy-check refuses below. Renovate's house packages group bumps craft within a day of a release; a repo still behind fails here rather than checking copy with old rules.",
