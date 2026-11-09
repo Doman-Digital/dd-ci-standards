@@ -298,6 +298,43 @@ has to pass a policy check to merge, not get caught in the next audit.
   `environment == 'Production'`. Inputs: `check` (one check id), `delay_seconds`
   (default 30, so the release is serving), `runner`.
 
+- **`.github/workflows/playwright-journeys.yml`**: walks a site's journeys with
+  the calling repo's own Playwright config and specs, keeps every capture as an
+  artefact, and fails when a test fails or when fewer than `min-captures` PNG
+  files were written. It covers what a crawl cannot reach: a booking widget
+  after a time is picked, a form's states, a sign-in and the way back, a
+  redirect, metadata on every sitemap page. For a site behind Cloudflare
+  Access, pass `access-origin` and the two service-token secrets; the run
+  refuses to start without them, because a login page is not a capture. The
+  secrets are GitHub secrets of the caller, since Doppler trusts a repo's
+  identity on its default branch only and the suite must run on the pull
+  request that changes it. A newer run never cancels one in progress, so a
+  spec that books and cancels reaches its cancel. Call:
+
+  ```yaml
+  journeys:
+    uses: Doman-Digital/dd-ci-standards/.github/workflows/playwright-journeys.yml@v1
+    with:
+      config: qa/journeys/playwright.config.ts
+      args: journeys.spec.ts
+      artefact-name: journey-capture
+      access-origin: https://staging.example.co.uk
+      runner: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+      env: |
+        JOURNEY_MARKETING_URL=https://staging.example.co.uk
+    secrets:
+      ACCESS_CLIENT_ID: ${{ secrets.JOURNEY_SITE_STG_ACCESS_ID }}
+      ACCESS_CLIENT_SECRET: ${{ secrets.JOURNEY_SITE_STG_ACCESS_SECRET }}
+      API_KEY: ${{ secrets.JOURNEY_CAL_API_KEY }}
+  ```
+
+  The specs read `JOURNEY_ACCESS_ORIGIN`, `JOURNEY_ACCESS_CLIENT_ID`,
+  `JOURNEY_ACCESS_CLIENT_SECRET` and `JOURNEY_API_KEY`, send the Access headers
+  to that origin only, and write no secret, cookie, trace or video into the
+  artefact. Other inputs: `artefact-path` (default `reports/journeys`),
+  `results-json`, `retention-days` (14), `working-directory`, `node-version`
+  (24), `timeout-minutes` (30). Guard: `test/playwright-journeys.test.mjs`.
+
   `ADMIN_RUN_TOKEN` is Doppler `dd-checks`/`prd`. Set it as a secret on the
   calling repo; client repos sit in their own GitHub accounts, so an
   organisation secret does not reach them. It is never a `with:` input and

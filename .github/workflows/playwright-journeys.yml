@@ -1,0 +1,260 @@
+name: playwright-journeys (reusable)
+
+# Walks a site's journeys with Playwright, keeps every capture as a workflow
+# artefact, and fails when a step or a capture is missing. Written for the
+# journeys a crawl cannot reach: a booking widget after a time is picked, a
+# form's sent, failed and invalid states, a sign-in and the way back, a
+# redirect, and metadata on every page of a sitemap (Doman-Digital, 9 Nov 2026).
+#
+# The suite itself lives in the calling repo (its Playwright config and specs).
+# This workflow only installs, runs it and keeps the evidence:
+#
+#   1. Checks out, installs with the repo's own pnpm (packageManager) and Node.
+#   2. Installs Chromium (cached), with system packages on GitHub-hosted runners.
+#   3. When `access-origin` is set, refuses to start unless both Cloudflare
+#      Access secrets are present: a login page captured is not coverage.
+#   4. Runs `playwright test -c <config> <args>` with the caller's plain
+#      `env` lines and the three optional secrets as JOURNEY_* variables.
+#   5. Fails when the run captured fewer than `min-captures` PNG files, even
+#      if every test passed (a skipped suite is not a green one).
+#   6. Writes a job summary (passed, failed, skipped, captures, the failed
+#      titles) and uploads the artefact folder whatever happened.
+#
+# Call it from a thin workflow in the site's repo:
+#
+#   jobs:
+#     journeys:
+#       permissions:
+#         contents: read
+#       uses: Doman-Digital/dd-ci-standards/.github/workflows/playwright-journeys.yml@v1
+#       with:
+#         config: qa/journeys/playwright.config.ts
+#         args: journeys.spec.ts
+#         artefact-name: journey-capture
+#         access-origin: https://staging.example.co.uk
+#         env: |
+#           JOURNEY_MARKETING_URL=https://staging.example.co.uk
+#       secrets:
+#         ACCESS_CLIENT_ID: ${{ secrets.JOURNEY_SITE_STG_ACCESS_ID }}
+#         ACCESS_CLIENT_SECRET: ${{ secrets.JOURNEY_SITE_STG_ACCESS_SECRET }}
+#         API_KEY: ${{ secrets.JOURNEY_CAL_API_KEY }}
+#
+# The specs read JOURNEY_ACCESS_ORIGIN, JOURNEY_ACCESS_CLIENT_ID,
+# JOURNEY_ACCESS_CLIENT_SECRET and JOURNEY_API_KEY. A spec must attach the
+# Access headers to requests for JOURNEY_ACCESS_ORIGIN only, never to a
+# third party, and must never write a secret, cookie, trace or video into the
+# artefact folder. Secrets are GitHub secrets of the caller, not Doppler over
+# OIDC, because Doppler trusts a repo's identity on its default branch only
+# and a journey suite has to run on the pull request that changes it.
+#
+# A run is never cancelled by a newer one (cancel-in-progress is false): a
+# suite that books something and cancels it in `finally` must reach the
+# cancel.
+
+on:
+  workflow_call:
+    inputs:
+      config:
+        description: The Playwright config, relative to working-directory.
+        type: string
+        required: true
+      args:
+        description: Further arguments to `playwright test` (spec files, --project). Split on spaces.
+        type: string
+        default: ""
+      env:
+        description: Plain KEY=VALUE lines for the run, one per line. Never a secret.
+        type: string
+        default: ""
+      access-origin:
+        description: The one origin behind Cloudflare Access the specs may send the service token to. Empty when nothing is gated.
+        type: string
+        default: ""
+      artefact-name:
+        description: The artefact's name; the run id is appended.
+        type: string
+        required: true
+      artefact-path:
+        description: The folder the suite writes captures and reports into, relative to working-directory.
+        type: string
+        default: reports/journeys
+      results-json:
+        description: Playwright's JSON reporter output, relative to working-directory. Empty skips the summary counts.
+        type: string
+        default: reports/journeys/results.json
+      min-captures:
+        description: Fail when fewer PNG files than this are under artefact-path.
+        type: number
+        default: 1
+      retention-days:
+        type: number
+        default: 14
+      working-directory:
+        type: string
+        default: "."
+      node-version:
+        type: string
+        default: "24"
+      runner:
+        description: Runner label. Pass the repo's own variable, for example vars.CI_RUNNER.
+        type: string
+        default: ubuntu-latest
+      timeout-minutes:
+        type: number
+        default: 30
+    secrets:
+      ACCESS_CLIENT_ID:
+        description: Cloudflare Access service token id for access-origin.
+        required: false
+      ACCESS_CLIENT_SECRET:
+        description: Cloudflare Access service token secret for access-origin.
+        required: false
+      API_KEY:
+        description: One provider key the suite needs (for example to cancel a test booking it made).
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  journeys:
+    runs-on: ${{ inputs.runner }}
+    timeout-minutes: ${{ inputs.timeout-minutes }}
+    concurrency:
+      group: playwright-journeys-${{ github.repository }}-${{ inputs.artefact-name }}-${{ github.ref }}
+      cancel-in-progress: false
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Restore Playwright browsers
+        id: browsers
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
+      - name: Install Chromium
+        env:
+          SELF_HOSTED: ${{ runner.environment == 'self-hosted' }}
+          CACHE_HIT: ${{ steps.browsers.outputs.cache-hit == 'true' }}
+        run: |
+          set -euo pipefail
+          if [ "$SELF_HOSTED" = "true" ]; then
+            pnpm exec playwright install chromium
+          elif [ "$CACHE_HIT" = "true" ]; then
+            pnpm exec playwright install-deps chromium
+          else
+            pnpm exec playwright install --with-deps chromium
+          fi
+
+      - name: Refuse a gated run without its Access token
+        env:
+          ACCESS_ORIGIN: ${{ inputs.access-origin }}
+          HAS_ID: ${{ secrets.ACCESS_CLIENT_ID != '' }}
+          HAS_SECRET: ${{ secrets.ACCESS_CLIENT_SECRET != '' }}
+        run: |
+          set -euo pipefail
+          [ -z "$ACCESS_ORIGIN" ] && exit 0
+          case "$ACCESS_ORIGIN" in
+            https://*) ;;
+            *) echo "::error::access-origin must be an https origin"; exit 1 ;;
+          esac
+          if [ "$HAS_ID" != "true" ] || [ "$HAS_SECRET" != "true" ]; then
+            echo "::error::$ACCESS_ORIGIN is behind Cloudflare Access and the caller passed no ACCESS_CLIENT_ID and ACCESS_CLIENT_SECRET. A login page is not a capture, so nothing ran."
+            exit 1
+          fi
+
+      - name: Load the plain environment lines
+        env:
+          LINES: ${{ inputs.env }}
+        run: |
+          set -euo pipefail
+          printf '%s\n' "$LINES" | while IFS= read -r line; do
+            [ -z "$line" ] && continue
+            key="${line%%=*}"
+            if ! printf '%s' "$key" | grep -Eq '^[A-Z][A-Z0-9_]*$' || [ "$key" = "$line" ]; then
+              echo "::error::env line is not KEY=VALUE: $key"; exit 1
+            fi
+            case "$key" in
+              JOURNEY_ACCESS_*|JOURNEY_API_KEY|GITHUB_*|PATH|NODE_OPTIONS)
+                echo "::error::env may not set $key"; exit 1 ;;
+            esac
+            printf '%s\n' "$line" >> "$GITHUB_ENV"
+          done
+
+      - name: Walk the journeys
+        env:
+          CONFIG: ${{ inputs.config }}
+          ARGS: ${{ inputs.args }}
+          JOURNEY_ACCESS_ORIGIN: ${{ inputs.access-origin }}
+          JOURNEY_ACCESS_CLIENT_ID: ${{ secrets.ACCESS_CLIENT_ID }}
+          JOURNEY_ACCESS_CLIENT_SECRET: ${{ secrets.ACCESS_CLIENT_SECRET }}
+          JOURNEY_API_KEY: ${{ secrets.API_KEY }}
+        run: |
+          set -eu
+          # shellcheck disable=SC2086 # ARGS is a space-separated list by contract
+          pnpm exec playwright test -c "$CONFIG" $ARGS
+
+      - name: Fail when the captures are missing
+        if: always()
+        env:
+          DIR: ${{ inputs.artefact-path }}
+          MIN: ${{ inputs.min-captures }}
+          RESULTS: ${{ inputs.results-json }}
+        run: |
+          set -euo pipefail
+          count=0
+          [ -d "$DIR" ] && count=$(find "$DIR" -name '*.png' -type f | wc -l | tr -d ' ')
+          {
+            echo "## Journey captures"
+            echo
+            echo "PNG captures: $count (at least $MIN expected)"
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ -n "$RESULTS" ] && [ -f "$RESULTS" ]; then
+            node -e '
+              const r = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+              const s = r.stats || {};
+              const failed = [];
+              const walk = (suite, trail) => {
+                for (const spec of suite.specs || [])
+                  for (const t of spec.tests || [])
+                    if (t.status === "unexpected" || t.status === "flaky")
+                      failed.push(`${t.projectName}: ${[...trail, spec.title].filter(Boolean).join(" > ")}`);
+                for (const child of suite.suites || []) walk(child, [...trail, child.title]);
+              };
+              for (const suite of r.suites || []) walk(suite, []);
+              const lines = [`Passed: ${s.expected ?? 0}, failed: ${s.unexpected ?? 0}, flaky: ${s.flaky ?? 0}, skipped: ${s.skipped ?? 0}`];
+              if (failed.length) lines.push("", "Failed:", ...failed.map((f) => `- ${f}`));
+              require("fs").appendFileSync(process.env.GITHUB_STEP_SUMMARY, "\n" + lines.join("\n") + "\n");
+            ' "$RESULTS"
+          fi
+          if [ "$count" -lt "$MIN" ]; then
+            echo "::error::$count PNG captures under $DIR, fewer than the $MIN expected. A journey that captured nothing is not covered."
+            exit 1
+          fi
+
+      - name: Keep the captures, including a failed run's
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: ${{ inputs.artefact-name }}-${{ github.run_id }}
+          path: ${{ inputs.working-directory }}/${{ inputs.artefact-path }}
+          retention-days: ${{ inputs.retention-days }}
+          if-no-files-found: error
