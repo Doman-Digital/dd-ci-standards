@@ -139,7 +139,7 @@ permissions:
 jobs:
   check:
     if: ${{ github.repository != 'Doman-Digital/dd-ci-standards' }}
-    runs-on: ${{ vars.CI_RUNNER_LIGHT || inputs.runner }}
+    runs-on: ${{ inputs.runner || 'ubuntu-latest' }}
     timeout-minutes: 8
     env:
       # semgrep/semgrep, the image a client repo's own workflow pulled on 19 October 2026.
