@@ -560,3 +560,26 @@ test("the projection matches what dd-repo-registry would write, if a checkout si
     assert.equal(readFileSync(new URL(`../${f}`, import.meta.url), "utf8"), text, `${f} differs from the registry's projection: run node bin/inventory.mjs --write <this checkout> in dd-repo-registry`);
   }
 });
+
+test("REG-007 counts the jobs of workflows an organisation ruleset runs", async () => {
+  const { branchRules } = await import("../lib/view-github.mjs");
+  const policy = "on:\n  workflow_call:\njobs:\n  check:\n    runs-on: ubuntu-latest\n    steps:\n      - run: x\n";
+  const api = {
+    "/repos/o/r/rules/branches/main": [
+      { type: "required_status_checks", parameters: { required_status_checks: [{ context: "check" }] } },
+      { type: "workflows", parameters: { workflows: [{ repository_id: 7, path: ".github/workflows/policy.yml", ref: "refs/tags/v1", sha: "abc" }] } },
+    ],
+    "/repositories/7": { full_name: "Doman-Digital/dd-ci-standards" },
+    "/repos/Doman-Digital/dd-ci-standards/contents/.github/workflows/policy.yml?ref=abc": { encoding: "base64", content: Buffer.from(policy).toString("base64") },
+  };
+  const get = async (p) => { if (!(p in api)) throw new Error("HTTP 404"); return api[p]; };
+  const rules = await branchRules("o/r", "main", get);
+  const v = { workflows: [], vercel: [], files: {}, ...rules };
+  assert.deepEqual(v.required, ["check"]);
+  assert.ok(!ids(runDoctor(v, rulebook, base)).includes("REG-007"));
+  // The org workflow cannot be read: judged on the repo's own workflows, as before.
+  const blind = await branchRules("o/r", "main", async (p) => { if (p.includes("/contents/")) throw new Error("HTTP 404"); return api[p]; });
+  assert.ok(ids(runDoctor({ workflows: [], vercel: [], files: {}, ...blind }, rulebook, base)).includes("REG-007"));
+  // A check no org workflow produces is still caught.
+  assert.ok(ids(runDoctor({ ...v, required: ["check", "scan"] }, rulebook, base)).includes("REG-007"));
+});
