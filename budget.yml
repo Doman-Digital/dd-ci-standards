@@ -46,6 +46,10 @@ repos:
         cron: "20 6 * * *"
         owner: "Doman Digital / DD Checks"
         reason: "daily drift-domains and drift-mfa (the Cyber Essentials MFA guard, DOM-1339), moved off dd-work-01 when it was deleted; one install of services/checks, a few dozen API calls, 20min cap"
+      - workflow: dd-zap-baseline.yml
+        cron: "41 3 * * 3"
+        owner: "Doman Digital / Assurance"
+        reason: "weekly OWASP ZAP baseline (passive, no attack traffic) of the public site and the portal, report kept as an artifact, a High alert fails the run (assurance item B8, 9 November 2026); one container pull, 20min cap, off the hour"
       # DOM-847 (Doman-Digital #1159): the first three days of the quarter, so a
       # dropped run is caught; the entry above goes when #1159 merges.
       - workflow: security-rotation-reminder.yml
