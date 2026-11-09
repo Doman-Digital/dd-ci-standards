@@ -254,6 +254,11 @@ jobs:
     // A comment recording why the check went is history, and a short hash in a log format is not an author.
     pass: wf("on: [pull_request]\njobs:\n  build:\n    steps:\n      # The commit-author check was retired on 29 October 2026 (DOM-1451).\n      - run: git log -1 --format='%h %s'\n"),
   },
+  "CI-032": {
+    // dd-relay's deploy.yml before dd-relay#350: a commit dd-ci-standards' rewritten history no longer holds.
+    fail: view({ workflows: [{ path: ".github/workflows/deploy.yml", text: "on: [push]\njobs:\n  deploy:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/cloudflare-deploy.yml@50504488e5f46eed1ec97ca47cdff80364e24949\n" }], pins: { "Doman-Digital/dd-ci-standards@50504488e5f46eed1ec97ca47cdff80364e24949": "orphaned" } }),
+    pass: view({ workflows: [{ path: ".github/workflows/deploy.yml", text: "on: [push]\njobs:\n  deploy:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/cloudflare-deploy.yml@v1\n  grade:\n    uses: Doman-Digital/dd-photo-pack/.github/workflows/grade.yml@0123456789abcdef0123456789abcdef01234567\n" }], pins: { "Doman-Digital/dd-photo-pack@0123456789abcdef0123456789abcdef01234567": "ok" } }),
+  },
   "CI-024": {
     fail: wf("jobs:\n  lh:\n    steps:\n      - if: runner.name != 'dd-ci-01-h'\n        run: pnpm lhci\n"),
     // The host's own name is not a runner name.
