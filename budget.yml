@@ -14,6 +14,10 @@ repos:
         cron: "15 8 * * 1"
         owner: "Doman Digital / Website QA"
         reason: "weekly journey captures on staging behind Access (playwright-journeys.yml) plus the read-only portal client run: one marked staging booking per run, cancelled in the same run; organisation runner pool, 45min cap; PageSpeed left to dd-psi (Doman-Digital#1526, then the staging journeys PR)"
+      - workflow: portal-journeys.yml
+        cron: "45 8 * * 1"
+        owner: "Doman Digital / Portal QA"
+        reason: "weekly portal journeys (handover, brief, contract, billing, six keyboard-only) on an isolated runner with service Postgres and Redis and loopback provider shims, plus the main-only Stripe test-mode sandbox job; journeys/ledger.json checked against the report; 45min cap per job, half an hour after journey-capture (Doman-Digital portal-journeys PR, 9 November 2026)"
       - workflow: journey-capture.yml
         cron: "40 6 * * *"
         owner: "Doman Digital / Website QA"
