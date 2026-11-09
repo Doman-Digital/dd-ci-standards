@@ -10,6 +10,10 @@
 repos:
   Doman-Digital:
     github_actions_crons:
+      - workflow: journey-capture.yml
+        cron: "15 8 * * 1"
+        owner: "Doman Digital / Website QA"
+        reason: "weekly public journey screenshots and 30 PageSpeed API samples to close teardown coverage gaps; browser 45min and PSI 65min caps; real bookings are manual only (Doman-Digital#1526)"
       - workflow: stale.yml
         cron: "30 1 * * *"
         reason: "daily stale issue/PR sweep, no checkout, near-zero cost"
