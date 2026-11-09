@@ -13,7 +13,7 @@ repos:
       - workflow: journey-capture.yml
         cron: "15 8 * * 1"
         owner: "Doman Digital / Website QA"
-        reason: "weekly public journey screenshots and 30 PageSpeed API samples to close teardown coverage gaps; organisation runner pool, browser 45min and PSI 65min caps; real bookings are manual only (Doman-Digital#1526)"
+        reason: "weekly journey captures on staging behind Access (playwright-journeys.yml) plus the read-only portal client run: one marked staging booking per run, cancelled in the same run; organisation runner pool, 45min cap; PageSpeed left to dd-psi (Doman-Digital#1526, then the staging journeys PR)"
       - workflow: stale.yml
         cron: "30 1 * * *"
         reason: "daily stale issue/PR sweep, no checkout, near-zero cost"
