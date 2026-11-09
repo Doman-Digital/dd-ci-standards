@@ -80,6 +80,22 @@ repos:
     github_actions_crons: []
     vercel_crons: []
 
+  dd-craft-corpus:
+    github_actions_crons:
+      - workflow: design-estate.yml
+        cron: "35 7 * * *"
+        owner: "Doman Digital / Craft"
+        reason: "daily check of design estate coverage, evidence and the 30-day capture limit (DOM-1301), read-only with a five-minute cap on the light runner"
+    vercel_crons: []
+
+  dd-library:
+    github_actions_crons:
+      - workflow: design-observations.yml
+        cron: "45 7 * * *"
+        owner: "Doman Digital / Craft"
+        reason: "daily check of dated typography, accent and shape evidence for the design register (DOM-1301), read-only with a five-minute cap on the light runner"
+    vercel_crons: []
+
   dd-repo-registry:
     github_actions_crons:
       - workflow: sweep.yml
