@@ -34,6 +34,7 @@ import { budgetForRepo } from "../lib/budget.mjs";
 import { craftContext, craftFloor } from "../lib/craft.mjs";
 import { runDoctor, levelOn } from "../lib/engine.mjs";
 import { planAdopt } from "../lib/adopt.mjs";
+import { resolvePins } from "../lib/pins.mjs";
 import { planNew, addToRegistry, cleanVerdict, ruleset, PR_BODY, REGISTRY_REPO, POLICY_CHECK } from "../lib/new.mjs";
 
 const HOME = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -172,6 +173,8 @@ async function doctor(args) {
   const view = loadFsView(dir);
   // The ruleset's required checks (REG-007) and merge queue (REG-008), when the repo and its rules can be read.
   if (repo && ctx.meta?.default_branch) Object.assign(view, await branchRules(repo, ctx.meta.default_branch, apiGet));
+  // Commits the workflows pin by SHA, and whether a branch or tag still holds each (CI-032).
+  view.pins = await resolvePins(view, { token: apiToken() });
   const floors = readFileSync(join(HOME, "floors.json"), "utf8");
   ctx.craft = await craftContext(view, floors);
   ctx.craftNotes = floorDrift(floors);

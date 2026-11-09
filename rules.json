@@ -209,6 +209,14 @@
       "enforce_from": "2026-11-05"
     },
     {
+      "id": "CI-032",
+      "title": "A shared workflow or action is pinned to a commit no branch or tag holds",
+      "why": "Doman-Digital/dd-relay#350, 8 November 2026: dd-relay's deploy.yml called cloudflare-deploy.yml at 50504488, a commit dd-ci-standards' rewritten history no longer contained (main carries the same change as 0ee9985). GitHub answered \"workflow was not found\" at startup, no job ran and nothing alerted, so the relay stayed on its 31 October build for six days. The commit is still served by SHA, so only reachability from a branch or tag is evidence: the doctor asks GitHub (compare default...sha, then the other branches and tags) once per pin per run. A pin it cannot resolve, such as a private repo the token cannot read, is a note, not a finding.",
+      "applies": "all",
+      "warn_from": "2026-11-09",
+      "enforce_from": "2026-11-09"
+    },
+    {
       "id": "CI-023",
       "title": "A workflow still uses Vercel",
       "why": "Vercel was retired for CI and deploys (DOM-555, DOM-776). On 19 October 2026 its leftovers were still in five repos: six VERCEL_TOKEN_* inputs in dd-repo-registry's sweep, a kv.vercel-storage placeholder in the monorepo's lighthouse.yml, and comments in three other repos describing Vercel building main. A workflow that names Vercel either does nothing or depends on an account nobody watches. A portal still served by Vercel records it as an exemption.",
