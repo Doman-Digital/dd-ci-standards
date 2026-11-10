@@ -203,7 +203,10 @@ repos:
         reason: "daily check for print orders left unpaid at Lulu; emails the team when one is waiting, since an unpaid order is never printed"
 
   MMM-Beauty:
-    github_actions_crons: []
+    github_actions_crons:
+      - workflow: staging-checkout-nightly.yml
+        cron: "30 2 * * *"
+        reason: "nightly staging checkout suite against Square's sandbox (book, pay, webhook, email, cleanup); ~6 min on dd-client, Slack on failure (DOM-456)"
     # 23 Vercel crons registered on apps/portal as of 2026-08-16, ~2,180
     # invocations/day, dominated by process-jobs running every minute
     # (1,440/day alone). Flagged in the audit as a Phase 4 follow-up —
