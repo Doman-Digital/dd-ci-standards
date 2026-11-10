@@ -148,6 +148,16 @@ repos:
         reason: "daily self-hosted Renovate across the portfolio, so house packages (@domandigital/*) land within a day; other updates still wait for Monday (DOM-1043). Public repo, so hosted minutes are free. Unregistered until 2026-10-03: the old cron check read only the first cron line and missed it"
     vercel_crons: []
 
+  dd-netcup-config:
+    github_actions_crons:
+      - workflow: neon-backup.yml
+        cron: "10 4 * * *"
+        reason: "nightly restic copy of the five Neon databases into the B2 repository (DOM-280), 120min cap; neon-backup-watch.yml is the check that a night was missed"
+      - workflow: neon-backup-watch.yml
+        cron: "17 9 * * *"
+        reason: "daily dead-man check that every Neon tag has a B2 snapshot younger than 26 hours (DOM-280): B2 API reads only, 15min cap"
+    vercel_crons: []
+
   chair-and-blade:
     github_actions_crons: []
     vercel_crons:
