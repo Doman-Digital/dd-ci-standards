@@ -156,6 +156,9 @@ repos:
       - workflow: neon-backup-watch.yml
         cron: "17 9 * * *"
         reason: "daily dead-man check that every Neon tag has a B2 snapshot younger than 26 hours (DOM-280): B2 API reads only, 15min cap"
+      - workflow: restore-drill.yml
+        cron: "30 6 2 * *"
+        reason: "monthly restore drill (DOM-280): the latest Neon dumps restored from B2 into throwaway Neon branches and every row count compared, branches deleted after; 120min cap, about 15min a month. Its one home: client-jobs.yml no longer runs it"
     vercel_crons: []
 
   chair-and-blade:
@@ -370,7 +373,7 @@ repos:
         reason: "Nightly Neon, Sanity, metrics and capsule backups to Backblaze B2."
       - workflow: client-jobs.yml
         cron: "30 6 * * 0"
-        reason: "First-Sunday restore drill; other Sundays skip before installing tools."
+        reason: "First-Sunday verified metrics restore (client state only; the restore drill itself is restore-drill.yml); other Sundays skip before installing tools."
       - workflow: client-jobs.yml
         cron: "30 7,17 * * *"
         reason: "Twice-daily beauty-client Drive inbox intake, replacing the removed box."
