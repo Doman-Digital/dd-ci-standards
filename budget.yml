@@ -159,7 +159,11 @@ repos:
     vercel_crons: []
 
   chair-and-blade:
-    github_actions_crons: []
+    github_actions_crons:
+      - workflow: booking-e2e.yml
+        cron: "30 5 * * *"
+        owner: "Barber client / Booking QA"
+        reason: "nightly booking e2e on Square Sandbox (wrangler dev -e staging, real Square, canary email with DKIM), plus a probe that staging answers through its Access token; catches Square or Sandbox drift before a deploy needs it; 25min cap, one run at a time (DOM-930)"
     vercel_crons:
       - app: root
         path: /api/cron/revalidate-reviews
