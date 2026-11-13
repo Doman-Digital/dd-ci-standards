@@ -153,9 +153,12 @@ repos:
       - workflow: neon-backup.yml
         cron: "10 4 * * *"
         reason: "nightly restic copy of the five Neon databases into the B2 repository (DOM-280), 120min cap; neon-backup-watch.yml is the check that a night was missed"
+      - workflow: sanity-backup.yml
+        cron: "40 4 * * *"
+        reason: "nightly restic export of the nine Sanity projects into the B2 repository (DOM-280), 120min cap; no Sanity snapshot existed after 31 October 2026 until this ran; neon-backup-watch.yml is the check that a night was missed"
       - workflow: neon-backup-watch.yml
         cron: "17 9 * * *"
-        reason: "daily dead-man check that every Neon tag has a B2 snapshot younger than 26 hours (DOM-280): B2 API reads only, 15min cap"
+        reason: "daily dead-man check that every Neon and Sanity tag has a B2 snapshot younger than 26 hours (DOM-280): B2 API reads only, 15min cap"
       - workflow: restore-drill.yml
         cron: "30 6 2 * *"
         reason: "monthly restore drill (DOM-280): the latest Neon dumps restored from B2 into throwaway Neon branches and every row count compared, branches deleted after; 120min cap, about 15min a month. Its one home: client-jobs.yml no longer runs it"
