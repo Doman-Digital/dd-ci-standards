@@ -287,7 +287,7 @@ async function newRepo(args) {
     if (!plan.local) {
       console.log(`  create   github.com/${plan.repo}, ${plan.visibility}, tags ${plan.topics.join(", ")}`);
       console.log("  push     the first commit to main");
-      console.log(`  protect  main: pull requests only, ${POLICY_CHECK} required`);
+      console.log(`  protect  main: pull requests only, ${POLICY_CHECK} required where the repo has the caller (a private Doman-Digital repo is gated by the org ruleset instead)`);
       console.log(`  open     a pull request on ${REGISTRY_REPO} adding:\n${plan.registry.trimEnd().replace(/^/gm, "           ")}`);
     }
     return 0;
@@ -321,7 +321,8 @@ async function newRepo(args) {
 
   // 2. Adopt, then the doctor must be clean.
   const budget = budgetForRepo(readFileSync(join(HOME, "budget.yml"), "utf8"), plan.name);
-  const ctx = { today, kind: plan.kind, visibility: plan.visibility, repoName: plan.name, budget, meta: null, taxonomy };
+  // The repo's name too: a private Doman-Digital repo is covered by the org ruleset, so adopt writes no caller (REG-003).
+  const ctx = { today, kind: plan.kind, visibility: plan.visibility, repo: plan.repo, repoName: plan.name, budget, meta: null, taxonomy };
   const { writes, summary } = planAdopt(loadFsView(dir), rulebook, ctx);
   for (const line of summary) console.log(`dd adopt: ${line}`);
   for (const [path, text] of Object.entries(writes)) {
@@ -362,9 +363,9 @@ async function newRepo(args) {
   step("git", ["remote", "add", "origin", `https://github.com/${plan.repo}.git`], dir);
   step("git", ["push", "-q", "-u", "origin", "main"], dir, gitAuthEnv(token));
 
-  // Blocked, not merely red: the policy check is required on main.
+  // Blocked, not merely red: the policy check is required on main (the caller's, or the org ruleset's run).
   let blocking = true;
-  const rules = await api(token, "POST", `/repos/${plan.repo}/rulesets`, ruleset());
+  const rules = await api(token, "POST", `/repos/${plan.repo}/rulesets`, ruleset({ caller: existsSync(join(dir, ".github/workflows/ci-standards-policy.yml")) }));
   if (!rules.ok) {
     blocking = false;
     console.error(

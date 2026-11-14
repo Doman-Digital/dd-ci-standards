@@ -413,11 +413,19 @@
     },
     {
       "id": "REG-003",
-      "title": "The repo has workflows but none calls the policy check",
-      "why": "3 October 2026: 14 of 48 repos with workflows were checked by nothing.",
+      "title": "The repo has workflows but nothing runs the policy check",
+      "why": "3 October 2026: 14 of 48 repos with workflows were checked by nothing. Since 27 October 2026 the org ruleset dd-policy-required runs the check on every private Doman-Digital repo with no caller, so a caller is required only where it does not apply: public repos and repos on other accounts (DOM-17635). Read from the default branch's live rules, or, when they cannot be read, from who org-rulesets.yaml covers.",
       "applies": "full",
       "warn_from": "2026-10-03",
       "enforce_from": "2026-12-31"
+    },
+    {
+      "id": "REG-009",
+      "title": "The repo calls the policy check the org ruleset already runs",
+      "why": "14 November 2026 (DOM-17635): the monorepo ran the scan twice on every commit, once as `policy / check` from its caller and once as `check` from dd-policy-required, as did 13 other covered repos. The second run costs a runner and a checkout per commit and puts two policy results in the checks list. Only the live rules count here: a repo the registry leaves out has no ruleset run, and its caller is its only scan.",
+      "applies": "all",
+      "warn_from": "2026-11-14",
+      "enforce_from": "2026-12-14"
     },
     {
       "id": "REG-004",
