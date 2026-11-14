@@ -114,6 +114,9 @@ name: ci-standards policy
 # 27 October 2026: neither a label nor a title edit started a run), and
 # re-running a run reads the pull request as it was when the run began. So the
 # failure message tells the author to push a commit, an empty one will do.
+# Where an org ruleset also runs issue-ref.yml on the branch (DOM-17635), this
+# run leaves LIN-001 and LIN-002 to that job, which reads the pull request
+# live, so a re-run of it is the fix (issue-ref.yml has the why).
 #
 # The `check` job skips in this repo itself: here the pull_request trigger
 # would run it with no runner variable (a public repo sees none), and

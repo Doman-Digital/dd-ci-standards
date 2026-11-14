@@ -593,11 +593,19 @@ second scan of every commit. Before deleting such a caller, stop requiring
 its check (`retire_checks` in dd-repo-registry `repo-settings.yaml`), or the
 pull request that deletes it waits for a check that never comes.
 
-**After fixing a failing PR, push a commit** (`git commit --allow-empty` will
-do). Editing the title or description, or adding the label, does not start the
-check again: a ruleset run ignores `edited`, `labeled` and `unlabeled` in its
-workflow's `types` (probed on dd-photo-pack#22, 27 October 2026), and a re-run
-reads the PR as it was when the run began.
+**After fixing a failing PR, re-run the issue-ref job** where an org ruleset
+runs `issue-ref.yml` (DOM-17635): `gh run rerun <run id> --failed`, or Re-run
+failed jobs on the run. That job runs only LIN-001 and LIN-002, reads the pull
+request live through the API with its own `pull-requests: read`, and takes
+seconds; the policy check's ruleset run then leaves those two rules to it.
+Editing the title or description, or adding the label, does not start it on
+its own: a ruleset run ignores `edited`, `labeled` and `unlabeled` in its
+workflow's `types` (probed on dd-photo-pack#22, 27 October 2026).
+
+Elsewhere (a caller's run, or a branch no issue-ref ruleset covers) the policy
+check still reads the event its run began with, so **push a commit**
+(`git commit --allow-empty` will do): a re-run there reads the old
+description.
 
 Why: on 20 October 2026 the founder found client work shipping with nothing
 in Linear or HubSpot to show for it. Since 22 July, 640 of the 869 pull

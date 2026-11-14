@@ -13,6 +13,12 @@ inputs:
   token:
     description: Token that can read the repo's settings (kind tag, visibility, description)
     default: ${{ github.token }}
+  only:
+    description: Comma list of rule ids to run, and no others (the issue-ref job runs LIN-001,LIN-002)
+    default: ""
+  live-pr:
+    description: Read the pull request through the API rather than from the event, so a re-run sees an edit (needs pull-requests read)
+    default: "false"
 
 runs:
   using: composite
@@ -26,4 +32,6 @@ runs:
       env:
         GH_TOKEN: ${{ inputs.token }}
         DD_PATH: ${{ inputs.path }}
+        DD_ONLY: ${{ inputs.only }}
+        DD_LIVE_PR: ${{ inputs.live-pr }}
       run: node "$GITHUB_ACTION_PATH/../bin/dd.mjs" doctor "$DD_PATH" --format github

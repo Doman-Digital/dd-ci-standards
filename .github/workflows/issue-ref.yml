@@ -1,0 +1,51 @@
+name: issue-ref
+
+# Does the pull request name its Linear issue (LIN-001, LIN-002)? A job of its
+# own, run by an org ruleset on every private org repo (DOM-17635, 14 November
+# 2026), beside the policy check.
+#
+# Why apart from the policy check. The policy check reads the pull request
+# from the event its run began with, so fixing a description meant pushing a
+# commit (an empty one would do), and in the monorepo a commit is a full CI
+# run. This job reads the pull request live through the API, so after an edit
+# you re-run this one job (`gh run rerun <run id> --failed`), which takes
+# seconds. It can read it because it asks for pull-requests: read itself. The
+# policy check cannot: callers grant contents: read only, and a called
+# workflow cannot ask for more than its caller grants.
+#
+# A ruleset run ignores `edited`, `labeled` and `unlabeled` in `types`
+# (probed on dd-photo-pack#22, 27 October 2026), so an edit does not start
+# this job on its own: re-run it. The types are listed for the day GitHub
+# honours them, and for a repo that runs this file from its own trigger.
+#
+# Where an org ruleset runs this file on a branch, the policy check's ruleset
+# run on that branch leaves LIN-001 and LIN-002 to this job (bin/dd.mjs,
+# lib/issue-ref.mjs), so a pull request is told once. A caller's run (client
+# and public repos) keeps them.
+#
+# No checkout: the rules read the pull request, not the repo's files. Nothing
+# to check on a merge queue's run, so the job is skipped there.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited, labeled, unlabeled]
+  merge_group:
+
+concurrency:
+  group: dd-issue-ref-${{ github.workflow_ref }}-${{ github.repository }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  issue-ref:
+    if: ${{ github.repository != 'Doman-Digital/dd-ci-standards' && github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: Doman-Digital/dd-ci-standards/doctor@v1
+        with:
+          only: LIN-001,LIN-002
+          live-pr: "true"

@@ -36,6 +36,8 @@ import { craftContext, craftFloor } from "../lib/craft.mjs";
 import { runDoctor, levelOn } from "../lib/engine.mjs";
 import { planAdopt } from "../lib/adopt.mjs";
 import { resolvePins } from "../lib/pins.mjs";
+import { POLICY_RULESET } from "../lib/rules.mjs";
+import { selectRules, issueRefElsewhere, livePullRequest } from "../lib/issue-ref.mjs";
 import { planNew, addToRegistry, cleanVerdict, ruleset, PR_BODY, REGISTRY_REPO, POLICY_CHECK } from "../lib/new.mjs";
 
 const HOME = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -126,7 +128,23 @@ async function context(args) {
   const vars = process.env.DD_VARS_SEEN === "true" ? { DOPPLER_IDENTITY_ID: process.env.DD_DOPPLER_IDENTITY_ID || "" } : null;
   // dd-repo-registry's cf.* rows (CF-002, CF-003): the checkout beside this one, or DD_REPO_REGISTRY.
   const cfJobs = readCfJobs(process.env.DD_REPO_REGISTRY || resolve(HOME, "..", "dd-repo-registry"));
-  return { dir, repo, ctx: { today, kind, visibility, repo, repoName, budget, meta, taxonomy, pr: pullRequest(), vars, dir, cfJobs } };
+  return { dir, repo, ctx: { today, kind, visibility, repo, repoName, budget, meta, taxonomy, pr: await currentPullRequest(repo, pullRequest()), vars, dir, cfJobs } };
+}
+
+/**
+ * With DD_LIVE_PR=true (the issue-ref job), the pull request as it is now, read through the API,
+ * so a re-run sees an edited description or a new label (DOM-17635). Falls back to the event,
+ * with a warning, when the token cannot read it.
+ */
+async function currentPullRequest(repo, pr) {
+  if (!pr || process.env.DD_LIVE_PR !== "true" || !repo || !pr.number) return pr;
+  try {
+    const live = await apiGet(`/repos/${repo}/pulls/${pr.number}`);
+    if (live) return livePullRequest(live);
+  } catch (e) {
+    console.error(`::warning title=issue-ref::could not read the pull request live (${e.message}); checked it as it was when the run began.`);
+  }
+  return pr;
 }
 
 /** The pull request this run checks (LIN-001, LIN-002, SEC-010), from the Actions event file; null outside a pull request run. */
@@ -135,7 +153,7 @@ function pullRequest() {
   if (!path || !/^pull_request/.test(process.env.GITHUB_EVENT_NAME || "")) return null;
   try {
     const pr = JSON.parse(readFileSync(path, "utf8")).pull_request;
-    return pr ? { title: pr.title || "", body: pr.body || "", branch: pr.head?.ref || "", labels: (pr.labels || []).map((l) => l.name), base: pr.base?.sha || null, head: pr.head?.sha || null } : null;
+    return pr ? { title: pr.title || "", body: pr.body || "", branch: pr.head?.ref || "", labels: (pr.labels || []).map((l) => l.name), base: pr.base?.sha || null, head: pr.head?.sha || null, number: pr.number ?? null } : null;
   } catch {
     return null;
   }
@@ -172,16 +190,31 @@ async function apiGet(path) {
 }
 
 async function doctor(args) {
+  // --only / --skip (or DD_ONLY / DD_SKIP from the doctor action): comma lists of rule ids.
+  const list = (s) => (s ? s.split(",").map((x) => x.trim()).filter(Boolean) : null);
+  const only = list(opt(args, "--only") || process.env.DD_ONLY);
+  const skip = list(opt(args, "--skip") || process.env.DD_SKIP) ?? [];
   const { dir, repo, ctx } = await context(args);
   const view = loadFsView(dir);
   // The ruleset's required checks (REG-007) and merge queue (REG-008), when the repo and its rules can be read.
-  if (repo && ctx.meta?.default_branch) Object.assign(view, await branchRules(repo, ctx.meta.default_branch, apiGet));
+  // Not for a run of named rules only (the issue-ref job): those read the pull request alone.
+  if (!only && repo && ctx.meta?.default_branch) Object.assign(view, await branchRules(repo, ctx.meta.default_branch, apiGet));
+  // The org ruleset's run of the policy check, where another org ruleset runs issue-ref.yml: LIN-001 and LIN-002 are that job's.
+  const handedOff = !only && issueRefElsewhere(view, process.env.GITHUB_WORKFLOW_REF);
+  if (handedOff) skip.push(...POLICY_RULESET.issueRefRules.filter((id) => !skip.includes(id)));
+  const picked = selectRules(rulebook, { only, skip });
+  if (picked.error) {
+    console.error(`dd doctor: ${picked.error}`);
+    return 2;
+  }
   // Commits the workflows pin by SHA, and whether a branch or tag still holds each (CI-032).
-  view.pins = await resolvePins(view, { token: apiToken() });
+  view.pins = only ? [] : await resolvePins(view, { token: apiToken() });
   const floors = readFileSync(join(HOME, "floors.json"), "utf8");
-  ctx.craft = await craftContext(view, floors);
-  ctx.craftNotes = floorDrift(floors);
-  const result = runDoctor(view, rulebook, ctx);
+  ctx.craft = only ? null : await craftContext(view, floors);
+  ctx.craftNotes = only ? [] : floorDrift(floors);
+  const result = runDoctor(view, picked.rulebook, ctx);
+  if (handedOff) result.notes.push(`${POLICY_RULESET.issueRefRules.join(" and ")} run in the issue-ref job here (an org ruleset runs ${POLICY_RULESET.issueRefPath}), not in this one.`);
+  if (only) result.notes.push(`only ${only.join(", ")} were checked.`);
   console.log(format(result, opt(args, "--format") || "text", repo));
   return result.findings.some((f) => f.level === "enforce") ? 1 : 0;
 }
