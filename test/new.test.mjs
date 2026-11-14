@@ -74,3 +74,9 @@ test("the ruleset requires the check the policy caller actually produces", () =>
   assert.deepEqual(checks, [{ context: POLICY_CHECK }]);
   assert.ok(ruleset().rules.some((r) => r.type === "pull_request"));
 });
+
+test("a repo with no caller (covered by the org ruleset) gets no required check that would never report", () => {
+  const rs = ruleset({ caller: false });
+  assert.ok(!rs.rules.some((r) => r.type === "required_status_checks"));
+  assert.ok(rs.rules.some((r) => r.type === "pull_request"), "pull requests are still required");
+});

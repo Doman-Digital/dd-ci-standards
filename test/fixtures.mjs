@@ -338,6 +338,12 @@ jobs:
     fail: wf(JOB("${{ vars.CI_RUNNER || 'ubuntu-latest' }}")),
     pass: { workflows: [{ path: ".github/workflows/policy.yml", text: "jobs:\n  p:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1\n" }], vercel: [], files: {} },
   },
+  "REG-009": {
+    // The org ruleset runs the check here (the branch's live rules say so) and a caller runs it again.
+    fail: { workflows: [{ path: ".github/workflows/ci-standards-policy.yml", text: "on:\n  pull_request:\njobs:\n  policy:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1\n" }], vercel: [], files: {}, orgPolicy: true },
+    // A client repo: no ruleset, so the caller is its only scan.
+    pass: { workflows: [{ path: ".github/workflows/ci-standards-policy.yml", text: "on:\n  pull_request:\njobs:\n  policy:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/policy.yml@v1\n" }], vercel: [], files: {}, orgPolicy: false },
+  },
   "LIN-001": {
     // The pull request, not files: the view is empty and the pull request comes in the context.
     fail: view({}),

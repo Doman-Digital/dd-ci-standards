@@ -40,8 +40,10 @@ same way in three places.
 `dd adopt <repo checkout>` makes one reviewable change:
 
 - writes the files the framework owns: the policy check caller
-  (`.github/workflows/ci-standards-policy.yml`) and a `renovate.json`
-  extending the shared preset, or corrects one that uses the old name;
+  (`.github/workflows/ci-standards-policy.yml`) where the org ruleset
+  `dd-policy-required` does not run the check (public repos, client
+  accounts; REG-003), and a `renovate.json` extending the shared preset, or
+  corrects one that uses the old name;
 - records everything else the doctor finds in `.github/dd.json` as
   exemptions that expire in 60 days.
 
@@ -104,9 +106,11 @@ In order, and stopping at the first failure:
 3. the repo in Doman-Digital with its description and tags (kind,
    `in-development`, `doman-digital`), auto-merge and delete-branch-on-merge
    turned on (REG-004), and the first commit on `main`;
-4. a ruleset on `main`: pull requests only, and the policy check
-   (`ci-standards-policy / check`) required, so a PR that breaks a rule past
-   its enforce date cannot merge. GitHub's Free plan has no
+4. a ruleset on `main`: pull requests only, and, where the repo has the
+   caller, the policy check (`ci-standards-policy / check`) required, so a PR
+   that breaks a rule past its enforce date cannot merge. A private
+   Doman-Digital repo has no caller: the org ruleset runs the check and blocks
+   the merge itself. GitHub's Free plan has no
    rulesets for private repos; there `dd new` says the repo is unprotected
    instead of pretending;
 5. a pull request on `Doman-Digital/dd-repo-registry` adding its entry.
@@ -167,8 +171,12 @@ has to pass a policy check to merge, not get caught in the next audit.
   `schedule:` crons and Vercel `crons:` entries, one entry per repo, each
   with a reason. `scripts/check-workflow-policy.mjs` fails a PR that adds a
   schedule or Vercel cron not listed here.
-- **`.github/workflows/policy.yml`**: reusable workflow, call it from any
-  repo's own CI to run the policy check against that repo:
+- **`.github/workflows/policy.yml`**: reusable workflow, call it from a
+  repo's own CI to run the policy check against that repo. A private
+  Doman-Digital repo needs no caller: the org ruleset `dd-policy-required`
+  runs this file on its pull requests (its check is the bare `check`), and a
+  caller there scans every commit twice (REG-009). Public repos and repos on
+  other accounts (client repos) call it:
 
   ```yaml
   name: ci-standards policy
@@ -577,6 +585,13 @@ It warns until 25 January 2027, the 90-day limit, then fails.
 **Where it runs.** In the org, the `dd-policy-required` ruleset (DOM-1084, active
 from 27 October 2026) runs `policy.yml@v1` on every private repo, so the check
 needs nothing in the repo. Client repos on other accounts keep their caller.
+REG-003 asks for a caller only where the ruleset does not apply, read from
+the default branch's live rules (or, when they cannot be read, from who
+`org-rulesets.yaml` covers). REG-009 (warns from 14 November 2026, fails from
+14 December) flags a caller in a repo the ruleset already covers: that is a
+second scan of every commit. Before deleting such a caller, stop requiring
+its check (`retire_checks` in dd-repo-registry `repo-settings.yaml`), or the
+pull request that deletes it waits for a check that never comes.
 
 **After fixing a failing PR, push a commit** (`git commit --allow-empty` will
 do). Editing the title or description, or adding the label, does not start the

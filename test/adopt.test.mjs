@@ -25,6 +25,16 @@ test("adopt writes the owned files and leaves nothing failing", () => {
   assert.deepEqual(after.findings.filter((f) => f.level !== "report"), []);
 });
 
+test("adopt writes no caller where the org ruleset runs the check, and still does for a client repo (DOM-17635)", () => {
+  const covered = planAdopt(messy, rulebook, { ...ctx, repo: "Doman-Digital/demo" });
+  assert.equal(covered.writes[".github/workflows/ci-standards-policy.yml"], undefined);
+  assert.ok(!covered.after.findings.some((f) => ["REG-003", "SEC-006"].includes(f.rule)));
+  const live = planAdopt({ ...messy, orgPolicy: true }, rulebook, { ...ctx, repo: "someclient/site" });
+  assert.equal(live.writes[".github/workflows/ci-standards-policy.yml"], undefined, "the live rules say covered");
+  const clientRepo = planAdopt(messy, rulebook, { ...ctx, repo: "someclient/site" });
+  assert.equal(clientRepo.writes[".github/workflows/ci-standards-policy.yml"], POLICY_CALLER);
+});
+
 test("the debt it cannot fix is dated, not hidden: exemptions expire in 60 days", () => {
   const { writes } = planAdopt(messy, rulebook, ctx);
   const dd = JSON.parse(writes[".github/dd.json"]);
