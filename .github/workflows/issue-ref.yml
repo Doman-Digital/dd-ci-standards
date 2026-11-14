@@ -42,7 +42,7 @@ permissions:
 jobs:
   issue-ref:
     if: ${{ github.repository != 'Doman-Digital/dd-ci-standards' && github.event_name == 'pull_request' }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.CI_RUNNER_LIGHT || 'ubuntu-latest' }}
     timeout-minutes: 3
     steps:
       - uses: Doman-Digital/dd-ci-standards/doctor@v1
