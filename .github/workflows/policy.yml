@@ -142,7 +142,11 @@ permissions:
 jobs:
   check:
     if: ${{ github.repository != 'Doman-Digital/dd-ci-standards' }}
-    runs-on: ${{ inputs.runner || 'ubuntu-latest' }}
+    # The org's variable first (visible to private org repos only), so a ruleset run, which has no
+    # inputs, and a caller that still passes ubuntu-latest both follow the valve. Public repos and
+    # client accounts see no variable and keep the runner they pass (DOM-17636, 14 November 2026:
+    # GitHub refused every hosted job in the org, so this one must be able to run on dd-ci-light).
+    runs-on: ${{ vars.CI_RUNNER_LIGHT || inputs.runner || 'ubuntu-latest' }}
     timeout-minutes: 8
     env:
       # semgrep/semgrep, the image a client repo's own workflow pulled on 19 October 2026.
