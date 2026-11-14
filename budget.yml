@@ -231,6 +231,9 @@ repos:
       - workflow: staging-checkout-nightly.yml
         cron: "30 2 * * *"
         reason: "nightly staging checkout suite against Square's sandbox (book, pay, webhook, email, cleanup); ~6 min on dd-client, Slack on failure (DOM-456)"
+      - workflow: studio-access.yml
+        cron: "10 3 * * *"
+        reason: "nightly guard that the 3D studio model host still sends signed-out visitors to Cloudflare Access; two curl calls, under a minute on dd-client (DOM-17717)"
     # 23 Vercel crons registered on apps/portal as of 2026-08-16, ~2,180
     # invocations/day, dominated by process-jobs running every minute
     # (1,440/day alone). Flagged in the audit as a Phase 4 follow-up —
