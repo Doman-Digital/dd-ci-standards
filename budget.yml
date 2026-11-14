@@ -122,6 +122,10 @@ repos:
         cron: "17 6 * * 1"
         owner: "DD Framework"
         reason: "weekly Lighthouse of every live page the registry lists under lighthouse.paths, through the PageSpeed Insights API (Google's hardware, no browser here), median of 3 runs, about ten minutes, 45min cap; replaces client-previews site-health.yml (DOM-776)"
+      - workflow: creds-check.yml
+        cron: "40 */3 * * *"
+        owner: "DD Framework"
+        reason: "every third hour: the read-only credential probes in creds.yaml (bin/creds-check.mjs), keyless through GitHub OIDC to Google, AWS and Doppler; about two minutes a run on the CI_RUNNER pool, none of the hosted minutes while dd-ci-01 serves it; job window 12h, checked by JOB-005 (DOM-17685)"
     vercel_crons: []
 
   dd-relay:
