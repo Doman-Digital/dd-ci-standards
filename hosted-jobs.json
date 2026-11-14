@@ -1,16 +1,15 @@
 {
-  "$comment": "Both self-hosted boxes are retired. Organization jobs use GitHub-hosted runners. The organization Actions budget remains the spending stop. This historic allowlist no longer restricts hosted jobs.",
-  "updated": "2026-11-09",
+  "$comment": "The jobs that run on GitHub's included Actions minutes (CI-028, DOM-1079). The Enterprise plan includes GitHub-hosted minutes a month on a budget of $0, so nothing here may bill; the allowance lives only in dd-repo-registry ci-runner-valve.yaml. A job listed here uses runs-on: ${{ vars.CI_RUNNER_HOSTED || vars.CI_RUNNER || 'ubuntu-latest' }}; the organisation variable CI_RUNNER_HOSTED is set by the runner valve (dd-repo-registry bin/ci-runner-valve.mjs). Add a row in the same change as the workflow edit, with the minutes a month measured on a 2-vCPU runner. repo is the repository name, workflow the file name under .github/workflows, job the job id. A row with runs_on pins one job to that GitHub-hosted label by name instead: only for a job that watches the self-hosted runners and so must never queue on them or on a variable it sets itself (the runner valve). CI-001 and CI-022 leave a pinned job alone and CI-028 holds it to the label; it needs a why and its minutes_a_month. The 9 November 2026 retirement of dd-ci-01 (self_hosted_retired) was reversed on 14 November 2026 (DOM-17636): the org's pools are back, GitHub-hosted first, the valve moving the variables.",
+  "updated": "2026-11-14",
   "jobs": [
     {
       "repo": "dd-repo-registry",
       "workflow": "ci-runner-valve.yml",
       "job": "valve",
       "runs_on": "ubuntu-latest",
-      "why": "Keeps all four runner variables on GitHub-hosted runners and reports included-minute usage. It cannot select the retired servers (DOM-1079).",
+      "why": "the runner valve points CI_RUNNER, CI_RUNNER_LIGHT, CI_RUNNER_DEPLOY and CI_RUNNER_HOSTED at GitHub-hosted runners while dd-ci-01 serves no jobs, and back when it does; on dd-ci-01 or on a variable it sets, it would stop when it is needed (DOM-1079, 6 Nov 2026). Its decision loop moves to dd-relay's cron under DOM-17636, after which this row goes.",
       "minutes_a_month": 2880,
       "measured": "every 15 minutes, one job of under a minute, billed as 1 minute: 4 x 24 x 30"
     }
-  ],
-  "self_hosted_retired": true
+  ]
 }
