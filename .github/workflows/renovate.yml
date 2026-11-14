@@ -112,7 +112,7 @@ jobs:
       # accepted it, and npm warned it was unsupported (19 Oct 2026).
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: "24"
+          node-version: "26"
 
       - name: Enable Corepack (pnpm via each repo's own packageManager field)
         run: corepack enable
