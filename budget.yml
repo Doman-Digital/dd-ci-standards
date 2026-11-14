@@ -55,6 +55,10 @@ repos:
         cron: "41 3 * * 3"
         owner: "Doman Digital / Assurance"
         reason: "weekly OWASP ZAP baseline (passive, no attack traffic) of the public site and the portal, report kept as an artifact, a High alert fails the run (assurance item B8, 9 November 2026); one container pull, 20min cap, off the hour"
+      - workflow: dd-portal-teardown-capture.yml
+        cron: "23 5 * * 3"
+        owner: "Doman Digital / Portal QA"
+        reason: "weekly portal teardown capture on staging, read only: six seeded users, one job each and two at a time, every page at 320 to 1440 in light and dark with axe, artifacts kept 35 days for the site-teardown runner (DOM-17652, contract agreed with DOM-17642); about an hour per admin user, 150min cap per job, off the hour"
       # DOM-847 (Doman-Digital #1159): the first three days of the quarter, so a
       # dropped run is caught; the entry above goes when #1159 merges.
       - workflow: security-rotation-reminder.yml
