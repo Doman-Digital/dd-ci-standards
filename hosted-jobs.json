@@ -1,6 +1,6 @@
 {
-  "$comment": "Both self-hosted boxes are retired. Organization jobs use GitHub-hosted runners. The organization Actions budget remains the spending stop. This historic allowlist no longer restricts hosted jobs.",
-  "updated": "2026-11-09",
+  "$comment": "dd-ci-01 serves the org's pools again (14 Nov 2026, founder): CI-001, CI-022, CI-028 and CI-029 apply to org private repos as before. Hosted runners are still wanted where a job is registered here. Set self_hosted_retired back to true to stop the rules requiring the pools.",
+  "updated": "2026-11-14",
   "jobs": [
     {
       "repo": "dd-repo-registry",
@@ -12,5 +12,5 @@
       "measured": "every 15 minutes, one job of under a minute, billed as 1 minute: 4 x 24 x 30"
     }
   ],
-  "self_hosted_retired": true
+  "self_hosted_retired": false
 }
