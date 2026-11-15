@@ -53,7 +53,7 @@ repos:
         reason: "daily drift-domains and drift-mfa (the Cyber Essentials MFA guard, DOM-1339), moved off dd-work-01 when it was deleted; one install of services/checks, a few dozen API calls, 20min cap"
       - workflow: dd-zap-baseline.yml
         cron: "41 3 * * 3"
-        owner: "Doman Digital / Assurance"
+        owner: "Doman Digital"
         reason: "weekly OWASP ZAP baseline (passive, no attack traffic) of the public site and the portal, report kept as an artifact, a High alert fails the run (assurance item B8, 9 November 2026); one container pull, 20min cap, off the hour"
       - workflow: dd-portal-teardown-capture.yml
         cron: "23 5 * * 3"
@@ -77,6 +77,178 @@ repos:
         path: /api/internal/google-ads/upload-conversions
         schedule: "15 2 * * *"
         reason: "nightly sweep for conversion dispatches claimed but never confirmed — without it a lead's outcome silently never reaches Google"
+    ceiling_usd: 101
+    workflows:
+      - workflow: ci-setup-benchmark.yml
+        events: "workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0014
+        runs_a_month: 42
+        owner: "DD Framework"
+        reason: "21 runs 1 to 15 November 2026 (42 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.024), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: ci-standards-policy.yml
+        events: "pull_request, merge_group"
+        runner_class: hosted-linux
+        per_run_usd: 0.0006
+        runs_a_month: 2220
+        owner: "DD Framework"
+        reason: "1110 runs 1 to 15 November 2026 (2220 a month at that rate), mean of 12 sampled November runs (range $0.006 to $0.006), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: ci.yml
+        events: "pull_request, merge_group, schedule"
+        runner_class: hosted-linux
+        per_run_usd: 0.0292
+        runs_a_month: 2212
+        owner: "DD Framework"
+        reason: "1106 runs 1 to 15 November 2026 (2212 a month at that rate), mean of 12 sampled November runs (range $0.006 to $0.804), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; x1.25 for merge-queue rebuilds (DOM-17819); seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+        pr_exempt_jobs: "verify, build, linear-command-centre"
+        pr_exempt_reason: "verify (30 minute cap) and build (20) are the pull request check itself, scoped to the changed paths by the changes job's plan; linear-command-centre (15) runs only for its own paths. The browser tier (phone-first, website reviews, visual regression, portal journeys) is queue-only since Doman-Digital#1777. DOM-17682"
+      - workflow: company-os-test.yml
+        events: "workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0
+        runs_a_month: 0
+        owner: "DD Framework"
+        reason: "0 runs 1 to 15 November 2026 (0 a month at that rate), no November runs to measure; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: company-os.yml
+        events: "push, schedule, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0011
+        runs_a_month: 1238
+        owner: "Doman Digital / Company OS"
+        reason: "619 runs 1 to 15 November 2026 (1238 a month at that rate), mean of 12 sampled November runs (range $0.006 to $0.012), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: contracts-signing.yml
+        events: "workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0006
+        runs_a_month: 346
+        owner: "DD Framework"
+        reason: "173 runs 1 to 15 November 2026 (346 a month at that rate), mean of 12 sampled November runs (range $0.006 to $0.006), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: dd-checks-deploy.yml
+        events: "push, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0021
+        runs_a_month: 42
+        owner: "DD Framework"
+        reason: "21 runs 1 to 15 November 2026 (42 a month at that rate), mean of 12 sampled November runs (range $0.018 to $0.030), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: dd-checks-drift.yml
+        events: "schedule, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0009
+        runs_a_month: 26
+        owner: "Doman Digital / DD Checks"
+        reason: "13 runs 1 to 15 November 2026 (26 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.018), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: dd-checks-test.yml
+        events: "workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0019
+        runs_a_month: 112
+        owner: "DD Framework"
+        reason: "56 runs 1 to 15 November 2026 (112 a month at that rate), mean of 12 sampled November runs (range $0.012 to $0.018), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: dd-portal-deploy.yml
+        events: "push, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0091
+        runs_a_month: 616
+        owner: "DD Framework"
+        reason: "308 runs 1 to 15 November 2026 (616 a month at that rate), mean of 12 sampled November runs (range $0.006 to $0.132), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: dd-portal-teardown-capture.yml
+        events: "workflow_dispatch, schedule"
+        runner_class: hosted-linux
+        per_run_usd: 0
+        runs_a_month: 0
+        owner: "Doman Digital / Portal QA"
+        reason: "0 runs 1 to 15 November 2026 (0 a month at that rate), no November runs to measure; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: dd-site-deploy.yml
+        events: "push, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0023
+        runs_a_month: 690
+        owner: "DD Framework"
+        reason: "345 runs 1 to 15 November 2026 (690 a month at that rate), mean of 12 sampled November runs (range $0.006 to $0.030), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: dd-site-drift.yml
+        events: "schedule, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0005
+        runs_a_month: 118
+        owner: "Doman Digital / Marketing Site"
+        reason: "59 runs 1 to 15 November 2026 (118 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.006), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: dd-site-live-scan.yml
+        events: "schedule, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0006
+        runs_a_month: 4
+        owner: "DD Framework"
+        reason: "2 runs 1 to 15 November 2026 (4 a month at that rate), mean of 2 sampled November runs (range $0.006 to $0.006), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: dd-zap-baseline.yml
+        events: "schedule, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0039
+        runs_a_month: 2
+        owner: "Doman Digital"
+        reason: "1 runs 1 to 15 November 2026 (2 a month at that rate), mean of 1 sampled November runs (range $0.036 to $0.036), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: journey-capture.yml
+        events: "workflow_dispatch, schedule"
+        runner_class: hosted-linux
+        per_run_usd: 0.0024
+        runs_a_month: 76
+        owner: "Doman Digital / Website QA"
+        reason: "38 runs 1 to 15 November 2026 (76 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.060), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: linear-command-centre-test.yml
+        events: "workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0006
+        runs_a_month: 6
+        owner: "DD Framework"
+        reason: "3 runs 1 to 15 November 2026 (6 a month at that rate), mean of 3 sampled November runs (range $0.006 to $0.006), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: portal-journeys-isolated.yml
+        events: "workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0
+        runs_a_month: 0
+        owner: "DD Framework"
+        reason: "0 runs 1 to 15 November 2026 (0 a month at that rate), no November runs to measure; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: portal-journeys.yml
+        events: "workflow_dispatch, schedule"
+        runner_class: hosted-linux
+        per_run_usd: 0.0056
+        runs_a_month: 476
+        owner: "Doman Digital / Portal QA"
+        reason: "238 runs 1 to 15 November 2026 (476 a month at that rate), mean of 12 sampled November runs (range $0.018 to $0.066), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: screen-reader.yml
+        events: "workflow_dispatch"
+        runner_class: hosted-macos
+        per_run_usd: 0.0803
+        runs_a_month: 32
+        owner: "DD Framework"
+        reason: "16 runs 1 to 15 November 2026 (32 a month at that rate), mean of 12 sampled November runs (range $0.000 to $1.426), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: security-rotation-reminder.yml
+        events: "schedule, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0
+        runs_a_month: 0
+        owner: "DD Framework"
+        reason: "0 runs 1 to 15 November 2026 (0 a month at that rate), no November runs to measure; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: site-journeys.yml
+        events: "workflow_dispatch, schedule"
+        runner_class: hosted-linux
+        per_run_usd: 0.0022
+        runs_a_month: 28
+        owner: "Doman Digital / Website QA"
+        reason: "14 runs 1 to 15 November 2026 (28 a month at that rate), mean of 12 sampled November runs (range $0.006 to $0.042), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: stale.yml
+        events: "schedule, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0006
+        runs_a_month: 30
+        owner: "DD Framework"
+        reason: "15 runs 1 to 15 November 2026 (30 a month at that rate), mean of 12 sampled November runs (range $0.006 to $0.006), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: stripe-prices.yml
+        events: "schedule, push, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0006
+        runs_a_month: 44
+        owner: "Doman Digital / Marketing Site"
+        reason: "22 runs 1 to 15 November 2026 (44 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.006), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
 
   dd-claude-kit:
     # repo-metadata.yml was removed on 2026-10-03; the estate sweep in
@@ -88,17 +260,51 @@ repos:
     github_actions_crons:
       - workflow: design-estate.yml
         cron: "35 7 * * *"
-        owner: "Doman Digital / Craft"
+        owner: "Doman Digital"
         reason: "daily check of design estate coverage, evidence and the 30-day capture limit (DOM-1301), read-only with a five-minute cap on the light runner"
     vercel_crons: []
+    ceiling_usd: 1
+    workflows:
+      - workflow: design-estate.yml
+        events: "pull_request, schedule, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0017
+        runs_a_month: 28
+        owner: "Doman Digital"
+        reason: "14 runs 1 to 15 November 2026 (28 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.006), scaled by 0.32 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
 
   dd-library:
     github_actions_crons:
       - workflow: design-observations.yml
         cron: "45 7 * * *"
-        owner: "Doman Digital / Craft"
+        owner: "Doman Digital"
         reason: "daily check of dated typography, accent and shape evidence for the design register (DOM-1301), read-only with a five-minute cap on the light runner"
     vercel_crons: []
+    ceiling_usd: 1
+    workflows:
+      - workflow: ci-standards-policy.yml
+        events: "pull_request"
+        runner_class: hosted-linux
+        per_run_usd: 0.006
+        runs_a_month: 6
+        owner: "DD Framework"
+        reason: "3 runs 1 to 15 November 2026 (6 a month at that rate), mean of 3 sampled November runs (range $0.006 to $0.006), scaled by 1.00 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: dd-base.yml
+        events: "pull_request, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.008
+        runs_a_month: 6
+        owner: "DD Framework"
+        reason: "3 runs 1 to 15 November 2026 (6 a month at that rate), mean of 3 sampled November runs (range $0.006 to $0.012), scaled by 1.00 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+        pr_exempt_jobs: "base"
+        pr_exempt_reason: "ordinary pull request checks; timeout-minutes is a cap, not a run time (base 15), and per_run_usd is the average billed cost of a whole run. A new job over 10 minutes needs its own entry here (DOM-17682)"
+      - workflow: design-observations.yml
+        events: "pull_request, schedule, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0055
+        runs_a_month: 22
+        owner: "Doman Digital"
+        reason: "11 runs 1 to 15 November 2026 (22 a month at that rate), mean of 11 sampled November runs (range $0.000 to $0.006), scaled by 1.00 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
 
   dd-repo-registry:
     github_actions_crons:
@@ -127,18 +333,105 @@ repos:
         owner: "DD Framework"
         reason: "every third hour: the read-only credential probes in creds.yaml (bin/creds-check.mjs), keyless through GitHub OIDC to Google, AWS and Doppler; about two minutes a run on the CI_RUNNER pool, none of the hosted minutes while dd-ci-01 serves it; job window 12h, checked by JOB-005 (DOM-17685)"
     vercel_crons: []
+    ceiling_usd: 5
+    workflows:
+      - workflow: ci-runner-canary.yml
+        events: "workflow_dispatch"
+        runner_class: box
+        per_run_usd: 0
+        runs_a_month: 48
+        owner: "DD Framework"
+        reason: "24 runs 1 to 15 November 2026 (48 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.000), scaled by 0.29 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: ci-runner-valve.yml
+        events: "schedule, workflow_dispatch, pull_request"
+        runner_class: hosted-linux
+        per_run_usd: 0.0017
+        runs_a_month: 1040
+        owner: "DD Framework"
+        reason: "520 runs 1 to 15 November 2026 (1040 a month at that rate), mean of 12 sampled November runs (range $0.006 to $0.006), scaled by 0.29 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+        pr_exempt_jobs: "valve"
+        pr_exempt_reason: "ordinary pull request checks; timeout-minutes is a cap, not a run time (valve 15), and per_run_usd is the average billed cost of a whole run. A new job over 10 minutes needs its own entry here (DOM-17682)"
+      - workflow: creds-check.yml
+        events: "schedule, workflow_dispatch, pull_request, merge_group"
+        runner_class: hosted-linux
+        per_run_usd: 0.0017
+        runs_a_month: 60
+        owner: "DD Framework"
+        reason: "30 runs 1 to 15 November 2026 (60 a month at that rate), mean of 12 sampled November runs (range $0.006 to $0.006), scaled by 0.29 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+        pr_exempt_jobs: "creds-check"
+        pr_exempt_reason: "ordinary pull request checks; timeout-minutes is a cap, not a run time (creds-check 15), and per_run_usd is the average billed cost of a whole run. A new job over 10 minutes needs its own entry here (DOM-17682)"
+      - workflow: lighthouse-live.yml
+        events: "schedule, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0069
+        runs_a_month: 4
+        owner: "DD Framework"
+        reason: "2 runs 1 to 15 November 2026 (4 a month at that rate), mean of 2 sampled November runs (range $0.024 to $0.024), scaled by 0.29 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: repo-settings.yml
+        events: "schedule, workflow_dispatch, push, pull_request"
+        runner_class: hosted-linux
+        per_run_usd: 0.0032
+        runs_a_month: 112
+        owner: "DD Framework"
+        reason: "56 runs 1 to 15 November 2026 (112 a month at that rate), mean of 12 sampled November runs (range $0.006 to $0.018), scaled by 0.29 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+        pr_exempt_jobs: "repo-settings"
+        pr_exempt_reason: "ordinary pull request checks; timeout-minutes is a cap, not a run time (repo-settings 20), and per_run_usd is the average billed cost of a whole run. A new job over 10 minutes needs its own entry here (DOM-17682)"
+      - workflow: sweep.yml
+        events: "schedule, workflow_dispatch, pull_request, merge_group"
+        runner_class: hosted-linux
+        per_run_usd: 0.0017
+        runs_a_month: 676
+        owner: "DD Framework"
+        reason: "338 runs 1 to 15 November 2026 (676 a month at that rate), mean of 12 sampled November runs (range $0.006 to $0.006), scaled by 0.29 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
 
   dd-relay:
     github_actions_crons:
       - workflow: ops-canary.yml
         cron: "20 5 * * *"
-        owner: "Doman Digital / Ops"
+        owner: "Doman Digital"
         reason: "the ops Worker's github-feed canary: one step that fails on purpose daily so the cockpit proves it still sees red scheduled workflows (DOM-1029); light runner, 2min cap"
       - workflow: ops-contract.yml
         cron: "40 9 * * *"
-        owner: "Doman Digital / Ops"
+        owner: "Doman Digital"
         reason: "nightly ops contract check: the cockpit's counts against direct Linear, GitHub, jobs.yaml and alert queries, and every feed's canary (DOM-1029); API reads and one SELECT, 10min cap"
     vercel_crons: []
+    ceiling_usd: 2
+    workflows:
+      - workflow: ci.yml
+        events: "pull_request, merge_group, push"
+        runner_class: hosted-linux
+        per_run_usd: 0.0019
+        runs_a_month: 526
+        owner: "DD Framework"
+        reason: "263 runs 1 to 15 November 2026 (526 a month at that rate), mean of 12 sampled November runs (range $0.006 to $0.018), scaled by 0.13 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: deploy-alert-probe.yml
+        events: "workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0013
+        runs_a_month: 6
+        owner: "DD Framework"
+        reason: "3 runs 1 to 15 November 2026 (6 a month at that rate), mean of 3 sampled November runs (range $0.006 to $0.012), scaled by 0.13 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: deploy.yml
+        events: "workflow_run, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0016
+        runs_a_month: 120
+        owner: "DD Framework"
+        reason: "60 runs 1 to 15 November 2026 (120 a month at that rate), mean of 12 sampled November runs (range $0.012 to $0.012), scaled by 0.13 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: ops-canary.yml
+        events: "schedule, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0007
+        runs_a_month: 30
+        owner: "Doman Digital"
+        reason: "15 runs 1 to 15 November 2026 (30 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.006), scaled by 0.13 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: ops-contract.yml
+        events: "schedule, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0007
+        runs_a_month: 30
+        owner: "Doman Digital"
+        reason: "15 runs 1 to 15 November 2026 (30 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.006), scaled by 0.13 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
 
   meridian:
     github_actions_crons:
@@ -147,6 +440,52 @@ repos:
         owner: "Meridian"
         reason: "nightly module integration harness against live third-party sites, moved off every pull request where it took a VM on each push and nobody acted on the result (DOM-1444, CI-017); one Rust build and test, 15min cap, non-blocking"
     vercel_crons: []
+    ceiling_usd: 5
+    workflows:
+      - workflow: api-deploy-drift.yml
+        events: "push, workflow_run, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0014
+        runs_a_month: 18
+        owner: "Doman Digital"
+        reason: "9 runs 1 to 15 November 2026 (18 a month at that rate), mean of 9 sampled November runs (range $0.006 to $0.006), scaled by 0.23 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: ci-standards-policy.yml
+        events: "pull_request"
+        runner_class: hosted-linux
+        per_run_usd: 0.0013
+        runs_a_month: 96
+        owner: "Doman Digital"
+        reason: "48 runs 1 to 15 November 2026 (96 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.006), scaled by 0.23 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: ci.yml
+        events: "push, pull_request"
+        runner_class: hosted-linux
+        per_run_usd: 0.0274
+        runs_a_month: 112
+        owner: "Doman Digital"
+        reason: "56 runs 1 to 15 November 2026 (112 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.174), scaled by 0.23 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+        pr_exempt_jobs: "build, security-audit, website, phone-gate"
+        pr_exempt_reason: "ordinary pull request checks; timeout-minutes is a cap, not a run time (build 45, security-audit 30, website 15, phone-gate 25), and per_run_usd is the average billed cost of a whole run. A new job over 10 minutes needs its own entry here (DOM-17682)"
+      - workflow: deploy-api.yml
+        events: "workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0151
+        runs_a_month: 6
+        owner: "Doman Digital"
+        reason: "3 runs 1 to 15 November 2026 (6 a month at that rate), mean of 3 sampled November runs (range $0.000 to $0.102), scaled by 0.23 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: deploy-apps.yml
+        events: "workflow_run, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0037
+        runs_a_month: 12
+        owner: "Doman Digital"
+        reason: "6 runs 1 to 15 November 2026 (12 a month at that rate), mean of 6 sampled November runs (range $0.000 to $0.024), scaled by 0.23 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: nightly-live-modules.yml
+        events: "schedule, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0102
+        runs_a_month: 30
+        owner: "Meridian"
+        reason: "15 runs 1 to 15 November 2026 (30 a month at that rate), mean of 12 sampled November runs (range $0.036 to $0.054), scaled by 0.23 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
 
   dd-ci-standards:
     github_actions_crons:
@@ -155,6 +494,43 @@ repos:
         owner: "DD Framework"
         reason: "daily self-hosted Renovate across the portfolio, so house packages (@domandigital/*) land within a day; other updates still wait for Monday (DOM-1043). Public repo, so hosted minutes are free. Unregistered until 2026-10-03: the old cron check read only the first cron line and missed it"
     vercel_crons: []
+    ceiling_usd: 2
+    workflows:
+      - workflow: ci-standards-policy.yml
+        events: "pull_request"
+        runner_class: hosted-linux
+        per_run_usd: 0.0005
+        runs_a_month: 104
+        owner: "DD Framework"
+        reason: "52 runs 1 to 15 November 2026 (104 a month at that rate), mean of 12 sampled November runs (range $0.006 to $0.006), scaled by 0.08 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: issue-ref.yml
+        events: "pull_request, merge_group"
+        runner_class: hosted-linux
+        per_run_usd: 0
+        runs_a_month: 46
+        owner: "DD Framework"
+        reason: "23 runs 1 to 15 November 2026 (46 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.000), scaled by 0.08 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: policy.yml
+        events: "pull_request, merge_group"
+        runner_class: hosted-linux
+        per_run_usd: 0
+        runs_a_month: 104
+        owner: "DD Framework"
+        reason: "52 runs 1 to 15 November 2026 (104 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.000), scaled by 0.08 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: release.yml
+        events: "push"
+        runner_class: hosted-linux
+        per_run_usd: 0.0005
+        runs_a_month: 80
+        owner: "DD Framework"
+        reason: "40 runs 1 to 15 November 2026 (80 a month at that rate), mean of 12 sampled November runs (range $0.006 to $0.006), scaled by 0.08 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: renovate.yml
+        events: "schedule, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0366
+        runs_a_month: 30
+        owner: "DD Framework"
+        reason: "15 runs 1 to 15 November 2026 (30 a month at that rate), mean of 12 sampled November runs (range $0.414 to $0.480), scaled by 0.08 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
 
   dd-netcup-config:
     github_actions_crons:
@@ -346,6 +722,31 @@ repos:
   beautyops:
     github_actions_crons: []
     vercel_crons: []
+    ceiling_usd: 1
+    workflows:
+      - workflow: ci.yml
+        events: "pull_request, push, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0225
+        runs_a_month: 26
+        owner: "Doman Digital"
+        reason: "13 runs 1 to 15 November 2026 (26 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.096), scaled by 0.35 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+        pr_exempt_jobs: "lint, typecheck, test, build, e2e"
+        pr_exempt_reason: "ordinary pull request checks; timeout-minutes is a cap, not a run time (lint 15, typecheck 15, test 15, build 20, e2e 45), and per_run_usd is the average billed cost of a whole run. A new job over 10 minutes needs its own entry here (DOM-17682)"
+      - workflow: deploy.yml
+        events: "workflow_run, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0064
+        runs_a_month: 10
+        owner: "Doman Digital"
+        reason: "5 runs 1 to 15 November 2026 (10 a month at that rate), mean of 5 sampled November runs (range $0.000 to $0.024), scaled by 0.35 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: psi.yml
+        events: "workflow_run, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0127
+        runs_a_month: 2
+        owner: "Doman Digital"
+        reason: "1 runs 1 to 15 November 2026 (2 a month at that rate), mean of 1 sampled November runs (range $0.036 to $0.036), scaled by 0.35 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
 
   dd-graph:
     github_actions_crons: []
@@ -358,6 +759,47 @@ repos:
         owner: "DD Framework"
         reason: "nightly starter check: makes the Next.js and Astro starters from scratch with dd new --local, builds them and runs dd doctor; red goes to Slack. GitHub-hosted (public repo), about 5 minutes per starter, 20min cap"
     vercel_crons: []
+    ceiling_usd: 2
+    workflows:
+      - workflow: browser.yml
+        events: "pull_request"
+        runner_class: hosted-linux
+        per_run_usd: 0.003
+        runs_a_month: 84
+        owner: "DD Framework"
+        reason: "42 runs 1 to 15 November 2026 (84 a month at that rate), mean of 12 sampled November runs (range $0.006 to $0.042), scaled by 0.19 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+        pr_exempt_jobs: "craft-browser"
+        pr_exempt_reason: "ordinary pull request checks; timeout-minutes is a cap, not a run time (craft-browser 15), and per_run_usd is the average billed cost of a whole run. A new job over 10 minutes needs its own entry here (DOM-17682)"
+      - workflow: ci-standards-policy.yml
+        events: "pull_request"
+        runner_class: hosted-linux
+        per_run_usd: 0.0011
+        runs_a_month: 108
+        owner: "DD Framework"
+        reason: "54 runs 1 to 15 November 2026 (108 a month at that rate), mean of 12 sampled November runs (range $0.006 to $0.006), scaled by 0.19 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: ci.yml
+        events: "pull_request"
+        runner_class: hosted-linux
+        per_run_usd: 0.0039
+        runs_a_month: 108
+        owner: "DD Framework"
+        reason: "54 runs 1 to 15 November 2026 (108 a month at that rate), mean of 12 sampled November runs (range $0.012 to $0.024), scaled by 0.19 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: release.yml
+        events: "push"
+        runner_class: hosted-linux
+        per_run_usd: 0.0018
+        runs_a_month: 30
+        owner: "DD Framework"
+        reason: "15 runs 1 to 15 November 2026 (30 a month at that rate), mean of 12 sampled November runs (range $0.006 to $0.012), scaled by 0.19 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: starters.yml
+        events: "schedule, workflow_dispatch, pull_request"
+        runner_class: hosted-linux
+        per_run_usd: 0.0033
+        runs_a_month: 100
+        owner: "DD Framework"
+        reason: "50 runs 1 to 15 November 2026 (100 a month at that rate), mean of 12 sampled November runs (range $0.012 to $0.024), scaled by 0.19 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+        pr_exempt_jobs: "starter"
+        pr_exempt_reason: "ordinary pull request checks; timeout-minutes is a cap, not a run time (starter 20), and per_run_usd is the average billed cost of a whole run. A new job over 10 minutes needs its own entry here (DOM-17682)"
 
   dd-gbp:
     github_actions_crons: []
@@ -370,6 +812,38 @@ repos:
   verqan-api:
     github_actions_crons: []
     vercel_crons: []
+    ceiling_usd: 2
+    workflows:
+      - workflow: ci.yml
+        events: "pull_request"
+        runner_class: hosted-linux
+        per_run_usd: 0.0035
+        runs_a_month: 110
+        owner: "Doman Digital"
+        reason: "55 runs 1 to 15 November 2026 (110 a month at that rate), mean of 12 sampled November runs (range $0.006 to $0.018), scaled by 0.32 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+        pr_exempt_jobs: "build-test"
+        pr_exempt_reason: "ordinary pull request checks; timeout-minutes is a cap, not a run time (build-test 15), and per_run_usd is the average billed cost of a whole run. A new job over 10 minutes needs its own entry here (DOM-17682)"
+      - workflow: sdk-js.yml
+        events: "pull_request"
+        runner_class: hosted-linux
+        per_run_usd: 0.0016
+        runs_a_month: 50
+        owner: "Doman Digital"
+        reason: "25 runs 1 to 15 November 2026 (50 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.006), scaled by 0.32 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: sdk-php.yml
+        events: "pull_request"
+        runner_class: hosted-linux
+        per_run_usd: 0.0048
+        runs_a_month: 48
+        owner: "Doman Digital"
+        reason: "24 runs 1 to 15 November 2026 (48 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.018), scaled by 0.32 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: sdk-python.yml
+        events: "pull_request"
+        runner_class: hosted-linux
+        per_run_usd: 0.0048
+        runs_a_month: 46
+        owner: "Doman Digital"
+        reason: "23 runs 1 to 15 November 2026 (46 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.018), scaled by 0.32 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
 
   dd-netcup-config:
     github_actions_crons:
@@ -392,3 +866,366 @@ repos:
         cron: "30 7,17 * * *"
         reason: "Twice-daily beauty-client Drive inbox intake, replacing the removed box."
     vercel_crons: []
+    ceiling_usd: 1
+    workflows:
+      - workflow: ci.yml
+        events: "pull_request, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0004
+        runs_a_month: 218
+        owner: "DD Framework"
+        reason: "109 runs 1 to 15 November 2026 (218 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.012), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: client-jobs.yml
+        events: "schedule, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0026
+        runs_a_month: 96
+        owner: "DD Framework"
+        reason: "48 runs 1 to 15 November 2026 (96 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.090), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: import-briefing-configs.yml
+        events: "workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0039
+        runs_a_month: 16
+        owner: "DD Framework"
+        reason: "8 runs 1 to 15 November 2026 (16 a month at that rate), mean of 8 sampled November runs (range $0.006 to $0.060), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: neon-backup-watch.yml
+        events: "schedule, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0012
+        runs_a_month: 24
+        owner: "DD Framework"
+        reason: "12 runs 1 to 15 November 2026 (24 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.018), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: neon-backup.yml
+        events: "schedule, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0034
+        runs_a_month: 14
+        owner: "DD Framework"
+        reason: "7 runs 1 to 15 November 2026 (14 a month at that rate), mean of 7 sampled November runs (range $0.012 to $0.042), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: restore-client-state.yml
+        events: "workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0208
+        runs_a_month: 2
+        owner: "DD Framework"
+        reason: "1 runs 1 to 15 November 2026 (2 a month at that rate), mean of 1 sampled November runs (range $0.186 to $0.186), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: restore-drill.yml
+        events: "schedule, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0027
+        runs_a_month: 24
+        owner: "DD Framework"
+        reason: "12 runs 1 to 15 November 2026 (24 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.072), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: sanity-backup.yml
+        events: "schedule, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0042
+        runs_a_month: 10
+        owner: "DD Framework"
+        reason: "5 runs 1 to 15 November 2026 (10 a month at that rate), mean of 5 sampled November runs (range $0.006 to $0.048), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+
+  dd-agent-kit:
+    github_actions_crons: []
+    vercel_crons: []
+    ceiling_usd: 23
+    workflows:
+      - workflow: craft-standard.yml
+        events: "pull_request, merge_group, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0021
+        runs_a_month: 618
+        owner: "DD Framework"
+        reason: "309 runs 1 to 15 November 2026 (618 a month at that rate), mean of 12 sampled November runs (range $0.006 to $0.006), scaled by 0.35 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: git-hooks.yml
+        events: "pull_request, merge_group, push, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0154
+        runs_a_month: 800
+        owner: "DD Framework"
+        reason: "400 runs 1 to 15 November 2026 (800 a month at that rate), mean of 12 sampled November runs (range $0.006 to $0.060), scaled by 0.35 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+        pr_exempt_jobs: "hook-tests"
+        pr_exempt_reason: "ordinary pull request checks; timeout-minutes is a cap, not a run time (hook-tests 20), and per_run_usd is the average billed cost of a whole run. A new job over 10 minutes needs its own entry here (DOM-17682)"
+      - workflow: screen-reader.yml
+        events: "workflow_dispatch"
+        runner_class: hosted-macos
+        per_run_usd: 0.0641
+        runs_a_month: 66
+        owner: "DD Framework"
+        reason: "33 runs 1 to 15 November 2026 (66 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.620), scaled by 0.35 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+
+  dd-trawl:
+    github_actions_crons: []
+    vercel_crons: []
+    ceiling_usd: 4
+    workflows:
+      - workflow: ci.yml
+        events: "pull_request, push, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0311
+        runs_a_month: 80
+        owner: "DD Framework"
+        reason: "40 runs 1 to 15 November 2026 (80 a month at that rate), mean of 12 sampled November runs (range $0.030 to $0.114), scaled by 0.53 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+        pr_exempt_jobs: "test, kit-contract"
+        pr_exempt_reason: "ordinary pull request checks; timeout-minutes is a cap, not a run time (test 20, kit-contract 30), and per_run_usd is the average billed cost of a whole run. A new job over 10 minutes needs its own entry here (DOM-17682)"
+
+  dd-photo-pack:
+    github_actions_crons: []
+    vercel_crons: []
+    ceiling_usd: 3
+    workflows:
+      - workflow: ci.yml
+        events: "push, pull_request, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0318
+        runs_a_month: 54
+        owner: "DD Framework"
+        reason: "27 runs 1 to 15 November 2026 (54 a month at that rate), mean of 12 sampled November runs (range $0.042 to $0.066), scaled by 0.62 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+        pr_exempt_jobs: "test"
+        pr_exempt_reason: "ordinary pull request checks; timeout-minutes is a cap, not a run time (test 20), and per_run_usd is the average billed cost of a whole run. A new job over 10 minutes needs its own entry here (DOM-17682)"
+
+  dd-seo-mcp:
+    github_actions_crons: []
+    vercel_crons: []
+    ceiling_usd: 1
+    workflows:
+      - workflow: ci.yml
+        events: "pull_request, push"
+        runner_class: hosted-linux
+        per_run_usd: 0.0078
+        runs_a_month: 64
+        owner: "DD Framework"
+        reason: "32 runs 1 to 15 November 2026 (64 a month at that rate), mean of 12 sampled November runs (range $0.006 to $0.012), scaled by 0.68 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: deploy.yml
+        events: "workflow_run, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0036
+        runs_a_month: 18
+        owner: "DD Framework"
+        reason: "9 runs 1 to 15 November 2026 (18 a month at that rate), mean of 9 sampled November runs (range $0.000 to $0.006), scaled by 0.68 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+
+  bellerose-plumbing:
+    github_actions_crons: []
+    vercel_crons: []
+    ceiling_usd: 1
+    workflows:
+      - workflow: build.yml
+        events: "pull_request, workflow_dispatch"
+        runner_class: box
+        per_run_usd: 0
+        runs_a_month: 128
+        owner: "Doman Digital"
+        reason: "64 runs 1 to 15 November 2026 (128 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.000), scaled by 1.00 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+        pr_exempt_jobs: "check"
+        pr_exempt_reason: "ordinary pull request checks; timeout-minutes is a cap, not a run time (check 20), and per_run_usd is the average billed cost of a whole run. A new job over 10 minutes needs its own entry here (DOM-17682)"
+      - workflow: psi.yml
+        events: "push, workflow_dispatch"
+        runner_class: box
+        per_run_usd: 0
+        runs_a_month: 8
+        owner: "Doman Digital"
+        reason: "4 runs 1 to 15 November 2026 (8 a month at that rate), mean of 4 sampled November runs (range $0.000 to $0.000), scaled by 1.00 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+
+  proteam-electrical:
+    github_actions_crons: []
+    vercel_crons: []
+    ceiling_usd: 1
+    workflows:
+      - workflow: build.yml
+        events: "pull_request, push, workflow_dispatch"
+        runner_class: box
+        per_run_usd: 0
+        runs_a_month: 104
+        owner: "Doman Digital"
+        reason: "52 runs 1 to 15 November 2026 (104 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.000), scaled by 1.00 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+        pr_exempt_jobs: "check"
+        pr_exempt_reason: "ordinary pull request checks; timeout-minutes is a cap, not a run time (check 15), and per_run_usd is the average billed cost of a whole run. A new job over 10 minutes needs its own entry here (DOM-17682)"
+      - workflow: deploy.yml
+        events: "workflow_run, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.009
+        runs_a_month: 40
+        owner: "Doman Digital"
+        reason: "20 runs 1 to 15 November 2026 (40 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.018), scaled by 1.00 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+
+  client-previews:
+    github_actions_crons: []
+    vercel_crons: []
+    ceiling_usd: 1
+    workflows:
+      - workflow: deploy-sites.yml
+        events: "workflow_dispatch, push"
+        runner_class: hosted-linux
+        per_run_usd: 0.016
+        runs_a_month: 12
+        owner: "Doman Digital"
+        reason: "6 runs 1 to 15 November 2026 (12 a month at that rate), mean of 6 sampled November runs (range $0.000 to $0.096), scaled by 1.00 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+
+  Market-probability-engine:
+    github_actions_crons: []
+    vercel_crons: []
+    ceiling_usd: 1
+    workflows:
+      - workflow: apac-prices.yml
+        events: "workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0
+        runs_a_month: 0
+        owner: "Doman Digital"
+        reason: "0 runs 1 to 15 November 2026 (0 a month at that rate), no November runs to measure; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: ca-prices.yml
+        events: "workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0
+        runs_a_month: 0
+        owner: "Doman Digital"
+        reason: "0 runs 1 to 15 November 2026 (0 a month at that rate), no November runs to measure; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: canada-ingest.yml
+        events: "workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0
+        runs_a_month: 0
+        owner: "Doman Digital"
+        reason: "0 runs 1 to 15 November 2026 (0 a month at that rate), no November runs to measure; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: ci.yml
+        events: "pull_request, push"
+        runner_class: hosted-linux
+        per_run_usd: 0.0005
+        runs_a_month: 24
+        owner: "Doman Digital"
+        reason: "12 runs 1 to 15 November 2026 (24 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.030), scaled by 0.09 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+        pr_exempt_jobs: "checks"
+        pr_exempt_reason: "ordinary pull request checks; timeout-minutes is a cap, not a run time (checks 20), and per_run_usd is the average billed cost of a whole run. A new job over 10 minutes needs its own entry here (DOM-17682)"
+      - workflow: daily-ingest.yml
+        events: "schedule, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0072
+        runs_a_month: 30
+        owner: "Doman Digital"
+        reason: "15 runs 1 to 15 November 2026 (30 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.162), scaled by 0.09 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: deploy.yml
+        events: "workflow_run, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0004
+        runs_a_month: 12
+        owner: "Doman Digital"
+        reason: "6 runs 1 to 15 November 2026 (12 a month at that rate), mean of 6 sampled November runs (range $0.000 to $0.024), scaled by 0.09 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: eu-prices.yml
+        events: "workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0
+        runs_a_month: 0
+        owner: "Doman Digital"
+        reason: "0 runs 1 to 15 November 2026 (0 a month at that rate), no November runs to measure; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: opencorporates.yml
+        events: "workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0
+        runs_a_month: 0
+        owner: "Doman Digital"
+        reason: "0 runs 1 to 15 November 2026 (0 a month at that rate), no November runs to measure; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: populate-backfills.yml
+        events: "workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0
+        runs_a_month: 0
+        owner: "Doman Digital"
+        reason: "0 runs 1 to 15 November 2026 (0 a month at that rate), no November runs to measure; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: quarterly-earnings.yml
+        events: "schedule, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0
+        runs_a_month: 0
+        owner: "Doman Digital"
+        reason: "0 runs 1 to 15 November 2026 (0 a month at that rate), no November runs to measure; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: tiingo-batches.yml
+        events: "workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0
+        runs_a_month: 0
+        owner: "Doman Digital"
+        reason: "0 runs 1 to 15 November 2026 (0 a month at that rate), no November runs to measure; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: uk-prices.yml
+        events: "workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0
+        runs_a_month: 0
+        owner: "Doman Digital"
+        reason: "0 runs 1 to 15 November 2026 (0 a month at that rate), no November runs to measure; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: weekly-memo.yml
+        events: "schedule, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0004
+        runs_a_month: 6
+        owner: "Doman Digital"
+        reason: "3 runs 1 to 15 November 2026 (6 a month at that rate), mean of 3 sampled November runs (range $0.000 to $0.012), scaled by 0.09 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+
+  Verqan-Platform:
+    github_actions_crons: []
+    vercel_crons: []
+    ceiling_usd: 1
+    workflows:
+      - workflow: ci.yml
+        events: "pull_request, push"
+        runner_class: hosted-linux
+        per_run_usd: 0.0007
+        runs_a_month: 60
+        owner: "Doman Digital"
+        reason: "30 runs 1 to 15 November 2026 (60 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.012), scaled by 0.07 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+        pr_exempt_jobs: "build"
+        pr_exempt_reason: "ordinary pull request checks; timeout-minutes is a cap, not a run time (build 40), and per_run_usd is the average billed cost of a whole run. A new job over 10 minutes needs its own entry here (DOM-17682)"
+      - workflow: deploy.yml
+        events: "workflow_run, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0013
+        runs_a_month: 10
+        owner: "Doman Digital"
+        reason: "5 runs 1 to 15 November 2026 (10 a month at that rate), mean of 5 sampled November runs (range $0.000 to $0.024), scaled by 0.07 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+
+  dd-prompt-library:
+    github_actions_crons: []
+    vercel_crons: []
+    ceiling_usd: 1
+    workflows:
+      - workflow: lint.yml
+        events: "push, pull_request"
+        runner_class: hosted-linux
+        per_run_usd: 0.0045
+        runs_a_month: 38
+        owner: "DD Framework"
+        reason: "19 runs 1 to 15 November 2026 (38 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.006), scaled by 1.00 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+
+  dd-frame-ripper:
+    github_actions_crons: []
+    vercel_crons: []
+    ceiling_usd: 1
+    workflows:
+      - workflow: ci.yml
+        events: "pull_request, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0038
+        runs_a_month: 16
+        owner: "DD Framework"
+        reason: "8 runs 1 to 15 November 2026 (16 a month at that rate), mean of 8 sampled November runs (range $0.000 to $0.024), scaled by 0.36 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+        pr_exempt_jobs: "smoke"
+        pr_exempt_reason: "ordinary pull request checks; timeout-minutes is a cap, not a run time (smoke 15), and per_run_usd is the average billed cost of a whole run. A new job over 10 minutes needs its own entry here (DOM-17682)"
+
+  dd-rebuild-relay:
+    github_actions_crons: []
+    vercel_crons: []
+    ceiling_usd: 1
+    workflows:
+      - workflow: ci.yml
+        events: "pull_request, push"
+        runner_class: hosted-linux
+        per_run_usd: 0
+        runs_a_month: 0
+        owner: "DD Framework"
+        reason: "0 runs 1 to 15 November 2026 (0 a month at that rate), no November runs to measure; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: deploy.yml
+        events: "workflow_run, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0
+        runs_a_month: 0
+        owner: "DD Framework"
+        reason: "0 runs 1 to 15 November 2026 (0 a month at that rate), no November runs to measure; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"

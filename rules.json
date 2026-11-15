@@ -225,6 +225,46 @@
       "enforce_from": "2026-11-22"
     },
     {
+      "id": "CI-034",
+      "title": "A workflow has no priced row in budget.yml",
+      "why": "Founder, 15 November 2026 (DOM-17682, programme DOM-17629): GitHub Actions spend is held at or below 60% of the $300 monthly allowance, about $180, and CI must not quietly grow back. November's first 15 days billed $54 (Doman-Digital $33.93 of it), and nothing recorded what any workflow was supposed to cost, so a new workflow, a new trigger or a wider path filter added spend nobody had agreed. Every workflow that starts a run on its own has a row under its repo's `workflows:` in budget.yml: workflow, events, runner_class (hosted-linux, hosted-macos or box), per_run_usd, runs_a_month, owner and reason. The rule fails a workflow with no row, a row missing any of those, and an event the row does not list. A workflow that is only called by another (workflow_call) is priced in its caller's row. test/budget.test.mjs sums the rows against the budget. A widened path filter is not yet seen by this rule (the row has no paths field): re-price the row in the same change. Warn from 15 November, enforced from 29 November, so every caller sees a warning for two weeks first.",
+      "applies": "all",
+      "warn_from": "2026-11-15",
+      "enforce_from": "2026-11-29"
+    },
+    {
+      "id": "CI-035",
+      "title": "A budget.yml row prices a workflow or an event that is gone",
+      "why": "15 November 2026 (DOM-17682): a priced row that outlives its workflow keeps counting against the monthly budget and hides real headroom, the same drift CI-026 catches for crons. The rule fails a workflows: row whose file no longer exists, whose workflow is now only called by another (workflow_call), or that lists an event the workflow no longer starts on.",
+      "applies": "all",
+      "warn_from": "2026-11-15",
+      "enforce_from": "2026-11-29"
+    },
+    {
+      "id": "CI-036",
+      "title": "A job over ten minutes runs on every pull request push",
+      "why": "15 November 2026 (DOM-17682): the monorepo billed thousands of hosted minutes in the first 15 days, and a job of 20 to 75 minutes on every push to a pull request pays that again on every fixup commit. A job whose timeout-minutes is over 10 runs on merge to main, in a merge queue or on a schedule, never on every pull request push: give it an `if:` on github.event_name that excludes pull_request, or a \"queue\" entry in the workflow's tier map (Doman-Digital ci.yml TIERS, DOM-17637). timeout-minutes is a cap, so the rule reads the cap: a job that must stay on pull requests records it in its workflow's row, pr_exempt_jobs (the job names) with pr_exempt_reason, which is also where its cost is argued. Only repos of the Doman-Digital organisation are read (a client's own account pays its own minutes). A local reusable workflow's jobs are judged through the job that calls it; a workflow in another repo is not read.",
+      "applies": "all",
+      "warn_from": "2026-11-15",
+      "enforce_from": "2026-11-29"
+    },
+    {
+      "id": "CI-037",
+      "title": "A browser starts on a pull request",
+      "why": "15 November 2026 (DOM-17682, Doman-Digital#1777): the monorepo's browser tier (phone-first, website reviews, visual regression, portal journeys) took about 40 minutes of hosted time per run, on every push to every portal pull request. It is queue-only now. The rule fails a job on a pull request that has an unconditional step running Playwright, Chromium, Puppeteer or Cypress (or the repo's .github/actions/playwright), so the pattern cannot come back. Run browsers in the merge queue, on a schedule or by hand, or record a dated exemption in the workflow (# dd: allow CI-037 until=YYYY-MM-DD reason). Unlike the other four, this one is enforced from 13 December: on 15 November six repos (the monorepo's dd-checks-test.yml and five others) already start a browser on pull requests and each needs a decision, not a row. Workflows called from other repos are not read.",
+      "applies": "all",
+      "warn_from": "2026-11-15",
+      "enforce_from": "2026-12-13"
+    },
+    {
+      "id": "CI-038",
+      "title": "A macOS job runs on push or pull request",
+      "why": "15 November 2026 (DOM-17682): macOS minutes are billed at about ten times a Linux minute ($3.53 of November's first 15 days came from 57 of them). The VoiceOver suites (screen-reader.yml in the monorepo and dd-agent-kit) are dispatch-only now. The rule fails a job on a macos runner in a workflow that starts on push, pull_request or pull_request_target, unless an `if:` keeps it to dispatch or a schedule or a dated exemption in the workflow records it (# dd: allow CI-038 until=YYYY-MM-DD reason). A second policy scan on the same commit is already caught by REG-009.",
+      "applies": "all",
+      "warn_from": "2026-11-15",
+      "enforce_from": "2026-11-29"
+    },
+    {
       "id": "CI-023",
       "title": "A workflow still uses Vercel",
       "why": "Vercel was retired for CI and deploys (DOM-555, DOM-776). On 19 October 2026 its leftovers were still in five repos: six VERCEL_TOKEN_* inputs in dd-repo-registry's sweep, a kv.vercel-storage placeholder in the monorepo's lighthouse.yml, and comments in three other repos describing Vercel building main. A workflow that names Vercel either does nothing or depends on an account nobody watches. A portal still served by Vercel records it as an exemption.",

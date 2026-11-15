@@ -33,6 +33,11 @@ jobs:
         with:
           node-version: "24"
 
+      # The envelope first (DOM-17682): the declared workflow costs in budget.yml must fit 60% of the
+      # $300 monthly allowance, so a release that breaks it never reaches v1.
+      - name: Budget envelope
+        run: node --test test/budget.test.mjs
+
       - name: Test
         run: node --test test/*.test.mjs scripts/*.test.mjs
 

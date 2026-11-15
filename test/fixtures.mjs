@@ -382,4 +382,35 @@ jobs:
     fail: wf("on:\n  push:\n    branches: [main]\n  pull_request:\n    branches: [main]\n# dd: allow CI-005 a backstop with no date\njobs: {}\n"),
     pass: wf("on:\n  push:\n    branches: [main]\n  pull_request:\n    branches: [main]\n# dd: allow CI-005 until=2027-01-31 secret-scan backstop on main\njobs: {}\n"),
   },
+  // The cost register (DOM-17682). A budget row for ci.yml, and a bare budget that has the rows section but none in it.
+  "CI-034": {
+    // A new 20-minute workflow, pushed to main, with no row.
+    fail: wf("on:\n  push:\n    branches: [main]\njobs:\n  nightly:\n    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 20\n    steps:\n      - run: make slow\n"),
+    pass: wf("on:\n  push:\n    branches: [main]\njobs:\n  nightly:\n    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 20\n    steps:\n      - run: make slow\n"),
+    ctx: { budget: { ghCrons: [], vercelCrons: [], workflows: [] } },
+    passCtx: { budget: { ghCrons: [], vercelCrons: [], workflows: [{ workflow: "ci.yml", events: ["push"], runner_class: "hosted-linux", per_run_usd: 0.12, runs_a_month: 60, owner: "DD Framework", reason: "the slow job, once per merge" }] } },
+  },
+  "CI-035": {
+    // A row for a workflow that was deleted.
+    fail: wf("on:\n  push:\n    branches: [main]\njobs: {}\n"),
+    pass: wf("on:\n  push:\n    branches: [main]\njobs: {}\n"),
+    ctx: { budget: { ghCrons: [], vercelCrons: [], workflows: [{ workflow: "old.yml", events: ["push"], runner_class: "hosted-linux", per_run_usd: 0.1, runs_a_month: 10, owner: "x", reason: "x" }] } },
+    passCtx: { budget: { ghCrons: [], vercelCrons: [], workflows: [{ workflow: "ci.yml", events: ["push"], runner_class: "hosted-linux", per_run_usd: 0.1, runs_a_month: 10, owner: "x", reason: "x" }] } },
+  },
+  "CI-036": {
+    // A 20-minute job on every pull request push.
+    fail: wf("on:\n  pull_request:\njobs:\n  slow:\n    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 20\n    steps:\n      - run: make slow\n"),
+    // The same job on merge to main only.
+    pass: wf("on:\n  pull_request:\n  push:\n    branches: [main]\njobs:\n  slow:\n    if: ${{ github.event_name != 'pull_request' }}\n    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 20\n    steps:\n      - run: make slow\n"),
+  },
+  "CI-037": {
+    // A short job, so only the browser rule sees it.
+    fail: wf("on:\n  pull_request:\njobs:\n  e2e:\n    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 8\n    steps:\n      - run: pnpm exec playwright install chromium\n      - run: pnpm exec playwright test\n"),
+    // The browser step waits for the merge queue.
+    pass: wf("on:\n  pull_request:\n  merge_group:\njobs:\n  e2e:\n    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 8\n    steps:\n      - run: pnpm test\n      - run: pnpm exec playwright test\n        if: ${{ github.event_name != 'pull_request' }}\n"),
+  },
+  "CI-038": {
+    fail: wf("on:\n  push:\n    branches: [main]\n  pull_request:\njobs:\n  voiceover:\n    runs-on: macos-latest\n    timeout-minutes: 20\n    steps:\n      - run: echo hi\n", ".github/workflows/screen-reader.yml"),
+    pass: wf("on:\n  workflow_dispatch:\njobs:\n  voiceover:\n    runs-on: macos-latest\n    timeout-minutes: 20\n    steps:\n      - run: echo hi\n", ".github/workflows/screen-reader.yml"),
+  },
 };
