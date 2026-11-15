@@ -19,6 +19,15 @@
       "why": "VoiceOver (Guidepup) needs macOS, which no Linux pool provides; the job stays hosted for as long as it exists (dd-agent-kit #298).",
       "minutes_a_month": 0,
       "measured": "not measured; runs on pull requests that touch the journey pack and on manual dispatch"
+    },
+    {
+      "repo": "dd-agent-kit",
+      "workflow": "screen-reader.yml",
+      "job": "voiceover",
+      "runs_on": "macos-latest",
+      "why": "Walks the site-teardown journey pack with macOS VoiceOver (Guidepup). It needs a real Mac; dd-ci-01 is Linux. Runs only on PRs that touch the journey pack, the screen-reader test or this workflow.",
+      "minutes_a_month": 300,
+      "measured": "estimate, not yet measured: about 15 minutes a run, about 2 runs a week, billed at the 10x macOS rate (ten included minutes per minute used); re-measure after a month"
     }
   ],
   "self_hosted_retired": false

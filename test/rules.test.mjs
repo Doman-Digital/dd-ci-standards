@@ -466,6 +466,16 @@ test("every pinned row in hosted-jobs.json names a hosted label, why, and its me
   }
 });
 
+test("the kit's VoiceOver job is registered, so CI-001 leaves it on macos-latest (DOM-17762)", () => {
+  const hostedJobs = JSON.parse(readFileSync(new URL("../hosted-jobs.json", import.meta.url), "utf8"));
+  const ctx = { selfHostedRetired: false, today: "2026-11-25", kind: "dd-tooling", visibility: "private", repoName: "dd-agent-kit", budget: { ghCrons: [], vercelCrons: [] }, hostedJobs };
+  const view = { workflows: [{ path: ".github/workflows/screen-reader.yml", text: "on:\n  pull_request:\njobs:\n  voiceover:\n    runs-on: macos-latest\n    timeout-minutes: 30\n    steps:\n      - run: x\n" }], vercel: [], files: {} };
+  assert.ok(!runDoctor(view, rulebook, ctx).findings.some((f) => f.rule === "CI-001"));
+  // an unregistered macOS job in the same repo is still held to CI-001
+  const other = { workflows: [{ path: ".github/workflows/other.yml", text: view.workflows[0].text }], vercel: [], files: {} };
+  assert.ok(runDoctor(other, rulebook, ctx).findings.some((f) => f.rule === "CI-001"));
+});
+
 test("CI-029 puts a deploy job on the deploy slot, and CI-022 leaves it alone", () => {
   const wfOf = (on, key, runsOn, timeout = 3) => ({ workflows: [{ path: ".github/workflows/deploy.yml", text: `on:\n  ${on}:\njobs:\n  ${key}:\n    runs-on: ${runsOn}\n    timeout-minutes: ${timeout}\n    steps:\n      - run: x\n` }], vercel: [], files: {} });
   const rules = (v, over = {}) => runDoctor(v, rulebook, { ...base, ...over }).findings.map((f) => f.rule);
