@@ -233,7 +233,11 @@ has to pass a policy check to merge, not get caught in the next audit.
   `.github/actions/workspace-scope` (`uses:
   Doman-Digital/dd-ci-standards/.github/actions/workspace-scope@v1`): the
   workspaces a PR changes and their dependents, or every workspace when a
-  file outside them changes. CI-025 reports a PR `turbo run` without it.
+  file outside them changes. Folders with their own lockfile and test job
+  (`services/checks`) go in the `independent` input: a change only under
+  them gives `run=false` for the root workspaces and the `independent`
+  output names the folder, so the caller runs just that job. CI-025 reports
+  a PR `turbo run` without it.
 
   Checks: push+pull_request double-runs on overlapping branches, jobs
   missing `timeout-minutes`, PR-triggered workflows missing a `concurrency`
