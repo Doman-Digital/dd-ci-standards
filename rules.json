@@ -217,6 +217,14 @@
       "enforce_from": "2026-11-09"
     },
     {
+      "id": "CI-033",
+      "title": "A pull request can fail on a lab Lighthouse speed number",
+      "why": "DOM-17734 and DOM-17811, 15 November 2026: a client site's pull requests failed on a mobile LCP budget measured on the shared runner (2.1 to 3.1 seconds inside one job on dd-ci-01) while PageSpeed read 1.65 seconds for the same page. The founder's rule is that speed is judged on PageSpeed against the live URL (dd-psi, and psi-gate@v1 after a deploy), never by a lab run on our runners, because a lab number on a shared box measures the box. A workflow that runs on pull_request or merge_group and runs Lighthouse CI fails this rule when its config asserts the performance category or a timing metric at error, or when it passes a budgetPath. Accessibility, best practices and SEO do not depend on CPU and may still fail a pull request. The rule reads Lighthouse CI configs at the repo root; a hand-written script that fails on a timing is held by that repo's own test.",
+      "applies": "all",
+      "warn_from": "2026-11-15",
+      "enforce_from": "2026-11-29"
+    },
+    {
       "id": "CI-023",
       "title": "A workflow still uses Vercel",
       "why": "Vercel was retired for CI and deploys (DOM-555, DOM-776). On 19 October 2026 its leftovers were still in five repos: six VERCEL_TOKEN_* inputs in dd-repo-registry's sweep, a kv.vercel-storage placeholder in the monorepo's lighthouse.yml, and comments in three other repos describing Vercel building main. A workflow that names Vercel either does nothing or depends on an account nobody watches. A portal still served by Vercel records it as an exemption.",

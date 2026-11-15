@@ -135,6 +135,14 @@ jobs:
     fail: wf("on:\n  workflow_run:\n    workflows: [CI]\n    types: [completed]\n    branches: [main]\nconcurrency:\n  group: deploy-production\n  cancel-in-progress: false\njobs:\n  deploy:\n    steps:\n      - uses: actions/checkout@v4\n      - run: npx wrangler deploy\n", ".github/workflows/deploy.yml"),
     pass: wf("on:\n  workflow_run:\n    workflows: [CI]\n    types: [completed]\n    branches: [main]\nconcurrency:\n  group: deploy-production\n  cancel-in-progress: false\njobs:\n  deploy:\n    steps:\n      - uses: Doman-Digital/dd-ci-standards/.github/actions/deploy-tip@v1\n        id: tip\n        with:\n          sha: ${{ github.event.workflow_run.head_sha }}\n      - uses: actions/checkout@v4\n        with:\n          ref: ${{ github.event.workflow_run.head_sha }}\n      - run: npx wrangler deploy\n", ".github/workflows/deploy.yml"),
   },
+  "CI-033": {
+    // A client site before DOM-17734, in Lighthouse CI form: performance at error on every pull request (DOM-17811).
+    fail: { workflows: [{ path: ".github/workflows/ci.yml", text: "on:\n  pull_request:\njobs:\n  lighthouse:\n    steps:\n      - run: pnpm exec lhci autorun\n" }], vercel: [],
+      files: { "lighthouserc.json": '{"ci":{"assert":{"assertions":{"categories:performance":["error",{"minScore":0.9}],"categories:accessibility":["error",{"minScore":0.95}]}}}}' } },
+    // Performance a report, the CPU-independent categories still gate.
+    pass: { workflows: [{ path: ".github/workflows/ci.yml", text: "on:\n  pull_request:\njobs:\n  lighthouse:\n    steps:\n      - run: pnpm exec lhci autorun\n" }], vercel: [],
+      files: { "lighthouserc.json": '{"ci":{"assert":{"assertions":{"categories:performance":["warn",{"minScore":0.85}],"categories:accessibility":["error",{"minScore":0.95}]}}}}' } },
+  },
   "CI-030": {
     fail: wf("on:\n  workflow_run:\n    workflows: [CI]\n    types: [completed]\n    branches: [main]\npermissions:\n  contents: read\njobs:\n  deploy:\n    permissions:\n      contents: read\n      id-token: write\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/cloudflare-deploy.yml@v1\n    with:\n      doppler-config: relay\n", ".github/workflows/deploy.yml"),
     pass: wf("on:\n  workflow_run:\n    workflows: [CI]\n    types: [completed]\n    branches: [main]\npermissions:\n  contents: read\njobs:\n  deploy:\n    permissions:\n      contents: read\n      id-token: write\n      actions: write\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/cloudflare-deploy.yml@v1\n    with:\n      doppler-config: relay\n", ".github/workflows/deploy.yml"),
