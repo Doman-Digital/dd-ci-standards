@@ -229,6 +229,17 @@ has to pass a policy check to merge, not get caught in the next audit.
   together and the cache key; `test/gitleaks-install.test.mjs` and the
   self-check's live install fail when they disagree.
 
+  **A speed budget is judged on PageSpeed, not on a shared runner** (DOM-17734).
+  `.github/actions/psi-gate` (`uses: Doman-Digital/dd-ci-standards/.github/actions/psi-gate@v1`)
+  runs PageSpeed Insights on a public https URL, five runs per strategy, and
+  fails when the median first contentful paint (1.8 s), largest contentful
+  paint (2.5 s) or layout shift (0.1) breaks its budget. Run it after a
+  deploy, with `api-key` from a secret. A lab Lighthouse budget on the dd-ci-01
+  runner is advice only: the same site build measured LCP 2.1 to 3.1 s
+  there on 15 November 2026 while PageSpeed read 1.65 s. CPU-independent
+  Lighthouse checks (accessibility, best practices) can still block a PR.
+  `test/psi-gate.test.mjs` holds the median, budget and thin-evidence rules.
+
   **Turbo monorepos** scope pull request work with
   `.github/actions/workspace-scope` (`uses:
   Doman-Digital/dd-ci-standards/.github/actions/workspace-scope@v1`): the
