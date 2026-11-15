@@ -225,6 +225,14 @@
       "enforce_from": "2026-11-22"
     },
     {
+      "id": "CI-034",
+      "title": "A PageSpeed workflow is named like a deploy",
+      "why": "DOM-17811, 15 November 2026: dd-relay reads any workflow whose name or file mentions deploy as a deploy (src/github-webhook/deploy-alert.ts). A client site's psi-gate workflow was named \"PageSpeed after deploy\", so a slow page would have paged #alerts as a failed release, and a green run, one job ending success, could have counted as a deploy and moved a Linear issue to Done. A workflow that runs psi-gate measures a deploy; it is not one. Name it without the word (\"PageSpeed live\").",
+      "applies": "all",
+      "warn_from": "2026-11-15",
+      "enforce_from": "2026-11-22"
+    },
+    {
       "id": "CI-023",
       "title": "A workflow still uses Vercel",
       "why": "Vercel was retired for CI and deploys (DOM-555, DOM-776). On 19 October 2026 its leftovers were still in five repos: six VERCEL_TOKEN_* inputs in dd-repo-registry's sweep, a kv.vercel-storage placeholder in the monorepo's lighthouse.yml, and comments in three other repos describing Vercel building main. A workflow that names Vercel either does nothing or depends on an account nobody watches. A portal still served by Vercel records it as an exemption.",
