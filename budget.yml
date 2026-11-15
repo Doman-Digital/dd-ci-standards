@@ -340,10 +340,10 @@ repos:
     ceiling_usd: 5
     workflows:
       - workflow: minutes-ledger.yml
-        events: "schedule, workflow_dispatch"
+        events: "schedule, workflow_dispatch, pull_request, merge_group"
         runner_class: hosted-linux
         per_run_usd: 0.006
-        runs_a_month: 30
+        runs_a_month: 36
         owner: "DD Framework"
         reason: "daily spend ledger, about a minute a run on a hosted Linux runner at $0.006 a minute (DOM-17682 I3); a priced estimate until its first month of runs is measured"
       - workflow: ci-runner-canary.yml

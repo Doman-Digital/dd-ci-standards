@@ -225,6 +225,14 @@
       "enforce_from": "2026-11-22"
     },
     {
+      "id": "CI-034",
+      "title": "A PageSpeed workflow is named like a deploy",
+      "why": "DOM-17811, 15 November 2026: dd-relay reads any workflow whose name or file mentions deploy as a deploy (src/github-webhook/deploy-alert.ts). A client site's psi-gate workflow was named \"PageSpeed after deploy\", so a slow page would have paged #alerts as a failed release, and a green run, one job ending success, could have counted as a deploy and moved a Linear issue to Done. A workflow that runs psi-gate measures a deploy; it is not one. Name it without the word (\"PageSpeed live\").",
+      "applies": "all",
+      "warn_from": "2026-11-15",
+      "enforce_from": "2026-11-22"
+    },
+    {
       "id": "CI-035",
       "title": "A workflow has no priced row in budget.yml",
       "why": "Founder, 15 November 2026 (DOM-17682, programme DOM-17629): GitHub Actions spend is held at or below 60% of the $300 monthly allowance, about $180, and CI must not quietly grow back. November's first 15 days billed $54 (Doman-Digital $33.93 of it), and nothing recorded what any workflow was supposed to cost, so a new workflow, a new trigger or a wider path filter added spend nobody had agreed. Every workflow that starts a run on its own has a row under its repo's `workflows:` in budget.yml: workflow, events, runner_class (hosted-linux, hosted-macos or box), per_run_usd, runs_a_month, owner and reason. The rule fails a workflow with no row, a row missing any of those, and an event the row does not list. A workflow that is only called by another (workflow_call) is priced in its caller's row. test/budget.test.mjs sums the rows against the budget. A widened path filter is not yet seen by this rule (the row has no paths field): re-price the row in the same change. Warn from 15 November, enforced from 29 November, so every caller sees a warning for two weeks first.",

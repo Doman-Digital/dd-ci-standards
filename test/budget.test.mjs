@@ -73,3 +73,16 @@ test("workflows: rows are read as rows, and never as crons", () => {
   assert.equal(b.ceilingUsd, 5);
   assert.equal(budgetForRepo(sample, "nobody").workflows.length, 0);
 });
+
+test("each repo appears once under repos: (a duplicate key is invalid YAML and was merged silently)", () => {
+  const keys = [];
+  let inRepos = false;
+  for (const line of raw.split("\n")) {
+    if (/^repos:\s*$/.test(line)) { inRepos = true; continue; }
+    if (inRepos && /^\S/.test(line) && !line.startsWith("#")) break;
+    const m = inRepos && /^  ([^\s#][^:]*):\s*$/.exec(line);
+    if (m) keys.push(m[1]);
+  }
+  assert.ok(keys.length > 20, "found the repo keys");
+  assert.deepEqual(keys.filter((k, i) => keys.indexOf(k) !== i), [], "repo keys listed twice");
+});
