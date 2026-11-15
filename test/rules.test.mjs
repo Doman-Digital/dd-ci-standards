@@ -476,6 +476,12 @@ test("the kit's VoiceOver job is registered, so CI-001 leaves it on macos-latest
   assert.ok(runDoctor(other, rulebook, ctx).findings.some((f) => f.rule === "CI-001"));
 });
 
+test("hosted-jobs.json registers each job once", () => {
+  const rows = JSON.parse(readFileSync(new URL("../hosted-jobs.json", import.meta.url), "utf8")).jobs;
+  const keys = rows.map((e) => `${e.repo}/${e.workflow}/${e.job}`);
+  assert.deepEqual(keys, [...new Set(keys)]);
+});
+
 test("CI-029 puts a deploy job on the deploy slot, and CI-022 leaves it alone", () => {
   const wfOf = (on, key, runsOn, timeout = 3) => ({ workflows: [{ path: ".github/workflows/deploy.yml", text: `on:\n  ${on}:\njobs:\n  ${key}:\n    runs-on: ${runsOn}\n    timeout-minutes: ${timeout}\n    steps:\n      - run: x\n` }], vercel: [], files: {} });
   const rules = (v, over = {}) => runDoctor(v, rulebook, { ...base, ...over }).findings.map((f) => f.rule);
