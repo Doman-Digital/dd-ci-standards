@@ -332,9 +332,20 @@ repos:
         cron: "40 */3 * * *"
         owner: "DD Framework"
         reason: "every third hour: the read-only credential probes in creds.yaml (bin/creds-check.mjs), keyless through GitHub OIDC to Google, AWS and Doppler; about two minutes a run on the CI_RUNNER pool, none of the hosted minutes while dd-ci-01 serves it; job window 12h, checked by JOB-005 (DOM-17685)"
+      - workflow: minutes-ledger.yml
+        cron: "23 5 * * *"
+        owner: "DD Framework"
+        reason: "daily CI spend ledger (DOM-17682 I3): reads the org billing usage API, compares measured Actions spend per repo with the workflows: rows declared here, Slack at 60% and 80% projected, one Linear issue under DOM-17629; about a minute a run on vars.CI_RUNNER, 10min cap"
     vercel_crons: []
     ceiling_usd: 5
     workflows:
+      - workflow: minutes-ledger.yml
+        events: "schedule, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.006
+        runs_a_month: 30
+        owner: "DD Framework"
+        reason: "daily spend ledger, about a minute a run on a hosted Linux runner at $0.006 a minute (DOM-17682 I3); a priced estimate until its first month of runs is measured"
       - workflow: ci-runner-canary.yml
         events: "workflow_dispatch"
         runner_class: box
@@ -546,7 +557,83 @@ repos:
       - workflow: restore-drill.yml
         cron: "30 6 2 * *"
         reason: "monthly restore drill (DOM-280): the latest Neon dumps restored from B2 into throwaway Neon branches and every row count compared, branches deleted after; 120min cap, about 15min a month. Its one home: client-jobs.yml no longer runs it"
+      - workflow: client-jobs.yml
+        cron: "40 3 * * *"
+        reason: "Daily client metrics, replacing the removed box; shared state lock, gated until verified recovery. Measure actual hosted minutes after activation."
+      - workflow: client-jobs.yml
+        cron: "0 7 * * *"
+        reason: "Daily client briefing build using the existing script and restored R2 state."
+      - workflow: client-jobs.yml
+        cron: "15 6,7 * * 1"
+        reason: "Weekly client delivery; UK-time guard permits only the 07:15 local run."
+      - workflow: client-jobs.yml
+        cron: "45 2 * * *"
+        reason: "Nightly Neon, Sanity, metrics and capsule backups to Backblaze B2."
+      - workflow: client-jobs.yml
+        cron: "30 6 * * 0"
+        reason: "First-Sunday verified metrics restore (client state only; the restore drill itself is restore-drill.yml); other Sundays skip before installing tools."
+      - workflow: client-jobs.yml
+        cron: "30 7,17 * * *"
+        reason: "Twice-daily beauty-client Drive inbox intake, replacing the removed box."
     vercel_crons: []
+    ceiling_usd: 1
+    workflows:
+      - workflow: ci.yml
+        events: "pull_request, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0004
+        runs_a_month: 218
+        owner: "DD Framework"
+        reason: "109 runs 1 to 15 November 2026 (218 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.012), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: client-jobs.yml
+        events: "schedule, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0026
+        runs_a_month: 96
+        owner: "DD Framework"
+        reason: "48 runs 1 to 15 November 2026 (96 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.090), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: import-briefing-configs.yml
+        events: "workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0039
+        runs_a_month: 16
+        owner: "DD Framework"
+        reason: "8 runs 1 to 15 November 2026 (16 a month at that rate), mean of 8 sampled November runs (range $0.006 to $0.060), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: neon-backup-watch.yml
+        events: "schedule, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0012
+        runs_a_month: 24
+        owner: "DD Framework"
+        reason: "12 runs 1 to 15 November 2026 (24 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.018), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: neon-backup.yml
+        events: "schedule, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0034
+        runs_a_month: 14
+        owner: "DD Framework"
+        reason: "7 runs 1 to 15 November 2026 (14 a month at that rate), mean of 7 sampled November runs (range $0.012 to $0.042), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: restore-client-state.yml
+        events: "workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0208
+        runs_a_month: 2
+        owner: "DD Framework"
+        reason: "1 runs 1 to 15 November 2026 (2 a month at that rate), mean of 1 sampled November runs (range $0.186 to $0.186), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: restore-drill.yml
+        events: "schedule, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0027
+        runs_a_month: 24
+        owner: "DD Framework"
+        reason: "12 runs 1 to 15 November 2026 (24 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.072), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: sanity-backup.yml
+        events: "schedule, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0042
+        runs_a_month: 10
+        owner: "DD Framework"
+        reason: "5 runs 1 to 15 November 2026 (10 a month at that rate), mean of 5 sampled November runs (range $0.006 to $0.048), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
 
   chair-and-blade:
     github_actions_crons:
@@ -844,86 +931,6 @@ repos:
         runs_a_month: 46
         owner: "Doman Digital"
         reason: "23 runs 1 to 15 November 2026 (46 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.018), scaled by 0.32 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
-
-  dd-netcup-config:
-    github_actions_crons:
-      - workflow: client-jobs.yml
-        cron: "40 3 * * *"
-        reason: "Daily client metrics, replacing the removed box; shared state lock, gated until verified recovery. Measure actual hosted minutes after activation."
-      - workflow: client-jobs.yml
-        cron: "0 7 * * *"
-        reason: "Daily client briefing build using the existing script and restored R2 state."
-      - workflow: client-jobs.yml
-        cron: "15 6,7 * * 1"
-        reason: "Weekly client delivery; UK-time guard permits only the 07:15 local run."
-      - workflow: client-jobs.yml
-        cron: "45 2 * * *"
-        reason: "Nightly Neon, Sanity, metrics and capsule backups to Backblaze B2."
-      - workflow: client-jobs.yml
-        cron: "30 6 * * 0"
-        reason: "First-Sunday verified metrics restore (client state only; the restore drill itself is restore-drill.yml); other Sundays skip before installing tools."
-      - workflow: client-jobs.yml
-        cron: "30 7,17 * * *"
-        reason: "Twice-daily beauty-client Drive inbox intake, replacing the removed box."
-    vercel_crons: []
-    ceiling_usd: 1
-    workflows:
-      - workflow: ci.yml
-        events: "pull_request, workflow_dispatch"
-        runner_class: hosted-linux
-        per_run_usd: 0.0004
-        runs_a_month: 218
-        owner: "DD Framework"
-        reason: "109 runs 1 to 15 November 2026 (218 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.012), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
-      - workflow: client-jobs.yml
-        events: "schedule, workflow_dispatch"
-        runner_class: hosted-linux
-        per_run_usd: 0.0026
-        runs_a_month: 96
-        owner: "DD Framework"
-        reason: "48 runs 1 to 15 November 2026 (96 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.090), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
-      - workflow: import-briefing-configs.yml
-        events: "workflow_dispatch"
-        runner_class: hosted-linux
-        per_run_usd: 0.0039
-        runs_a_month: 16
-        owner: "DD Framework"
-        reason: "8 runs 1 to 15 November 2026 (16 a month at that rate), mean of 8 sampled November runs (range $0.006 to $0.060), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
-      - workflow: neon-backup-watch.yml
-        events: "schedule, workflow_dispatch"
-        runner_class: hosted-linux
-        per_run_usd: 0.0012
-        runs_a_month: 24
-        owner: "DD Framework"
-        reason: "12 runs 1 to 15 November 2026 (24 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.018), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
-      - workflow: neon-backup.yml
-        events: "schedule, workflow_dispatch"
-        runner_class: hosted-linux
-        per_run_usd: 0.0034
-        runs_a_month: 14
-        owner: "DD Framework"
-        reason: "7 runs 1 to 15 November 2026 (14 a month at that rate), mean of 7 sampled November runs (range $0.012 to $0.042), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
-      - workflow: restore-client-state.yml
-        events: "workflow_dispatch"
-        runner_class: hosted-linux
-        per_run_usd: 0.0208
-        runs_a_month: 2
-        owner: "DD Framework"
-        reason: "1 runs 1 to 15 November 2026 (2 a month at that rate), mean of 1 sampled November runs (range $0.186 to $0.186), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
-      - workflow: restore-drill.yml
-        events: "schedule, workflow_dispatch"
-        runner_class: hosted-linux
-        per_run_usd: 0.0027
-        runs_a_month: 24
-        owner: "DD Framework"
-        reason: "12 runs 1 to 15 November 2026 (24 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.072), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
-      - workflow: sanity-backup.yml
-        events: "schedule, workflow_dispatch"
-        runner_class: hosted-linux
-        per_run_usd: 0.0042
-        runs_a_month: 10
-        owner: "DD Framework"
-        reason: "5 runs 1 to 15 November 2026 (10 a month at that rate), mean of 5 sampled November runs (range $0.006 to $0.048), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
 
   dd-agent-kit:
     github_actions_crons: []
