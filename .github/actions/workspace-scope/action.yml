@@ -13,6 +13,13 @@ description: |
   scripts/ or workflow change marks no package), and apps may read them
   directly.
 
+  Independent paths (the `independent` input) are the exception: folders with
+  their own lockfile and their own test job, such as services/checks. A change
+  only under them gives run=false for the root workspaces, and the
+  `independent` output names the paths that changed so the caller can run
+  their jobs. A change anywhere else outside a workspace still selects
+  everything, and then `independent` lists every independent path.
+
   Otherwise the workspaces Turbo finds changed since the pull request's base,
   plus every workspace that depends on one of them, plus `include`.
 
@@ -35,6 +42,9 @@ description: |
   description, and the action then fails to load (20 October 2026).
 
 inputs:
+  independent:
+    description: Folders with their own lockfile and test job, space separated (for example services/checks). Not workspaces of the root install.
+    default: ""
   include:
     description: Workspace names to add to an affected-only scope, space separated.
     default: ""
@@ -53,6 +63,10 @@ outputs:
     description: "`--filter=<name>` per workspace, or every workspace but the root (`--filter=!<root name>`)."
     value: ${{ steps.scope.outputs.pnpm-filters }}
 
+  independent:
+    description: "Independent paths to run, space separated: those the change touched, or all of them when everything runs. Empty when none."
+    value: ${{ steps.scope.outputs.independent }}
+
 runs:
   using: composite
   steps:
@@ -63,4 +77,5 @@ runs:
         BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
         INCLUDE: ${{ inputs.include }}
         DOCS: ${{ inputs.docs }}
+        INDEPENDENT: ${{ inputs.independent }}
       run: bash "$GITHUB_ACTION_PATH/scope.sh"
