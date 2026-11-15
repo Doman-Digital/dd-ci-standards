@@ -362,7 +362,7 @@ async function newRepo(args) {
     mkdirSync(dirname(join(dir, path)), { recursive: true });
     writeFileSync(join(dir, path), text);
   }
-  // The cost register (CI-034): a new repo has no rows in budget.yml yet, so price its workflows by default and say what to add.
+  // The cost register (CI-035): a new repo has no rows in budget.yml yet, so price its workflows by default and say what to add.
   if (!budget.workflows.length) {
     budget.workflows = starterBudgetRows(loadFsView(dir));
     if (budget.workflows.length) console.log(`dd new: add this to ${join(HOME, "budget.yml")} (Doman-Digital/dd-ci-standards) so the repo's workflows are priced:\n${starterBudgetYaml(plan.name, budget.workflows)}`);
