@@ -53,7 +53,7 @@ repos:
         reason: "daily drift-domains and drift-mfa (the Cyber Essentials MFA guard, DOM-1339), moved off dd-work-01 when it was deleted; one install of services/checks, a few dozen API calls, 20min cap"
       - workflow: dd-zap-baseline.yml
         cron: "41 3 * * 3"
-        owner: "Doman Digital"
+        owner: "Doman Digital / Assurance"
         reason: "weekly OWASP ZAP baseline (passive, no attack traffic) of the public site and the portal, report kept as an artifact, a High alert fails the run (assurance item B8, 9 November 2026); one container pull, 20min cap, off the hour"
       - workflow: dd-portal-teardown-capture.yml
         cron: "23 5 * * 3"
@@ -260,7 +260,7 @@ repos:
     github_actions_crons:
       - workflow: design-estate.yml
         cron: "35 7 * * *"
-        owner: "Doman Digital"
+        owner: "Doman Digital / Craft"
         reason: "daily check of design estate coverage, evidence and the 30-day capture limit (DOM-1301), read-only with a five-minute cap on the light runner"
     vercel_crons: []
     ceiling_usd: 1
@@ -277,7 +277,7 @@ repos:
     github_actions_crons:
       - workflow: design-observations.yml
         cron: "45 7 * * *"
-        owner: "Doman Digital"
+        owner: "Doman Digital / Craft"
         reason: "daily check of dated typography, accent and shape evidence for the design register (DOM-1301), read-only with a five-minute cap on the light runner"
     vercel_crons: []
     ceiling_usd: 1
@@ -388,11 +388,11 @@ repos:
     github_actions_crons:
       - workflow: ops-canary.yml
         cron: "20 5 * * *"
-        owner: "Doman Digital"
+        owner: "Doman Digital / Ops"
         reason: "the ops Worker's github-feed canary: one step that fails on purpose daily so the cockpit proves it still sees red scheduled workflows (DOM-1029); light runner, 2min cap"
       - workflow: ops-contract.yml
         cron: "40 9 * * *"
-        owner: "Doman Digital"
+        owner: "Doman Digital / Ops"
         reason: "nightly ops contract check: the cockpit's counts against direct Linear, GitHub, jobs.yaml and alert queries, and every feed's canary (DOM-1029); API reads and one SELECT, 10min cap"
     vercel_crons: []
     ceiling_usd: 2
