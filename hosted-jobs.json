@@ -1,6 +1,6 @@
 {
   "$comment": "dd-ci-01 serves the org's pools again (14 Nov 2026, founder): CI-001, CI-022, CI-028 and CI-029 apply to org private repos as before. Hosted runners are still wanted where a job is registered here. Set self_hosted_retired back to true to stop the rules requiring the pools.",
-  "updated": "2026-11-14",
+  "updated": "2026-11-15",
   "jobs": [
     {
       "repo": "dd-repo-registry",
@@ -10,6 +10,15 @@
       "why": "Keeps all four runner variables on GitHub-hosted runners and reports included-minute usage. It cannot select the retired servers (DOM-1079).",
       "minutes_a_month": 2880,
       "measured": "every 15 minutes, one job of under a minute, billed as 1 minute: 4 x 24 x 30"
+    },
+    {
+      "repo": "dd-agent-kit",
+      "workflow": "screen-reader.yml",
+      "job": "voiceover",
+      "runs_on": "macos-latest",
+      "why": "VoiceOver (Guidepup) needs macOS, which no Linux pool provides; the job stays hosted for as long as it exists (dd-agent-kit #298).",
+      "minutes_a_month": 0,
+      "measured": "not measured; runs on pull requests that touch the journey pack and on manual dispatch"
     }
   ],
   "self_hosted_retired": false
