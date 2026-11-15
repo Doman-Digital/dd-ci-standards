@@ -1,7 +1,8 @@
 name: DD PageSpeed gate
 description: >
   Run PageSpeed Insights on a public URL, five runs per strategy, and fail when the median first
-  contentful paint, largest contentful paint or layout shift breaks its budget. Use it after a deploy
+  contentful paint, largest contentful paint or layout shift breaks its budget, or the median
+  accessibility, best-practices or SEO score falls below its floor (90 by default). Use it after a deploy
   instead of a lab Lighthouse budget on a shared runner (DOM-17734).
 inputs:
   url:
@@ -28,6 +29,15 @@ inputs:
   min-performance:
     description: Lowest acceptable median performance score, 0 to switch it off.
     default: "0"
+  min-accessibility:
+    description: Lowest acceptable median accessibility score (0 to 100), 0 to switch it off.
+    default: "90"
+  min-best-practices:
+    description: Lowest acceptable median best-practices score (0 to 100), 0 to switch it off.
+    default: "90"
+  min-seo:
+    description: Lowest acceptable median SEO score (0 to 100), 0 to switch it off.
+    default: "90"
 runs:
   using: composite
   steps:
@@ -42,4 +52,7 @@ runs:
         PSI_FCP_MS: ${{ inputs.fcp-ms }}
         PSI_CLS: ${{ inputs.cls }}
         PSI_MIN_PERFORMANCE: ${{ inputs.min-performance }}
+        PSI_MIN_ACCESSIBILITY: ${{ inputs.min-accessibility }}
+        PSI_MIN_BEST_PRACTICES: ${{ inputs.min-best-practices }}
+        PSI_MIN_SEO: ${{ inputs.min-seo }}
       run: node "$GITHUB_ACTION_PATH/psi-gate.mjs"

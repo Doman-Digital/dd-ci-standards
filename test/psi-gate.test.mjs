@@ -60,3 +60,21 @@ test("the manifest is a composite that takes the key as an input and runs the sc
   assert.match(action, /node "\$GITHUB_ACTION_PATH\/psi-gate.mjs"/);
   assert.ok(!/\$\{\{ secrets\./.test(action), "the key comes in as an input, never read from secrets inside the action");
 });
+
+test("the category floors fail a median below them and leave a switched-off one alone (DOM-17811)", async () => {
+  const { evaluate, pick, DEFAULT_MIN_SCORES } = await import("../.github/actions/psi-gate/psi-gate.mjs");
+  assert.deepEqual(DEFAULT_MIN_SCORES, { accessibility: 90, "best-practices": 90, seo: 90 });
+  const run = (a, b, s) => ({ performance: 95, accessibility: a, "best-practices": b, seo: s, "first-contentful-paint": 900, "largest-contentful-paint": 1200, "cumulative-layout-shift": 0.01 });
+  const runs = [run(100, 96, 100), run(100, 78, 100), run(100, 79, 100)];
+  const v = evaluate(runs, { minScores: DEFAULT_MIN_SCORES });
+  assert.equal(v.ok, false);
+  assert.deepEqual(v.problems, ["best-practices median 79 is below 90"]);
+  assert.equal(evaluate(runs, { minScores: { ...DEFAULT_MIN_SCORES, "best-practices": 0 } }).ok, true);
+  // A category PageSpeed did not score is a failure, never a pass.
+  const blind = evaluate([run(undefined, 96, 100), run(undefined, 96, 100), run(undefined, 96, 100)], { minScores: DEFAULT_MIN_SCORES });
+  assert.deepEqual(blind.problems, ["accessibility has no score in any run"]);
+  // pick() reads the category scores as 0 to 100.
+  const json = { lighthouseResult: { categories: { performance: { score: 0.91 }, accessibility: { score: 1 }, "best-practices": { score: 0.78 }, seo: { score: 0.92 } }, audits: {} } };
+  assert.deepEqual([pick(json).accessibility, pick(json)["best-practices"], pick(json).seo], [100, 78, 92]);
+});
+

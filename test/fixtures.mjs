@@ -135,6 +135,10 @@ jobs:
     fail: wf("on:\n  workflow_run:\n    workflows: [CI]\n    types: [completed]\n    branches: [main]\nconcurrency:\n  group: deploy-production\n  cancel-in-progress: false\njobs:\n  deploy:\n    steps:\n      - uses: actions/checkout@v4\n      - run: npx wrangler deploy\n", ".github/workflows/deploy.yml"),
     pass: wf("on:\n  workflow_run:\n    workflows: [CI]\n    types: [completed]\n    branches: [main]\nconcurrency:\n  group: deploy-production\n  cancel-in-progress: false\njobs:\n  deploy:\n    steps:\n      - uses: Doman-Digital/dd-ci-standards/.github/actions/deploy-tip@v1\n        id: tip\n        with:\n          sha: ${{ github.event.workflow_run.head_sha }}\n      - uses: actions/checkout@v4\n        with:\n          ref: ${{ github.event.workflow_run.head_sha }}\n      - run: npx wrangler deploy\n", ".github/workflows/deploy.yml"),
   },
+  "CI-034": {
+    fail: wf("name: PageSpeed after deploy\non:\n  push:\n    branches: [master]\njobs:\n  psi:\n    steps:\n      - uses: Doman-Digital/dd-ci-standards/.github/actions/psi-gate@v1\n", ".github/workflows/psi.yml"),
+    pass: wf("name: PageSpeed live\non:\n  push:\n    branches: [master]\njobs:\n  psi:\n    steps:\n      - uses: Doman-Digital/dd-ci-standards/.github/actions/psi-gate@v1\n", ".github/workflows/psi.yml"),
+  },
   "CI-033": {
     // A client site's pull request build before DOM-17811: the Lighthouse CLI installed and run on the runner.
     fail: wf("on:\n  pull_request:\njobs:\n  checks:\n    steps:\n      - run: npm install --no-save playwright @axe-core/playwright lighthouse\n      - run: node .github/scripts/axe.mjs\n"),
