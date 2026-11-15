@@ -28,6 +28,15 @@
       "why": "Walks the site-teardown journey pack with macOS VoiceOver (Guidepup). It needs a real Mac; dd-ci-01 is Linux. Runs only on PRs that touch the journey pack, the screen-reader test or this workflow.",
       "minutes_a_month": 300,
       "measured": "estimate, not yet measured: about 15 minutes a run, about 2 runs a week, billed at the 10x macOS rate (ten included minutes per minute used); re-measure after a month"
+    },
+    {
+      "repo": "Doman-Digital",
+      "workflow": "screen-reader.yml",
+      "job": "voiceover",
+      "runs_on": "macos-latest",
+      "why": "Walks the site's enquiry form and the portal's sign-in screen with macOS VoiceOver (Guidepup) and feeds the screen-reader column of both journey ledgers. It needs a real Mac; dd-ci-01 is Linux. Runs only on pull requests that touch qa/screen-reader, the public site or portal sign-in code, the ledgers or this workflow, and by hand (Doman-Digital #1717).",
+      "minutes_a_month": 300,
+      "measured": "estimate, not yet measured: about 15 minutes a run, about 2 runs a week, billed at the 10x macOS rate (ten included minutes per minute used); re-measure after a month"
     }
   ],
   "self_hosted_retired": false
