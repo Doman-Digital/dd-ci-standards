@@ -218,11 +218,11 @@
     },
     {
       "id": "CI-033",
-      "title": "A pull request can fail on a lab Lighthouse speed number",
-      "why": "DOM-17734 and DOM-17811, 15 November 2026: a client site's pull requests failed on a mobile LCP budget measured on the shared runner (2.1 to 3.1 seconds inside one job on dd-ci-01) while PageSpeed read 1.65 seconds for the same page. The founder's rule is that speed is judged on PageSpeed against the live URL (dd-psi, and psi-gate@v1 after a deploy), never by a lab run on our runners, because a lab number on a shared box measures the box. A workflow that runs on pull_request or merge_group and runs Lighthouse CI fails this rule when its config asserts the performance category or a timing metric at error, or when it passes a budgetPath. Accessibility, best practices and SEO do not depend on CPU and may still fail a pull request. The rule reads Lighthouse CI configs at the repo root; a hand-written script that fails on a timing is held by that repo's own test.",
+      "title": "CI runs Lighthouse",
+      "why": "Founder, 15 November 2026 (DOM-17811): Lighthouse is no longer part of CI, for the independence of our machines. Performance, accessibility, best-practice and SEO scores come only from PageSpeed against the deployed URL after the deploy (psi-gate@v1, dd-psi), because a lab run on a shared runner measures the runner: one client site's build measured LCP 2.1 to 3.1 seconds inside a single job while PageSpeed read 1.65 seconds (DOM-17734). Accessibility in CI is axe. A workflow fails this rule when a line it runs uses Lighthouse CI (lhci, @lhci/cli, treosh/lighthouse-ci-action), unlighthouse, the lighthouse CLI, or installs the lighthouse package; and a repo fails it when it keeps a Lighthouse CI config (lighthouserc.*) at its root. A script that calls the PageSpeed API, whatever its file is called, is not Lighthouse on our machine. Warn from 15 November, enforced from 22 November, so open pull requests have a week.",
       "applies": "all",
       "warn_from": "2026-11-15",
-      "enforce_from": "2026-11-29"
+      "enforce_from": "2026-11-22"
     },
     {
       "id": "CI-023",

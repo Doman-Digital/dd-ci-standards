@@ -590,24 +590,29 @@ test("REG-007 counts issue-ref where dd-policy-required runs, though dd-issue-re
   assert.ok(rulesFound(runDoctor({ ...v, required: ["issue-ref", "scan"] }, rulebook, base)).includes("REG-007"));
 });
 
-test("CI-033 holds lab speed off pull requests and leaves PageSpeed after the deploy alone (DOM-17811)", () => {
+test("CI-033: CI runs no Lighthouse, in any of its forms; PageSpeed and axe are fine (DOM-17811)", () => {
   const found = (v) => runDoctor(v, rulebook, base).findings.filter((f) => f.rule === "CI-033");
-  const pr = (text) => ({ path: ".github/workflows/perf.yml", text });
-  const treosh = "on:\n  pull_request:\njobs:\n  lh:\n    steps:\n      - uses: treosh/lighthouse-ci-action@3e7e23fb74242897f95c0ba9cabad3d0227b9b18\n        with:\n          urls: http://localhost:3000\n          budgetPath: ./budget.json\n";
-  assert.equal(found({ workflows: [pr(treosh)], vercel: [], files: {} }).length, 1);
-  // The same step after a deploy (push) measures nothing on a pull request: not this rule's business.
-  assert.equal(found({ workflows: [pr(treosh.replace("pull_request", "push"))], vercel: [], files: {} }).length, 0);
-  // A commented-out budget is not a budget.
-  assert.equal(found({ workflows: [pr(treosh.replace("budgetPath", "# budgetPath"))], vercel: [], files: {} }).length, 0);
-  // A JS config with a timing metric at error, run from the merge queue.
-  const js = "module.exports = { ci: { assert: { assertions: { 'largest-contentful-paint': ['error', { maxNumericValue: 2500 }] } } } };";
-  const mq = "on:\n  merge_group:\njobs:\n  lh:\n    steps:\n      - run: npx lhci autorun\n";
-  const hits = found({ workflows: [pr(mq)], vercel: [], files: { "lighthouserc.js": js } });
-  assert.deepEqual(hits.map((f) => [f.file, f.line]), [["lighthouserc.js", 1]]);
-  // A config with no pull request workflow running Lighthouse is left alone (it is run by hand, or after a deploy).
-  assert.equal(found({ workflows: [pr("on:\n  pull_request:\njobs:\n  test:\n    steps:\n      - run: pnpm test\n")], vercel: [], files: { "lighthouserc.js": js } }).length, 0);
-  // psi-gate after a deploy is the right place for speed.
-  assert.equal(found({ workflows: [pr("on:\n  push:\n    branches: [master]\njobs:\n  psi:\n    steps:\n      - uses: Doman-Digital/dd-ci-standards/.github/actions/psi-gate@v1\n")], vercel: [], files: {} }).length, 0);
+  const job = (...steps) => ({ workflows: [{ path: ".github/workflows/ci.yml", text: `on:\n  push:\njobs:\n  a:\n    steps:\n${steps.map((x) => `      - ${x}\n`).join("")}` }], vercel: [], files: {} });
+  for (const step of [
+    "run: pnpm exec lhci autorun --config=lighthouserc.json",
+    "run: npm i -D @lhci/cli",
+    "uses: treosh/lighthouse-ci-action@3e7e23fb74242897f95c0ba9cabad3d0227b9b18",
+    "run: npx --yes lighthouse@13 http://localhost:3000 --output json",
+    "run: npx lighthouse http://localhost:4321",
+    "run: lighthouse https://example.com --quiet",
+    "run: pnpm add -D lighthouse",
+    "run: npx unlighthouse --site https://example.com",
+  ]) assert.equal(found(job(step)).length, 1, step);
+  // Not Lighthouse on the runner: PageSpeed after a deploy, a PageSpeed script named lighthouse.mjs, axe, a comment.
+  for (const step of [
+    "uses: Doman-Digital/dd-ci-standards/.github/actions/psi-gate@v1",
+    "run: node bin/lighthouse.mjs $SITE",
+    "run: node .github/scripts/axe.mjs",
+    "name: Lighthouse against the live pages in the registry",
+    "run: echo ok # lhci used to run here",
+  ]) assert.equal(found(job(step)).length, 0, step);
+  // A Lighthouse CI config at the root is flagged on its own.
+  assert.deepEqual(found({ ...job("run: pnpm test"), files: { "lighthouserc.json": "{}" } }).map((f) => f.file), ["lighthouserc.json"]);
 });
 
 test("REG-007 counts the jobs of workflows an organisation ruleset runs", async () => {
