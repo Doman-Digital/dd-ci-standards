@@ -66,3 +66,17 @@ test("a very long list of files outside every workspace still runs everything (n
   for (let i = 0; i < 1500; i++) change[`gone/${"d".repeat(60)}/file-${i}.txt`] = "x\n";
   assert.deepEqual(scope(change), { run: "true", "turbo-filters": "", "pnpm-filters": "--filter=!mono" });
 });
+
+test("a merge group is scoped against the group's base, not its first parent", () => {
+  // The queue's commit is a plain commit on top of earlier entries: HEAD^1 is not main. BASE_SHA is.
+  assert.deepEqual(scope({ "apps/web/index.js": "2\n" }, { EVENT_NAME: "merge_group" }), { run: "true", "turbo-filters": "--filter=web", "pnpm-filters": "--filter=web" });
+  assert.deepEqual(scope({ "scripts/build.mjs": "x\n" }, { EVENT_NAME: "merge_group" }), { run: "true", "turbo-filters": "", "pnpm-filters": "--filter=!mono" });
+  assert.deepEqual(scope({ "docs/notes.md": "x\n" }, { EVENT_NAME: "merge_group" }), { run: "false" });
+  assert.equal(scope({ "apps/web/index.js": "2\n" }, { EVENT_NAME: "merge_group", BASE_SHA: "" })["turbo-filters"], "", "no base commit runs everything");
+  assert.equal(scope({ "apps/web/index.js": "2\n" }, { EVENT_NAME: "push" })["turbo-filters"], "", "a push still runs everything");
+});
+
+test("action.yml gives a merge group its base commit", () => {
+  const action = readFileSync(new URL("../.github/actions/workspace-scope/action.yml", import.meta.url), "utf8");
+  assert.match(action, /BASE_SHA: \$\{\{ github\.event\.pull_request\.base\.sha \|\| github\.event\.merge_group\.base_sha \}\}/);
+});

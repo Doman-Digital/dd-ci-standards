@@ -4,7 +4,8 @@ description: |
   pnpm filter arguments, so a PR's lint, typecheck, test and build run only
   those (DOM-776 step 5, CI-025).
 
-  Every workspace on any event that is not a pull request, and on a pull
+  Every workspace on any event that is not a pull request or a merge group
+  (the merge queue's run is scoped against the group's base), and on a pull
   request that changes a file outside every workspace folder other than
   documentation: the root package.json, the lockfile, turbo.json, a workflow,
   a script, a docs JSON file. Turbo's own change detection does not see those
@@ -59,7 +60,7 @@ runs:
       shell: bash
       env:
         EVENT_NAME: ${{ github.event_name }}
-        BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
         INCLUDE: ${{ inputs.include }}
         DOCS: ${{ inputs.docs }}
       run: bash "$GITHUB_ACTION_PATH/scope.sh"
