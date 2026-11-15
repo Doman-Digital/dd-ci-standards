@@ -1,0 +1,45 @@
+name: DD PageSpeed gate
+description: >
+  Run PageSpeed Insights on a public URL, five runs per strategy, and fail when the median first
+  contentful paint, largest contentful paint or layout shift breaks its budget. Use it after a deploy
+  instead of a lab Lighthouse budget on a shared runner (DOM-17734).
+inputs:
+  url:
+    description: The public https URL to measure.
+    required: true
+  api-key:
+    description: The PageSpeed API key, passed from a secret.
+    required: true
+  runs:
+    description: Runs per strategy.
+    default: "5"
+  strategies:
+    description: Comma list of mobile and desktop.
+    default: "mobile,desktop"
+  lcp-ms:
+    description: Budget for the median largest contentful paint, in milliseconds.
+    default: "2500"
+  fcp-ms:
+    description: Budget for the median first contentful paint, in milliseconds.
+    default: "1800"
+  cls:
+    description: Budget for the median cumulative layout shift.
+    default: "0.1"
+  min-performance:
+    description: Lowest acceptable median performance score, 0 to switch it off.
+    default: "0"
+runs:
+  using: composite
+  steps:
+    - name: PageSpeed Insights, median of the runs against the budgets
+      shell: bash
+      env:
+        PSI_URL: ${{ inputs.url }}
+        PSI_API_KEY: ${{ inputs.api-key }}
+        PSI_RUNS: ${{ inputs.runs }}
+        PSI_STRATEGIES: ${{ inputs.strategies }}
+        PSI_LCP_MS: ${{ inputs.lcp-ms }}
+        PSI_FCP_MS: ${{ inputs.fcp-ms }}
+        PSI_CLS: ${{ inputs.cls }}
+        PSI_MIN_PERFORMANCE: ${{ inputs.min-performance }}
+      run: node "$GITHUB_ACTION_PATH/psi-gate.mjs"
