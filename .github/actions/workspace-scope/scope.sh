@@ -13,10 +13,16 @@ all() {
   } >> "$GITHUB_OUTPUT"
   exit 0
 }
-[ "$EVENT_NAME" = pull_request ] || all "not a pull request"
+case "$EVENT_NAME" in
+  pull_request | merge_group) ;;
+  *) all "not a pull request or merge group" ;;
+esac
 # A pull request's checkout is its merge commit: the first parent is the base
-# it was merged onto, which is exactly what the PR changes.
-if git rev-parse -q --verify HEAD^2 >/dev/null; then
+# it was merged onto, which is exactly what the PR changes. A merge group's
+# checkout is the queue's commit on top of every entry ahead of it, so its first
+# parent is not the base: BASE_SHA is the group's base (main), and the diff
+# against it covers everything the group adds.
+if [ "$EVENT_NAME" = pull_request ] && git rev-parse -q --verify HEAD^2 >/dev/null; then
   base=$(git rev-parse HEAD^1)
 else
   base=${BASE_SHA:-}
