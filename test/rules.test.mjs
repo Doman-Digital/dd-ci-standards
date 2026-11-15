@@ -577,6 +577,19 @@ test("the projection matches what dd-repo-registry would write, if a checkout si
   }
 });
 
+test("REG-007 counts issue-ref where dd-policy-required runs, though dd-issue-ref-required is at evaluate (DOM-17778)", () => {
+  const rulesFound = (r) => r.findings.map((f) => f.rule);
+  // 15 November 2026: dd-agent-kit's ruleset required `issue-ref`, which issue-ref.yml reported through an evaluate
+  // ruleset. GitHub's branch rules showed only the active policy rule, and REG-007 failed every kit pull request.
+  const v = { workflows: [], vercel: [], files: {}, required: ["issue-ref"], mergeQueue: false, orgWorkflows: [], orgPolicy: true };
+  assert.ok(!rulesFound(runDoctor(v, rulebook, base)).includes("REG-007"));
+  // Without the policy ruleset, nothing runs issue-ref.yml here: still caught.
+  assert.ok(rulesFound(runDoctor({ ...v, orgPolicy: false }, rulebook, base)).includes("REG-007"));
+  assert.ok(rulesFound(runDoctor({ ...v, orgPolicy: null }, rulebook, base)).includes("REG-007"));
+  // Only issue-ref is excused: another missing check is still caught.
+  assert.ok(rulesFound(runDoctor({ ...v, required: ["issue-ref", "scan"] }, rulebook, base)).includes("REG-007"));
+});
+
 test("REG-007 counts the jobs of workflows an organisation ruleset runs", async () => {
   const { branchRules } = await import("../lib/view-github.mjs");
   const policy = "on:\n  workflow_call:\njobs:\n  check:\n    runs-on: ubuntu-latest\n    steps:\n      - run: x\n";
