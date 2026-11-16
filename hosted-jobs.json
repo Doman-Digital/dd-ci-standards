@@ -4,6 +4,15 @@
   "jobs": [
     {
       "repo": "dd-repo-registry",
+      "workflow": "minutes-ledger.yml",
+      "job": "ledger",
+      "runs_on": "ubuntu-latest",
+      "why": "Watches the spend the valve moves CI_RUNNER on; must not queue on the pools or move to the box at 60% (DOM-17682).",
+      "minutes_a_month": 30,
+      "measured": "one job of about a minute a day, billed as 1 minute: 30 a month"
+    },
+    {
+      "repo": "dd-repo-registry",
       "workflow": "ci-runner-valve.yml",
       "job": "valve",
       "runs_on": "ubuntu-latest",

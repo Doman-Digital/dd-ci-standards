@@ -38,7 +38,7 @@ import { planAdopt } from "../lib/adopt.mjs";
 import { resolvePins } from "../lib/pins.mjs";
 import { POLICY_RULESET } from "../lib/rules.mjs";
 import { selectRules, issueRefElsewhere, livePullRequest } from "../lib/issue-ref.mjs";
-import { planNew, addToRegistry, cleanVerdict, ruleset, PR_BODY, REGISTRY_REPO, POLICY_CHECK } from "../lib/new.mjs";
+import { planNew, addToRegistry, cleanVerdict, starterBudgetRows, starterBudgetYaml, ruleset, PR_BODY, REGISTRY_REPO, POLICY_CHECK } from "../lib/new.mjs";
 
 const HOME = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const rulebook = JSON.parse(readFileSync(join(HOME, "rules.json"), "utf8"));
@@ -361,6 +361,11 @@ async function newRepo(args) {
   for (const [path, text] of Object.entries(writes)) {
     mkdirSync(dirname(join(dir, path)), { recursive: true });
     writeFileSync(join(dir, path), text);
+  }
+  // The cost register (CI-035): a new repo has no rows in budget.yml yet, so price its workflows by default and say what to add.
+  if (!budget.workflows.length) {
+    budget.workflows = starterBudgetRows(loadFsView(dir));
+    if (budget.workflows.length) console.log(`dd new: add this to ${join(HOME, "budget.yml")} (Doman-Digital/dd-ci-standards) so the repo's workflows are priced:\n${starterBudgetYaml(plan.name, budget.workflows)}`);
   }
   const result = runDoctor(loadFsView(dir), rulebook, ctx);
   console.log(format(result, "text", plan.repo));
