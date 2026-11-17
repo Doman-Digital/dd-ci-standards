@@ -55,6 +55,25 @@
       "pinDigests": false
     },
     {
+      "description": "Our own tooling (repos tagged dd-tooling, minus the exclusions in renovate-tooling.json) also automerges minor bumps and lock file maintenance once every check is green; client sites and apps never do (founder, 17 November 2026). Renovate merges on its own daily run after reading the checks itself (platformAutomerge false), so a repo whose main requires no checks still waits for green. Placed before the house packages rule so house updates keep their own settings",
+      "matchRepositories": [
+        "Doman-Digital/dd-agent-kit",
+        "Doman-Digital/dd-craft-corpus",
+        "Doman-Digital/dd-frame-ripper",
+        "Doman-Digital/dd-library",
+        "Doman-Digital/dd-packages",
+        "Doman-Digital/dd-photo-pack",
+        "Doman-Digital/dd-prompt-library",
+        "Doman-Digital/dd-seo-mcp",
+        "Doman-Digital/dd-trawl"
+      ],
+      "matchUpdateTypes": ["minor", "patch", "lockFileMaintenance"],
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "squash",
+      "platformAutomerge": false
+    },
+    {
       "description": "House packages (@domandigital/*, craft above all) as soon as they are published, in their own group, merged once CI is green. They used to sit in the Monday group with 70 third-party packages, not automerged, so the Doman-Digital monorepo stayed on craft 0.5.0 while npm had 0.20.5 and copy-check ran old rules (DOM-1043). Last among the grouping rules so it wins; the rule above already skips the release-age wait for our own packages. No hourly or concurrent cap: on the first run a client repo's house PR was skipped because security PRs had used the hour's two, and a house release is one PR a repo",
       "matchPackageNames": ["@domandigital/**"],
       "groupName": "house packages",

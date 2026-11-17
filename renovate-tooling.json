@@ -1,0 +1,17 @@
+{
+  "about": "Which Doman-Digital repos get the tooling automerge rule in default.json: every unarchived repo with the dd-tooling topic, minus the exclusions below. test/renovate-tooling.test.mjs checks default.json against this file; scripts/check-renovate-tooling.mjs checks it against GitHub topics every day from renovate.yml. Founder yes, 17 November 2026: green robot PRs on our own tooling merge themselves, client sites never.",
+  "owner": "Doman-Digital",
+  "topic": "dd-tooling",
+  "excluded": {
+    "client-previews": "builds client preview sites; a broken update shows only at a manual production deploy, so a person merges",
+    "dd-ci-standards": "every merge moves @v1 for the whole estate, so a person picks a quiet moment",
+    "dd-content-hq": "no build or test check yet, so green means only the policy scan passed; join once it has one (DOM-1048)",
+    "dd-device-lab": "no build or test check yet, so green means only the policy scan passed; join once it has one (DOM-1048)",
+    "dd-legal-library": "no build or test check yet, so green means only the policy scan passed; join once it has one (DOM-1048)",
+    "dd-postcard-campaign": "no build or test check yet, so green means only the policy scan passed; join once it has one (DOM-1048)",
+    "dd-whisperjack": "no build or test check yet, so green means only the policy scan passed; join once it has one (DOM-1048)",
+    "dd-rebuild-relay": "no build or test check yet, and a merge to main deploys it; join once it has one (DOM-1048)",
+    "dd-repo-registry": "main merges through a merge queue, which a Renovate merge (platformAutomerge false) cannot enter",
+    "dd-netcup-config": "runs the database backups and restore drills on the fleet box, applied nightly; a person merges"
+  }
+}

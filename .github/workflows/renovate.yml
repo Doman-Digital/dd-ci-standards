@@ -140,3 +140,30 @@ jobs:
         # The major is named so a new one is a reviewed change, not a surprise
         # on a Monday; minors and patches arrive by themselves.
         run: npx --yes renovate@44
+
+  # The tooling automerge rule in default.json names repos by hand (Renovate cannot match a
+  # topic). This job turns red when that list no longer matches the unarchived Doman-Digital
+  # repos tagged dd-tooling, minus renovate-tooling.json exclusions (founder, 17 November 2026).
+  # Its own job, so drift never stops the Renovate run.
+  tooling-list:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Mint a read token for Doman-Digital
+        id: app-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0 # zizmor: ignore[github-app]
+        with:
+          app-id: ${{ secrets.CI_GH_APP_ID }}
+          private-key: ${{ secrets.CI_GH_APP_PRIVATE_KEY }}
+          owner: Doman-Digital
+          permission-metadata: read
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+      - name: Check the tooling list against the topics
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: node scripts/check-renovate-tooling.mjs
