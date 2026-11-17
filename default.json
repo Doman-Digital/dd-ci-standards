@@ -58,22 +58,14 @@
       "description": "Our own tooling (repos tagged dd-tooling, minus the exclusions in renovate-tooling.json) also automerges minor bumps and lock file maintenance once every check is green; client sites and apps never do (founder, 17 November 2026). Renovate merges on its own daily run after reading the checks itself (platformAutomerge false), so a repo whose main requires no checks still waits for green. Placed before the house packages rule so house updates keep their own settings",
       "matchRepositories": [
         "Doman-Digital/dd-agent-kit",
-        "Doman-Digital/dd-content-hq",
         "Doman-Digital/dd-craft-corpus",
-        "Doman-Digital/dd-device-lab",
         "Doman-Digital/dd-frame-ripper",
-        "Doman-Digital/dd-legal-library",
         "Doman-Digital/dd-library",
-        "Doman-Digital/dd-netcup-config",
         "Doman-Digital/dd-packages",
         "Doman-Digital/dd-photo-pack",
-        "Doman-Digital/dd-postcard-campaign",
         "Doman-Digital/dd-prompt-library",
-        "Doman-Digital/dd-rebuild-relay",
-        "Doman-Digital/dd-repo-registry",
         "Doman-Digital/dd-seo-mcp",
-        "Doman-Digital/dd-trawl",
-        "Doman-Digital/dd-whisperjack"
+        "Doman-Digital/dd-trawl"
       ],
       "matchUpdateTypes": ["minor", "patch", "lockFileMaintenance"],
       "automerge": true,

@@ -532,8 +532,9 @@ has to pass a policy check to merge, not get caught in the next audit.
   every check is green (founder, 17 November 2026); client sites and apps never
   do. Renovate cannot match a GitHub topic, so the rule names each repo: every
   unarchived Doman-Digital repo tagged dd-tooling, minus the exclusions in
-  renovate-tooling.json, each with its reason (client-previews builds client
-  previews; dd-ci-standards moves @v1 for everyone). It sets
+  renovate-tooling.json, each with its reason: repos with no build or test
+  check yet, a merge-queue repo, the fleet box config, client-previews and
+  this repo, whose merges move @v1 for everyone. It sets
   platformAutomerge false, so Renovate merges on its daily run only after
   reading the checks itself, even where main requires none.
   test/renovate-tooling.test.mjs refuses an unscoped, wildcard, major or
