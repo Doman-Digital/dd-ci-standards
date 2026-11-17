@@ -39,6 +39,15 @@
       "measured": "estimate, not yet measured: about 15 minutes a run, about 2 runs a week, billed at the 10x macOS rate (ten included minutes per minute used); re-measure after a month"
     },
     {
+      "repo": "dd-relay",
+      "workflow": "ci-queue-probe.yml",
+      "job": "close",
+      "runs_on": "ubuntu-latest",
+      "why": "Closes the cloud queue judge's self-test (relay.ciQueue, DOM-17983): it cancels the held probe run so the card closes. It must not wait on the pools, because a probe that queued behind the pool it checks cannot close its card when that pool is the thing that is down.",
+      "minutes_a_month": 4,
+      "measured": "estimate: one run of under a minute per probe, about four probes a month, billed as 1 minute each; the held job asks for a label no runner has and is never billed"
+    },
+    {
       "repo": "Doman-Digital",
       "workflow": "dd-checks-test.yml",
       "job": "test",
