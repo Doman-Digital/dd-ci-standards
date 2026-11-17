@@ -417,4 +417,9 @@ jobs:
     fail: wf("on:\n  push:\n    branches: [main]\n  pull_request:\njobs:\n  voiceover:\n    runs-on: macos-latest\n    timeout-minutes: 20\n    steps:\n      - run: echo hi\n", ".github/workflows/screen-reader.yml"),
     pass: wf("on:\n  workflow_dispatch:\njobs:\n  voiceover:\n    runs-on: macos-latest\n    timeout-minutes: 20\n    steps:\n      - run: echo hi\n", ".github/workflows/screen-reader.yml"),
   },
+  "CI-040": {
+    // A queue-tier browser job on the heavy pool: the 60% flip would move it to the box.
+    fail: wf("on:\n  pull_request:\n  merge_group:\njobs:\n  changes:\n    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 5\n    steps:\n      - run: echo plan\n        env:\n          TIERS: '{\"phone\":\"queue\"}'\n  phone:\n    needs: changes\n    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 8\n    steps:\n      - run: echo phone\n"),
+    pass: wf("on:\n  pull_request:\n  merge_group:\njobs:\n  changes:\n    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 5\n    steps:\n      - run: echo plan\n        env:\n          TIERS: '{\"phone\":\"queue\"}'\n  phone:\n    needs: changes\n    runs-on: ${{ vars.CI_RUNNER_BROWSER || 'ubuntu-latest' }}\n    timeout-minutes: 8\n    steps:\n      - run: echo phone\n"),
+  },
 };
