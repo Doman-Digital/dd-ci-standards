@@ -17,5 +17,5 @@ test("scanners.json names each repo with a reason, as owner/name", () => {
 test("a listed repo gets the scanner, case aside; any other repo does not", () => {
   const listed = Object.keys(register.scanners.semgrep)[0];
   assert.deepEqual(scannersFor(register, listed.toUpperCase()), { semgrep: true });
-  assert.deepEqual(scannersFor(register, "Doman-Digital/Doman-Digital"), { semgrep: false });
+  assert.deepEqual(scannersFor(register, "Doman-Digital/dd-packages"), { semgrep: false });
 });
