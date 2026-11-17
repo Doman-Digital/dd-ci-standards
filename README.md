@@ -548,8 +548,10 @@ has to pass a policy check to merge, not get caught in the next audit.
 
   Four version caps hold the estate where it is until a person moves it
   (founder, 17 November 2026; test/renovate-caps.test.mjs pins them). Node
-  stays on 24 (`allowedVersions "<25"`, by package name, so setup-node, nvm,
-  `engines` and Dockerfile images are all held). pnpm stays on 10 (`"<11"`):
+  stays on 24 (`allowedVersions "<25"`, by dependency name, so setup-node, nvm,
+  `engines` and Dockerfile images are all held; a workflow's `node-version`
+  has the package name `actions/node-versions`, which a package-name match
+  missed). pnpm stays on 10 (`"<11"`):
   the `packageManager` field and the version pnpm/action-setup installs, while
   the action itself still updates. phpunit stays below 13 in composer. A
   project's `requires-python` is never bumped (pep621 rule disabled). To move

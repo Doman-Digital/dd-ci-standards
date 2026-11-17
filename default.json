@@ -86,8 +86,8 @@
       "prConcurrentLimit": 0
     },
     {
-      "description": "Stay on Node 24 across the estate and move together later (founder, 17 November 2026). Covers the node runtime wherever Renovate reads it: setup-node node-version in workflows, .nvmrc, engines.node, Dockerfile node images",
-      "matchPackageNames": ["node"],
+      "description": "Stay on Node 24 across the estate and move together later (founder, 17 November 2026). Covers the node runtime wherever Renovate reads it: setup-node node-version in workflows, .nvmrc, engines.node, Dockerfile node images. Matched by dependency name: for a workflow's node-version Renovate's package name is actions/node-versions, so a package-name match let Node 26 through on six repos the day the cap shipped",
+      "matchDepNames": ["node"],
       "allowedVersions": "<25"
     },
     {
