@@ -502,7 +502,8 @@ has to pass a policy check to merge, not get caught in the next audit.
 - **`default.json`**: shared Renovate preset. Weekly Monday-morning window,
   concurrency caps, majors grouped by manager (the fix for an 18-PR fan-out
   where individually-grouped minors still let every major land separately),
-  automerge on devDependencies and patch bumps only. Vulnerability handling
+  automerge on devDependencies and patch bumps (and, on our own tooling, minor
+  bumps and lock file maintenance: see below). Vulnerability handling
   is the deliberate exception to all of the above: `osvVulnerabilityAlerts`
   + `vulnerabilityAlerts` bypass the weekly schedule and concurrency cap
   entirely (`schedule: "at any time"`, `prConcurrentLimit: 0`): a real CVE
@@ -526,6 +527,18 @@ has to pass a policy check to merge, not get caught in the next audit.
   `ignoreTests: true`, merge without waiting. Renovate's own commit statuses
   are off (`statusCheckNames`), because the App that runs it can read statuses
   but not write them, and the 403 aborted every repo (DOM-1043).
+
+  Our own tooling also automerges minor bumps and lock file maintenance once
+  every check is green (founder, 17 November 2026); client sites and apps never
+  do. Renovate cannot match a GitHub topic, so the rule names each repo: every
+  unarchived Doman-Digital repo tagged dd-tooling, minus the exclusions in
+  renovate-tooling.json, each with its reason (client-previews builds client
+  previews; dd-ci-standards moves @v1 for everyone). It sets
+  platformAutomerge false, so Renovate merges on its daily run only after
+  reading the checks itself, even where main requires none.
+  test/renovate-tooling.test.mjs refuses an unscoped, wildcard, major or
+  estate-wide version of the rule, and the tooling-list job in renovate.yml
+  turns red each day the list drifts from the topics.
 
   A repo that falls behind anyway fails PKG-001: `dd doctor` reads the craft
   versions the lockfile resolves for the repo's own packages, reads the

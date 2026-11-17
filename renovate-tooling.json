@@ -1,0 +1,9 @@
+{
+  "about": "Which Doman-Digital repos get the tooling automerge rule in default.json: every unarchived repo with the dd-tooling topic, minus the exclusions below. test/renovate-tooling.test.mjs checks default.json against this file; scripts/check-renovate-tooling.mjs checks it against GitHub topics every day from renovate.yml. Founder yes, 17 November 2026: green robot PRs on our own tooling merge themselves, client sites never.",
+  "owner": "Doman-Digital",
+  "topic": "dd-tooling",
+  "excluded": {
+    "client-previews": "builds client preview sites; a broken update shows only at a manual production deploy, so a person merges",
+    "dd-ci-standards": "every merge moves @v1 for the whole estate, so a person picks a quiet moment"
+  }
+}
