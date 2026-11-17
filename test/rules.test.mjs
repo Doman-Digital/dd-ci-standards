@@ -525,7 +525,7 @@ test("SEC-009: registration, the variable and drift (DOM-1265)", () => {
   assert.deepEqual(run(quiet, { repo: "Doman-Digital/other", vars: {} }), []);
 });
 
-test("SEC-009: a null-identity row fails a repo that runs `doppler oidc login`; the real table has none (DOM-17914)", () => {
+test("SEC-009: a null-identity row fails a repo that runs `doppler oidc login`; dd-repo-registry passes on the real table (DOM-17914)", () => {
   const cli = { workflows: [{ path: ".github/workflows/ledger.yml", text: "on:\n  schedule:\n    - cron: '0 * * * *'\njobs:\n  l:\n    steps:\n      - run: |\n          doppler oidc login --scope / --identity \"$DOPPLER_IDENTITY_ID\" --token \"$jwt\"\n" }], vercel: [], files: {} };
   const none = { workflows: [{ path: ".github/workflows/ci.yml", text: "on: [push]\njobs:\n  t:\n    steps:\n      - run: npm test\n" }], vercel: [], files: {} };
   const commented = { workflows: [{ path: ".github/workflows/ci.yml", text: "on: [push]\njobs:\n  t:\n    steps:\n      # doppler oidc login --scope /\n      - run: npm test\n" }], vercel: [], files: {} };
@@ -543,10 +543,13 @@ test("SEC-009: a null-identity row fails a repo that runs `doppler oidc login`; 
   const good = { identities: [{ repo: h("Doman-Digital/demo"), identity: h("11111111-1111-4111-8111-111111111111") }] };
   assert.deepEqual(run(cli, { repo: "Doman-Digital/demo", vars: { DOPPLER_IDENTITY_ID: "11111111-1111-4111-8111-111111111111" }, dopplerIdentities: good }), []);
   assert.match(run(cli, { repo: "Doman-Digital/ghost", vars: null, dopplerIdentities: good })[0], /no row/);
-  // The real table: every row has an identity, so no signing-in repo can fall through on a null.
+  // The real table (no override): dd-repo-registry, the repo that signed in on a null row, signs in with the
+  // command line and has a recorded identity, so it passes; if its row ever goes back to null this goes red.
+  // Other rows may be null by design (a repo registered before its identity is made) and are not this test's.
   const real = JSON.parse(readFileSync(new URL("../doppler-identities.json", import.meta.url), "utf8"));
-  const nulls = real.identities.filter((r) => !r.identity);
-  assert.equal(nulls.length, 0, `${nulls.length} register row(s) have no identity: run bin/doppler-identity.mjs in dd-repo-registry`);
+  const regRow = real.identities.find((r) => r.repo === h("Doman-Digital/dd-repo-registry"));
+  assert.ok(regRow?.identity, "dd-repo-registry has a row with an identity in the real table");
+  assert.deepEqual(run(cli, { repo: "Doman-Digital/dd-repo-registry", vars: null }), []);
 });
 
 // The acceptance for DOM-1363, end to end: the doctor as the policy workflow runs it, reading the
