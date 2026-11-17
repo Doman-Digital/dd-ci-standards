@@ -64,7 +64,6 @@
         "Doman-Digital/dd-packages",
         "Doman-Digital/dd-photo-pack",
         "Doman-Digital/dd-prompt-library",
-        "Doman-Digital/dd-seo-mcp",
         "Doman-Digital/dd-trawl"
       ],
       "matchUpdateTypes": ["minor", "patch", "lockFileMaintenance"],
