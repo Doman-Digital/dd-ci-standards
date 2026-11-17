@@ -108,6 +108,12 @@
       "enabled": false
     },
     {
+      "description": "Never take a major on an override (pnpm, npm or yarn), security updates included. An override forces its version onto every package that asked for the older major, so a forced major changes code those packages never tested against; two such PRs broke the build on a client site on 17 November 2026. A fix that exists only in a newer major is a decision for a person, tracked in Linear. The fix inside the current major is a lock refresh or a raised floor, which this rule leaves alone. No package, manager or datasource matcher: matchers are ANDed, so any of them would narrow the rule",
+      "matchDepTypes": ["pnpm.overrides", "pnpm-workspace.overrides", "overrides", "resolutions"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
       "description": "Never update dd-ci-standards itself. Callers use @v1 (and #v1 for this preset), which moves with every release; Renovate rewrote it to fixed releases (v1.0.13, v1.0.22), and a pinned caller stops getting new rules (FW-003, 13 October 2026)",
       "matchPackageNames": ["Doman-Digital/dd-ci-standards"],
       "enabled": false

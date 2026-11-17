@@ -557,6 +557,15 @@ has to pass a policy check to merge, not get caught in the next audit.
   project's `requires-python` is never bumped (pep621 rule disabled). To move
   a ceiling, change it here once, for every repo.
 
+  Renovate never takes a major on an override, security updates included:
+  `pnpm.overrides`, `pnpm-workspace.overrides`, npm `overrides` and yarn
+  `resolutions` have majors disabled. An override forces its version onto
+  every package that asked for the older major, and two such PRs broke a
+  client build on 17 November 2026. A fix that exists only in a newer major
+  goes to a person through Linear; the fix inside the current major is a lock
+  refresh or a raised floor. test/renovate-overrides.test.mjs pins the rule
+  and refuses any matcher that would narrow it.
+
   A repo that falls behind anyway fails PKG-001: `dd doctor` reads the craft
   versions the lockfile resolves for the repo's own packages, reads the
   catalogue each release carries from its npm tarball (cached by version),
