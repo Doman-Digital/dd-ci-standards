@@ -11,11 +11,13 @@ const rules = preset.packageRules;
 const IMAGE = "mcr.microsoft.com/playwright";
 
 // What applies to a dependency, read the way Renovate does: matching rules in order, later ones win.
-// Only the name matchers used in this preset are modelled; a rule with any other matcher is skipped.
-function settingsFor(depName, updateType) {
+// Names, update types and dependency types are modelled; a rule scoped to repositories, managers or
+// datasources is skipped, so this reads a client repo (the tooling rule names our own repos only).
+function settingsFor(depName, updateType, depType = "dependencies") {
   const out = {};
   for (const r of rules) {
-    if (r.matchRepositories || r.matchManagers || r.matchDepTypes || r.matchDatasources) continue;
+    if (r.matchRepositories || r.matchManagers || r.matchDatasources) continue;
+    if (r.matchDepTypes && !r.matchDepTypes.includes(depType)) continue;
     if (r.matchUpdateTypes && !r.matchUpdateTypes.includes(updateType)) continue;
     if (r.matchDepNames && !r.matchDepNames.includes(depName)) continue;
     if (r.matchPackageNames && !r.matchPackageNames.some((n) => n === depName || (n.endsWith("/**") && depName.startsWith(n.slice(0, -2))))) continue;
@@ -52,6 +54,21 @@ test("only the image skips the release-age wait; the npm packages keep it", () =
   assert.equal(settingsFor("@playwright/test", "patch").minimumReleaseAge, undefined);
   const lift = rules.filter((x) => x.minimumReleaseAge === null && x.matchDepNames);
   assert.deepEqual(lift.map((x) => x.matchDepNames), [[IMAGE]]);
+});
+
+// The devDependencies and patch rules set automerge with platformAutomerge, and client repos require
+// no checks, so a grouped PR (or the image alone, while npm waits out its release age) would merge
+// itself the moment it opened.
+test("on a client repo the group never automerges, whatever the update or dependency type", () => {
+  for (const type of ["patch", "minor", "major"]) {
+    for (const [dep, depType] of [[IMAGE, "container"], [IMAGE, "final"], ["playwright", "devDependencies"], ["@playwright/test", "devDependencies"], ["playwright", "dependencies"]]) {
+      assert.equal(settingsFor(dep, type, depType).automerge, false, `${dep} ${depType} ${type}`);
+    }
+  }
+  const group = rules.findIndex((x) => x.groupName === "playwright");
+  for (const i of rules.map((r, i) => (r.automerge === true && !r.matchRepositories ? i : -1)).filter((i) => i >= 0 && rules[i].groupName !== "house packages")) {
+    assert.ok(group > i, "the group must come after every estate-wide automerge rule it could meet");
+  }
 });
 
 test("the group sits after the generic grouping rules, so it wins", () => {
