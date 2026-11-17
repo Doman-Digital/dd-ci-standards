@@ -99,10 +99,10 @@ repos:
         measured_basis: "100 completed runs of ci.yml (71 pull request, 28 merge queue, 1 schedule) from 16 November 00:00 to 17 November 21:47 UTC, cancelled and failed runs included because they bill: 2,614 billed minutes at $0.006 = $15.68, from the runs and jobs APIs with each job rounded up to a whole minute. The same method gave 1,041 minutes against billing's 1,034 on 16 November and 2,093 against 2,091 on 17 November (all workflows of the repo). Two weekdays at a heavy pace, so plus or minus 30%; the ledger (BUD-004) measures it live from the 7-day window."
         events: "pull_request, merge_group, schedule"
         runner_class: hosted-linux
-        per_run_usd: 0.0292
-        runs_a_month: 2212
+        per_run_usd: 0.2028
+        runs_a_month: 2433
         owner: "DD Framework"
-        reason: "1106 runs 1 to 15 November 2026 (2212 a month at that rate), mean of 12 sampled November runs (range $0.006 to $0.804), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; x1.25 for merge-queue rebuilds (DOM-17819); seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+        reason: "measured 17 November 2026 (DOM-17629): every completed run 15 November 02:00 to 17 November 19:07 UTC (65 hours), 163 pull_request at 26.9 billed minutes a run ($0.162), 56 merge_group at 52.6 ($0.316) and 1 schedule at 105, cancelled and failed runs included, each job rounded up to the minute, from the jobs API at $0.006 a Linux minute; 220 runs in 65 hours is 2433 a month. Cross-check: the 8789 billed minutes ($52.73) of all 232 runs, dispatches included, against $55.02 the billing usage API gives the whole repo since 15 November. Replaces the 15 November seed, which was scaled by 0.11"
         pr_exempt_jobs: "verify, build, linear-command-centre"
         pr_exempt_reason: "verify (30 minute cap) and build (20) are the pull request check itself, scoped to the changed paths by the changes job's plan; linear-command-centre (15) runs only for its own paths. The browser tier (phone-first, website reviews, visual regression, portal journeys) is queue-only since Doman-Digital#1777. DOM-17682"
         job_minutes: "portal-phone-first=46.9, verify=19.5, portal-journeys / journeys=9.3, portal-website-reviews=4.2, build=2.6, visual-regression-portal=2.4, dd-checks / test=2.3, linear-command-centre / test=0.5, portal-a11y=11"
