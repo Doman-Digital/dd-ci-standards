@@ -483,8 +483,9 @@ has to pass a policy check to merge, not get caught in the next audit.
   with the owner's Doppler sign-in. It creates the service account and
   identity, sets the variables, writes the identity id back into the row and
   regenerates the projection here (`doppler-identities.json`, the repo and
-  the identity as sha256 only). SEC-009 fails a repo that signs in without its
-  row, without the variable, or with a value whose hash differs from the
+  the identity as sha256 only). SEC-009 fails a repo that signs in (the action's `doppler-identity-id`, the shared
+  deploy, or `doppler oidc login` in a run step) without its
+  row, with a row that records no identity, without the variable, or with a value whose hash differs from the
   row's; it never prints a registered value. The account id comes from
   dd-repo-registry registry.yaml `accounts.cloudflare`. This repo is public,
   so it holds no account id, plain repo list or identity id (DOM-1643). The register of

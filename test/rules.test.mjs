@@ -525,6 +525,30 @@ test("SEC-009: registration, the variable and drift (DOM-1265)", () => {
   assert.deepEqual(run(quiet, { repo: "Doman-Digital/other", vars: {} }), []);
 });
 
+test("SEC-009: a null-identity row fails a repo that runs `doppler oidc login`; the real table has none (DOM-17914)", () => {
+  const cli = { workflows: [{ path: ".github/workflows/ledger.yml", text: "on:\n  schedule:\n    - cron: '0 * * * *'\njobs:\n  l:\n    steps:\n      - run: |\n          doppler oidc login --scope / --identity \"$DOPPLER_IDENTITY_ID\" --token \"$jwt\"\n" }], vercel: [], files: {} };
+  const none = { workflows: [{ path: ".github/workflows/ci.yml", text: "on: [push]\njobs:\n  t:\n    steps:\n      - run: npm test\n" }], vercel: [], files: {} };
+  const commented = { workflows: [{ path: ".github/workflows/ci.yml", text: "on: [push]\njobs:\n  t:\n    steps:\n      # doppler oidc login --scope /\n      - run: npm test\n" }], vercel: [], files: {} };
+  const nullRow = { identities: [{ repo: h("Doman-Digital/demo"), identity: null }] };
+  const run = (v, ctx) => runDoctor(v, rulebook, { ...base, ...ctx }).findings.filter((f) => f.rule === "SEC-009").map((f) => f.message);
+  // The fixture that failed in October and went unseen: null row, CLI sign-in, variables unreadable.
+  assert.match(run(cli, { repo: "Doman-Digital/demo", vars: null, dopplerIdentities: nullRow })[0], /has no identity/);
+  // And with the variable unset, or set against a null row, it still fails.
+  assert.equal(run(cli, { repo: "Doman-Digital/demo", vars: {}, dopplerIdentities: nullRow }).length, 1);
+  assert.equal(run(cli, { repo: "Doman-Digital/demo", vars: { DOPPLER_IDENTITY_ID: "11111111-1111-4111-8111-111111111111" }, dopplerIdentities: nullRow }).length, 1);
+  // A null row for a repo that never signs in, or only mentions the command in a comment, is not this rule's.
+  assert.deepEqual(run(none, { repo: "Doman-Digital/demo", vars: null, dopplerIdentities: nullRow }), []);
+  assert.deepEqual(run(commented, { repo: "Doman-Digital/demo", vars: null, dopplerIdentities: nullRow }), []);
+  // A CLI sign-in with a recorded identity and the matching variable passes; with no row, it fails.
+  const good = { identities: [{ repo: h("Doman-Digital/demo"), identity: h("11111111-1111-4111-8111-111111111111") }] };
+  assert.deepEqual(run(cli, { repo: "Doman-Digital/demo", vars: { DOPPLER_IDENTITY_ID: "11111111-1111-4111-8111-111111111111" }, dopplerIdentities: good }), []);
+  assert.match(run(cli, { repo: "Doman-Digital/ghost", vars: null, dopplerIdentities: good })[0], /no row/);
+  // The real table: every row has an identity, so no signing-in repo can fall through on a null.
+  const real = JSON.parse(readFileSync(new URL("../doppler-identities.json", import.meta.url), "utf8"));
+  const nulls = real.identities.filter((r) => !r.identity);
+  assert.equal(nulls.length, 0, `${nulls.length} register row(s) have no identity: run bin/doppler-identity.mjs in dd-repo-registry`);
+});
+
 // The acceptance for DOM-1363, end to end: the doctor as the policy workflow runs it, reading the
 // pull request event file. A PR with no issue is refused, Part of passes, the no-issue label passes.
 test("dd doctor refuses a pull request event with no issue, passes Part of and the no-issue label", () => {
