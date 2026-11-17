@@ -128,3 +128,33 @@ test("a starter's own workflows are priced by dd new, so it starts clean (CI-035
   assert.deepEqual(found(v, ctx, "CI-037"), []);
   assert.deepEqual(found(v, ctx, "CI-036"), []);
 });
+
+// CI-040 (DOM-17865): the merge queue's browser tier reads CI_RUNNER_BROWSER so the 60% flip leaves it on GitHub-hosted runners.
+test("CI-040: a queue-tier job must read CI_RUNNER_BROWSER; jobs outside the tier, and workflows with no tier map, are left alone", () => {
+  const tiers = `      - run: echo plan\n        env:\n          TIERS: '{"phone":"queue","journeys":"queue"}'\n`;
+  const j = (name, runsOn) => `  ${name}:\n    runs-on: ${runsOn}\n    timeout-minutes: 8\n    steps:\n      - run: echo ${name}\n`;
+  const CI = "${{ vars.CI_RUNNER || 'ubuntu-latest' }}";
+  const BR = "${{ vars.CI_RUNNER_BROWSER || 'ubuntu-latest' }}";
+  const mg = "  pull_request:\n  merge_group:";
+  const wf = (...jobs) => view(["ci.yml", wfText(mg, job("changes", 5, tiers), ...jobs)]);
+  const f = found(wf(j("phone", CI), j("lint", CI)), ctxWith([row()]), "CI-040");
+  assert.equal(f.length, 1, "only the tier's job is flagged, not lint");
+  assert.match(f[0].message, /job phone .*CI_RUNNER_BROWSER/);
+  assert.equal(f[0].level, "enforce", "refused after 1 December 2026");
+  assert.equal(found(wf(j("phone", CI)), ctxWith([row()], { today: "2026-11-20" }), "CI-040")[0].level, "warn", "a warning first");
+  assert.equal(found(wf(j("phone", CI)), ctxWith([row()], { today: "2026-11-16" }), "CI-040").length, 0, "silent before the warning date");
+  assert.deepEqual(found(wf(j("phone", BR), j("lint", CI)), ctxWith([row()]), "CI-040"), []);
+  // no merge_group trigger, no tier map, a client's account, a public repo: nothing to judge
+  assert.deepEqual(found(view(["ci.yml", wfText("  pull_request:", job("changes", 5, tiers), j("phone", CI))]), ctxWith([row()]), "CI-040"), []);
+  assert.deepEqual(found(view(["ci.yml", wfText(mg, j("phone", CI))]), ctxWith([row()]), "CI-040"), []);
+  assert.deepEqual(found(wf(j("phone", CI)), ctxWith([row()], { meta: { owner: { login: "someclient" } } }), "CI-040"), []);
+  assert.deepEqual(found(wf(j("phone", CI)), ctxWith([row()], { visibility: "public" }), "CI-040"), []);
+  // a tier job that calls a local reusable workflow is judged on the inner job's runs-on
+  const caller = wfText(mg, job("changes", 5, tiers), "  journeys:\n    uses: ./.github/workflows/inner.yml\n");
+  const inner = (runsOn) => `on:\n  workflow_call:\njobs:\n  run:\n    runs-on: ${runsOn}\n    timeout-minutes: 8\n    steps:\n      - run: echo hi\n`;
+  assert.equal(found(view(["ci.yml", caller], ["inner.yml", inner(CI)]), ctxWith([row()]), "CI-040").length, 1);
+  assert.deepEqual(found(view(["ci.yml", caller], ["inner.yml", inner(BR)]), ctxWith([row()]), "CI-040"), []);
+  // a dated allow works
+  const allowed = "# dd: allow CI-040 until=2027-02-01 the box runs it\n" + wfText(mg, job("changes", 5, tiers), j("phone", CI));
+  assert.deepEqual(runDoctor(view(["ci.yml", allowed]), rulebook, ctxWith([row()])).findings.filter((x) => x.rule === "CI-040"), []);
+});

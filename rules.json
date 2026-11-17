@@ -273,6 +273,14 @@
       "enforce_from": "2026-11-29"
     },
     {
+      "id": "CI-040",
+      "title": "A merge-queue browser-tier job does not read CI_RUNNER_BROWSER",
+      "why": "17 November 2026 (DOM-17865, founder decision of 16 November): at the 60% spend flip the runner valve moves everything on vars.CI_RUNNER to dd-ci-01, but the monorepo's merge-queue browser tier cannot run there. DOM-17822 measured five proof entries on dd-ci-ephemeral at 148 to 303 minutes against the queue's 90-minute limit, and phone-first at 83 minutes on the box against its 75-minute cap; on GitHub-hosted it passed in 45 minutes (about $0.51 an entry). The valve keeps the org variable CI_RUNNER_BROWSER on ubuntu-latest until the $0 stop (dd-repo-registry ci-runner-valve.yaml, mode pinned_hosted). The rule fails a job named \"queue\" in a workflow's TIERS map (or a job of a local reusable workflow it calls) whose runs-on does not read vars.CI_RUNNER_BROWSER, in a workflow that starts on merge_group. Use runs-on: ${{ vars.CI_RUNNER_BROWSER || 'ubuntu-latest' }}; a deliberate exception is a dated allow comment. Known gap: in hosted mode the valve has no pool-health or canary check until the controller Worker exists (DOM-17692).",
+      "applies": "all",
+      "warn_from": "2026-11-17",
+      "enforce_from": "2026-12-01"
+    },
+    {
       "id": "CI-023",
       "title": "A workflow still uses Vercel",
       "why": "Vercel was retired for CI and deploys (DOM-555, DOM-776). On 19 October 2026 its leftovers were still in five repos: six VERCEL_TOKEN_* inputs in dd-repo-registry's sweep, a kv.vercel-storage placeholder in the monorepo's lighthouse.yml, and comments in three other repos describing Vercel building main. A workflow that names Vercel either does nothing or depends on an account nobody watches. A portal still served by Vercel records it as an exemption.",
