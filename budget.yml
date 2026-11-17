@@ -366,6 +366,8 @@ repos:
         reason: "520 runs 1 to 15 November 2026 (1040 a month at that rate), mean of 12 sampled November runs (range $0.006 to $0.006), scaled by 0.29 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
         pr_exempt_jobs: "valve"
         pr_exempt_reason: "ordinary pull request checks; timeout-minutes is a cap, not a run time (valve 15), and per_run_usd is the average billed cost of a whole run. A new job over 10 minutes needs its own entry here (DOM-17682)"
+        job_minutes: "valve=0.2"
+        job_minutes_basis: "Median of 264 successful runs of the workflow in the 30 days to 17 November 2026 (pull request, schedule and dispatch: the valve runs the same way on each), from the jobs API (DOM-17629). Raise a figure on purpose, in the same change as the job."
       - workflow: creds-check.yml
         events: "schedule, workflow_dispatch, pull_request, merge_group"
         runner_class: hosted-linux
@@ -974,6 +976,8 @@ repos:
         reason: "400 runs 1 to 15 November 2026 (800 a month at that rate), mean of 12 sampled November runs (range $0.006 to $0.060), scaled by 0.35 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
         pr_exempt_jobs: "hook-tests"
         pr_exempt_reason: "ordinary pull request checks; timeout-minutes is a cap, not a run time (hook-tests 20), and per_run_usd is the average billed cost of a whole run. A new job over 10 minutes needs its own entry here (DOM-17682)"
+        job_minutes: "hook-tests=8.7"
+        job_minutes_basis: "The job is shown as Git hook fixtures. Median of its 2 successful pull-request runs on 17 November 2026 (8.8 and 8.7 minutes), from the jobs API (DOM-17629); too few runs for a firm figure, so re-measure when it has 5. Raise a figure on purpose, in the same change as the job."
       - workflow: screen-reader.yml
         events: "workflow_dispatch"
         runner_class: hosted-macos
