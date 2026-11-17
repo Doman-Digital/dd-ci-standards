@@ -49,6 +49,16 @@
       "platformAutomerge": true
     },
     {
+      "description": "Playwright's Docker image moves in the same PR as the npm packages it must match. dd-trawl#48 moved playwright to 1.65.1 in the lock file while the CI image tag stayed v1.65.0-noble, and dd-trawl's test that compares the two went red. Matched by dependency name, the image wherever Renovate reads it (workflow container: and services: lines, Dockerfiles) and the two npm packages, with no manager or datasource matcher, which would narrow it. After the two generic grouping rules so this group wins for minor, patch and major. Lock file maintenance is a separate PR and can still move the npm lock alone",
+      "matchDepNames": ["mcr.microsoft.com/playwright", "playwright", "@playwright/test"],
+      "groupName": "playwright"
+    },
+    {
+      "description": "Playwright's image has no release-age wait. Renovate reads release timestamps from Docker Hub only, so an image on mcr.microsoft.com never has one and the timestamp-required default held its update forever (pendingChecks in the dd-trawl run of 17 November 2026; every image bump there was made by hand). The npm packages in the same group keep their wait, so the group PR can open with the image alone and stay red in a repo that compares the two until the npm side clears it",
+      "matchDepNames": ["mcr.microsoft.com/playwright"],
+      "minimumReleaseAge": null
+    },
+    {
       "description": "Our own repos (reusable workflows, git-tag packages like drift-guards) skip the release-age wait and digest pinning. The wait protects against someone else's compromised release, not our own tags, and the timestamp-required default would hold a git tag with no release timestamp indefinitely. @v1 stays a tag, as the README intends",
       "matchPackageNames": ["Doman-Digital/**", "dmitridoman/**", "@domandigital/**"],
       "minimumReleaseAge": null,

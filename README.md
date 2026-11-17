@@ -557,6 +557,16 @@ has to pass a policy check to merge, not get caught in the next audit.
   project's `requires-python` is never bumped (pep621 rule disabled). To move
   a ceiling, change it here once, for every repo.
 
+  Playwright's Docker image (`mcr.microsoft.com/playwright`, in workflow
+  `container:` lines or Dockerfiles) moves in one `playwright` group with the
+  npm packages `playwright` and `@playwright/test`, so the image tag and the
+  lock file change in the same PR (dd-trawl#48 moved the lock to 1.65.1 while
+  the image stayed 1.65.0, and its test comparing the two went red). The image
+  alone skips the release-age wait: Renovate has release timestamps from Docker
+  Hub only, so the wait never cleared for it. Monthly lock file maintenance is
+  a separate PR and can still move the npm lock alone. test/renovate-playwright.test.mjs
+  pins this.
+
   Renovate never takes a major on an override, security updates included:
   `pnpm.overrides`, `pnpm-workspace.overrides`, npm `overrides` and yarn
   `resolutions` have majors disabled. An override forces its version onto
