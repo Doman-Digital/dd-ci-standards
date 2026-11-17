@@ -2,7 +2,10 @@
   "_comment": "Scanners the policy check runs beyond gitleaks, per repo, with the reason. policy.yml reads this at the same release (scanners/action.yml), so no caller has a switch of its own. A repo that runs a scanner workflow of its own fails CI-015: add it here instead.",
   "scanners": {
     "semgrep": {
-      "sensphere/sen-sphere": "Semgrep p/default over each PR's changed files. It ran as security-semgrep.yml (its own VM on every PR) until DOM-776 step 5, 20 October 2026."
+      "sensphere/sen-sphere": "Semgrep p/default over each PR's changed files. It ran as security-semgrep.yml (its own VM on every PR) until DOM-776 step 5, 20 October 2026.",
+      "Doman-Digital/Doman-Digital": "Pilot (founder, 17 November 2026, DOM-17884): Semgrep p/default over each PR's changed files. Our website, enquiry endpoints and the client portal with its sign-in and customer records.",
+      "Doman-Digital/meridian": "Pilot (founder, 17 November 2026, DOM-17884): Semgrep p/default over each PR's changed files. A service that matches and returns personal data about people.",
+      "Doman-Digital/verqan-api": "Pilot (founder, 17 November 2026, DOM-17884): Semgrep p/default over each PR's changed files. An age-check API with token sign-in, metered billing and personal data."
     }
   }
 }
