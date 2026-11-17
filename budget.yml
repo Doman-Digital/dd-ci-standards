@@ -575,6 +575,9 @@ repos:
       - workflow: client-jobs.yml
         cron: "30 7,17 * * *"
         reason: "Twice-daily beauty-client Drive inbox intake, replacing the removed box."
+      - workflow: client-jobs.yml
+        cron: "0 9,10 * * 4"
+        reason: "Weekly Google Business Profile post for one client (DOM-17669); the UK-time guard lets only the 10:00 local run post, and the second entry covers the clock change. Posts only while CLIENT_GBP_POSTS_ENABLED is true. Four posts are queued (19 November to 10 December)."
     vercel_crons: []
     ceiling_usd: 1
     workflows:
