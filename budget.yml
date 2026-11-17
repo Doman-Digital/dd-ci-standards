@@ -102,6 +102,8 @@ repos:
         reason: "1106 runs 1 to 15 November 2026 (2212 a month at that rate), mean of 12 sampled November runs (range $0.006 to $0.804), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; x1.25 for merge-queue rebuilds (DOM-17819); seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
         pr_exempt_jobs: "verify, build, linear-command-centre"
         pr_exempt_reason: "verify (30 minute cap) and build (20) are the pull request check itself, scoped to the changed paths by the changes job's plan; linear-command-centre (15) runs only for its own paths. The browser tier (phone-first, website reviews, visual regression, portal journeys) is queue-only since Doman-Digital#1777. DOM-17682"
+        job_minutes: "portal-phone-first=46.9, verify=19.5, portal-journeys / journeys=9.3, portal-website-reviews=4.2, build=2.6, visual-regression-portal=2.4, dd-checks / test=2.3, linear-command-centre / test=0.5, portal-a11y=11"
+        job_minutes_basis: "First baselines (DOM-17629), moved here from dd-repo-registry ci-job-baselines.json so the number has one home: each job's median minutes over its successful runs in the 142 successful pull-request and merge-queue runs of ci.yml from 15 November 2026 02:00 to 17 November 19:07 UTC, from the runs and jobs APIs. The ledger (BUD-002) compares its 7-day median with these. Added 17 November: linear-command-centre / test is the median of 24 pull-request and merge-queue runs in 14 days; portal-a11y is not measured (advisory, schedule and dispatch only, no successful run in 14 days because the weekly run failed), so 11 is the figure in its own comment in ci.yml. Raise a figure on purpose, in the same change as the job."
       - workflow: company-os-test.yml
         events: "workflow_dispatch"
         runner_class: hosted-linux
@@ -214,6 +216,8 @@ repos:
         runs_a_month: 476
         owner: "Doman Digital / Portal QA"
         reason: "238 runs 1 to 15 November 2026 (476 a month at that rate), mean of 12 sampled November runs (range $0.018 to $0.066), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+        job_minutes: "journeys=8.7"
+        job_minutes_basis: "Median minutes of its successful pull-request and merge-queue runs in the 14 days to 17 November 2026 (3 or more runs each), from the runs and jobs APIs, no logs (DOM-17629). Raise a figure on purpose, in the same change as the job."
       - workflow: screen-reader.yml
         events: "workflow_dispatch"
         runner_class: hosted-macos
@@ -371,6 +375,8 @@ repos:
         reason: "30 runs 1 to 15 November 2026 (60 a month at that rate), mean of 12 sampled November runs (range $0.006 to $0.006), scaled by 0.29 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
         pr_exempt_jobs: "creds-check"
         pr_exempt_reason: "ordinary pull request checks; timeout-minutes is a cap, not a run time (creds-check 15), and per_run_usd is the average billed cost of a whole run. A new job over 10 minutes needs its own entry here (DOM-17682)"
+        job_minutes: "creds-check=0.6"
+        job_minutes_basis: "Median minutes of its successful pull-request and merge-queue runs in the 14 days to 17 November 2026 (3 or more runs each), from the runs and jobs APIs, no logs (DOM-17629). Raise a figure on purpose, in the same change as the job."
       - workflow: lighthouse-live.yml
         events: "schedule, workflow_dispatch"
         runner_class: hosted-linux
@@ -387,6 +393,8 @@ repos:
         reason: "56 runs 1 to 15 November 2026 (112 a month at that rate), mean of 12 sampled November runs (range $0.006 to $0.018), scaled by 0.29 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
         pr_exempt_jobs: "repo-settings"
         pr_exempt_reason: "ordinary pull request checks; timeout-minutes is a cap, not a run time (repo-settings 20), and per_run_usd is the average billed cost of a whole run. A new job over 10 minutes needs its own entry here (DOM-17682)"
+        job_minutes: "repo-settings=0.6"
+        job_minutes_basis: "Median minutes of its successful pull-request and merge-queue runs in the 14 days to 17 November 2026 (3 or more runs each), from the runs and jobs APIs, no logs (DOM-17629). Raise a figure on purpose, in the same change as the job."
       - workflow: sweep.yml
         events: "schedule, workflow_dispatch, pull_request, merge_group"
         runner_class: hosted-linux
@@ -476,6 +484,8 @@ repos:
         reason: "56 runs 1 to 15 November 2026 (112 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.174), scaled by 0.23 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
         pr_exempt_jobs: "build, security-audit, website, phone-gate"
         pr_exempt_reason: "ordinary pull request checks; timeout-minutes is a cap, not a run time (build 45, security-audit 30, website 15, phone-gate 25), and per_run_usd is the average billed cost of a whole run. A new job over 10 minutes needs its own entry here (DOM-17682)"
+        job_minutes: "build=6.3, security-audit=1.1, website=1.9, phone-gate=2.9"
+        job_minutes_basis: "Median minutes of its successful pull-request and merge-queue runs in the 14 days to 17 November 2026 (3 or more runs each), from the runs and jobs APIs, no logs (DOM-17629). Raise a figure on purpose, in the same change as the job."
       - workflow: deploy-api.yml
         events: "workflow_dispatch"
         runner_class: hosted-linux
@@ -823,6 +833,8 @@ repos:
         reason: "13 runs 1 to 15 November 2026 (26 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.096), scaled by 0.35 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
         pr_exempt_jobs: "lint, typecheck, test, build, e2e"
         pr_exempt_reason: "ordinary pull request checks; timeout-minutes is a cap, not a run time (lint 15, typecheck 15, test 15, build 20, e2e 45), and per_run_usd is the average billed cost of a whole run. A new job over 10 minutes needs its own entry here (DOM-17682)"
+        job_minutes: "lint=0.8, typecheck=0.8, test=0.9, build=2.6, e2e=4.1"
+        job_minutes_basis: "Median minutes of its successful pull-request and merge-queue runs in the 14 days to 17 November 2026 (3 or more runs each), from the runs and jobs APIs, no logs (DOM-17629). Raise a figure on purpose, in the same change as the job."
       - workflow: deploy.yml
         events: "workflow_run, workflow_dispatch"
         runner_class: hosted-linux
@@ -860,6 +872,8 @@ repos:
         reason: "42 runs 1 to 15 November 2026 (84 a month at that rate), mean of 12 sampled November runs (range $0.006 to $0.042), scaled by 0.19 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
         pr_exempt_jobs: "craft-browser"
         pr_exempt_reason: "ordinary pull request checks; timeout-minutes is a cap, not a run time (craft-browser 15), and per_run_usd is the average billed cost of a whole run. A new job over 10 minutes needs its own entry here (DOM-17682)"
+        job_minutes: "craft-browser=2.7"
+        job_minutes_basis: "Median minutes of its successful pull-request and merge-queue runs in the 14 days to 17 November 2026 (3 or more runs each), from the runs and jobs APIs, no logs (DOM-17629). Raise a figure on purpose, in the same change as the job."
       - workflow: ci-standards-policy.yml
         events: "pull_request"
         runner_class: hosted-linux
@@ -890,6 +904,8 @@ repos:
         reason: "50 runs 1 to 15 November 2026 (100 a month at that rate), mean of 12 sampled November runs (range $0.012 to $0.024), scaled by 0.19 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
         pr_exempt_jobs: "starter"
         pr_exempt_reason: "ordinary pull request checks; timeout-minutes is a cap, not a run time (starter 20), and per_run_usd is the average billed cost of a whole run. A new job over 10 minutes needs its own entry here (DOM-17682)"
+        job_minutes: "starter=1.4"
+        job_minutes_basis: "Median minutes of its successful pull-request and merge-queue runs in the 14 days to 17 November 2026 (3 or more runs each), from the runs and jobs APIs, no logs (DOM-17629). Raise a figure on purpose, in the same change as the job."
 
   dd-gbp:
     github_actions_crons: []
@@ -913,6 +929,8 @@ repos:
         reason: "55 runs 1 to 15 November 2026 (110 a month at that rate), mean of 12 sampled November runs (range $0.006 to $0.018), scaled by 0.32 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
         pr_exempt_jobs: "build-test"
         pr_exempt_reason: "ordinary pull request checks; timeout-minutes is a cap, not a run time (build-test 15), and per_run_usd is the average billed cost of a whole run. A new job over 10 minutes needs its own entry here (DOM-17682)"
+        job_minutes: "build-test=1.9"
+        job_minutes_basis: "Median minutes of its successful pull-request and merge-queue runs in the 14 days to 17 November 2026 (3 or more runs each), from the runs and jobs APIs, no logs (DOM-17629). Raise a figure on purpose, in the same change as the job."
       - workflow: sdk-js.yml
         events: "pull_request"
         runner_class: hosted-linux
@@ -978,6 +996,8 @@ repos:
         reason: "40 runs 1 to 15 November 2026 (80 a month at that rate), mean of 12 sampled November runs (range $0.030 to $0.114), scaled by 0.53 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
         pr_exempt_jobs: "test, kit-contract"
         pr_exempt_reason: "ordinary pull request checks; timeout-minutes is a cap, not a run time (test 20, kit-contract 30), and per_run_usd is the average billed cost of a whole run. A new job over 10 minutes needs its own entry here (DOM-17682)"
+        job_minutes: "test=1.4"
+        job_minutes_basis: "Median minutes of its successful pull-request and merge-queue runs in the 14 days to 17 November 2026 (3 or more runs each), from the runs and jobs APIs, no logs (DOM-17629). Raise a figure on purpose, in the same change as the job."
 
   dd-photo-pack:
     github_actions_crons: []
@@ -993,6 +1013,8 @@ repos:
         reason: "27 runs 1 to 15 November 2026 (54 a month at that rate), mean of 12 sampled November runs (range $0.042 to $0.066), scaled by 0.62 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
         pr_exempt_jobs: "test"
         pr_exempt_reason: "ordinary pull request checks; timeout-minutes is a cap, not a run time (test 20), and per_run_usd is the average billed cost of a whole run. A new job over 10 minutes needs its own entry here (DOM-17682)"
+        job_minutes: "test=3.0"
+        job_minutes_basis: "Median minutes of its successful pull-request and merge-queue runs in the 14 days to 17 November 2026 (3 or more runs each), from the runs and jobs APIs, no logs (DOM-17629). Raise a figure on purpose, in the same change as the job."
 
   dd-seo-mcp:
     github_actions_crons: []
@@ -1028,6 +1050,8 @@ repos:
         reason: "64 runs 1 to 15 November 2026 (128 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.000), scaled by 1.00 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
         pr_exempt_jobs: "check"
         pr_exempt_reason: "ordinary pull request checks; timeout-minutes is a cap, not a run time (check 20), and per_run_usd is the average billed cost of a whole run. A new job over 10 minutes needs its own entry here (DOM-17682)"
+        job_minutes: "check=12.8"
+        job_minutes_basis: "Median minutes of its successful pull-request and merge-queue runs in the 14 days to 17 November 2026 (3 or more runs each), from the runs and jobs APIs, no logs (DOM-17629). Raise a figure on purpose, in the same change as the job."
       - workflow: psi.yml
         events: "push, workflow_dispatch"
         runner_class: box
@@ -1050,6 +1074,8 @@ repos:
         reason: "52 runs 1 to 15 November 2026 (104 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.000), scaled by 1.00 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
         pr_exempt_jobs: "check"
         pr_exempt_reason: "ordinary pull request checks; timeout-minutes is a cap, not a run time (check 15), and per_run_usd is the average billed cost of a whole run. A new job over 10 minutes needs its own entry here (DOM-17682)"
+        job_minutes: "check=8.5"
+        job_minutes_basis: "Median minutes of its successful pull-request and merge-queue runs in the 14 days to 17 November 2026 (3 or more runs each), from the runs and jobs APIs, no logs (DOM-17629). Raise a figure on purpose, in the same change as the job."
       - workflow: deploy.yml
         events: "workflow_run, workflow_dispatch"
         runner_class: hosted-linux
@@ -1106,6 +1132,8 @@ repos:
         reason: "12 runs 1 to 15 November 2026 (24 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.030), scaled by 0.09 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
         pr_exempt_jobs: "checks"
         pr_exempt_reason: "ordinary pull request checks; timeout-minutes is a cap, not a run time (checks 20), and per_run_usd is the average billed cost of a whole run. A new job over 10 minutes needs its own entry here (DOM-17682)"
+        job_minutes: "checks=4.4"
+        job_minutes_basis: "Median minutes of its successful pull-request and merge-queue runs in the 14 days to 17 November 2026 (3 or more runs each), from the runs and jobs APIs, no logs (DOM-17629). Raise a figure on purpose, in the same change as the job."
       - workflow: daily-ingest.yml
         events: "schedule, workflow_dispatch"
         runner_class: hosted-linux
@@ -1184,6 +1212,8 @@ repos:
         reason: "30 runs 1 to 15 November 2026 (60 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.012), scaled by 0.07 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
         pr_exempt_jobs: "build"
         pr_exempt_reason: "ordinary pull request checks; timeout-minutes is a cap, not a run time (build 40), and per_run_usd is the average billed cost of a whole run. A new job over 10 minutes needs its own entry here (DOM-17682)"
+        job_minutes: "build=1.6"
+        job_minutes_basis: "Median minutes of its successful pull-request and merge-queue runs in the 14 days to 17 November 2026 (3 or more runs each), from the runs and jobs APIs, no logs (DOM-17629). Raise a figure on purpose, in the same change as the job."
       - workflow: deploy.yml
         events: "workflow_run, workflow_dispatch"
         runner_class: hosted-linux
@@ -1219,6 +1249,8 @@ repos:
         reason: "8 runs 1 to 15 November 2026 (16 a month at that rate), mean of 8 sampled November runs (range $0.000 to $0.024), scaled by 0.36 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
         pr_exempt_jobs: "smoke"
         pr_exempt_reason: "ordinary pull request checks; timeout-minutes is a cap, not a run time (smoke 15), and per_run_usd is the average billed cost of a whole run. A new job over 10 minutes needs its own entry here (DOM-17682)"
+        job_minutes: "smoke=3.5"
+        job_minutes_basis: "Median minutes of its successful pull-request and merge-queue runs in the 14 days to 17 November 2026 (3 or more runs each), from the runs and jobs APIs, no logs (DOM-17629). Raise a figure on purpose, in the same change as the job."
 
   dd-rebuild-relay:
     github_actions_crons: []
