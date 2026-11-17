@@ -49,6 +49,21 @@ test("an estate-wide minor or lock file automerge is refused", () => {
   assert.match(out, /automerges minor for every repo/);
 });
 
+test("lock files stay monthly by default and weekly for our tooling", () => {
+  assert.deepEqual(preset.lockFileMaintenance.schedule, ["before 4am on the first day of the month"]);
+  assert.deepEqual(toolingRules(preset)[0].schedule, ["on monday"]);
+  assert.deepEqual(preset.packageRules.find((r) => r.groupName === "house packages").schedule, ["at any time"]);
+  const weekly = clone();
+  weekly.lockFileMaintenance.schedule = ["on monday"];
+  assert.match(presetProblems(weekly, cfg).join(" "), /must stay monthly/);
+  const noWeekly = clone();
+  delete toolingRules(noWeekly)[0].schedule;
+  assert.match(presetProblems(noWeekly, cfg).join(" "), /keeps weekly lock files/);
+  const slow = clone();
+  slow.packageRules.find((r) => r.groupName === "house packages").schedule = ["on monday"];
+  assert.match(presetProblems(slow, cfg).join(" "), /house packages rule must keep/);
+});
+
 test("drift against the topics is reported both ways", () => {
   const named = toolingRules(preset)[0].matchRepositories.map((r) => ({ name: r.split("/")[1], isArchived: false }));
   assert.deepEqual(driftProblems(preset, cfg, [...named, { name: "client-previews", isArchived: false }]), [], "exclusions are not drift");

@@ -530,7 +530,11 @@ has to pass a policy check to merge, not get caught in the next audit.
 
   Our own tooling also automerges minor bumps and lock file maintenance once
   every check is green (founder, 17 November 2026); client sites and apps never
-  do. Renovate cannot match a GitHub topic, so the rule names each repo: every
+  do. Lock file maintenance runs monthly (before 4am on the first day) for
+  every repo, which cuts the estate's weekly lock file PRs and the CI runs they
+  start; the tooling rule sets schedule "on monday", so our tooling keeps weekly
+  lock files. House packages keep "at any time". The test pins all three.
+  Renovate cannot match a GitHub topic, so the rule names each repo: every
   unarchived Doman-Digital repo tagged dd-tooling, minus the exclusions in
   renovate-tooling.json, each with its reason: repos with no build or test
   check yet, a merge-queue repo, the fleet box config, client-previews and
