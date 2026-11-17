@@ -86,6 +86,28 @@
       "prConcurrentLimit": 0
     },
     {
+      "description": "Stay on Node 24 across the estate and move together later (founder, 17 November 2026). Covers the node runtime wherever Renovate reads it: setup-node node-version in workflows, .nvmrc, engines.node, Dockerfile node images",
+      "matchPackageNames": ["node"],
+      "allowedVersions": "<25"
+    },
+    {
+      "description": "Stay on pnpm 10 (founder, 17 November 2026): the packageManager field and the pnpm version pnpm/action-setup installs. The action itself still updates",
+      "matchPackageNames": ["pnpm"],
+      "allowedVersions": "<11"
+    },
+    {
+      "description": "phpunit stays below 13 until the PHP repos move together (founder, 17 November 2026)",
+      "matchManagers": ["composer"],
+      "matchPackageNames": ["phpunit/phpunit"],
+      "allowedVersions": "<13"
+    },
+    {
+      "description": "Never bump a project's requires-python: it states which Pythons the package supports, a decision for a person, not a bot (founder, 17 November 2026)",
+      "matchManagers": ["pep621"],
+      "matchDepTypes": ["requires-python"],
+      "enabled": false
+    },
+    {
       "description": "Never update dd-ci-standards itself. Callers use @v1 (and #v1 for this preset), which moves with every release; Renovate rewrote it to fixed releases (v1.0.13, v1.0.22), and a pinned caller stops getting new rules (FW-003, 13 October 2026)",
       "matchPackageNames": ["Doman-Digital/dd-ci-standards"],
       "enabled": false
