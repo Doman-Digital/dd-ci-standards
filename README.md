@@ -124,17 +124,35 @@ starter job in dd-packages uses it); `--create-site <cli.js>` runs a
 create-site build instead of the published one. It needs a token that can
 create repos in the organisation (`GH_TOKEN`, or `gh auth login`).
 
-It refuses `client-site` and `client-app`: client repos are pushed and merged
-by the Doman Digital GitHub App, from the client work's own tooling. It also
-refuses `personal` and `it-portfolio` (outside the framework) and any owner
+It refuses `personal` and `it-portfolio` (outside the framework) and any owner
 but Doman-Digital (personal-account repos cannot run Actions).
-- **`doctor/action.yml`**: the same command as a GitHub Action.
-- **`lib/view-github.mjs`**: the same repo view read through the API, which
-  the estate sweep uses, so it runs exactly these rules.
 
-Kinds come from `repo-topics.json`. Organisation sites, products and tooling
-and client sites and apps get every rule; `sales-demo` gets the light set;
-`personal` and `it-portfolio` repos are outside the framework.
+**Client repos (`client-site`, `client-app`; DOM-18123).** A client repo is
+pushed by the Doman Digital GitHub App (dd-bot), never with a person's token or
+login, and many sit in the client's own account, where this repo's Actions and
+rulesets do not reach. So `dd new` takes the governed route:
+
+```sh
+node <dd-ci-standards checkout>/bin/dd.mjs new --kind client-site acme-plumbing \
+  --description "What the repo is, in a sentence." --owner acme-plumbing-ltd \
+  --programme DOM-123 --answers answers.json
+```
+
+It runs steps 1 and 2 above (create-site with `--programme`, `dd adopt`, `dd
+doctor` clean, which now includes PKG-003) and stops: **it does not create the
+GitHub repo.** GitHub does not let an App create a repository in a personal
+account, and every client account in dd-repo-registry today is one (checked 18
+November 2026), so the account owner creates the empty repo and installs the
+App, and `dd new` prints the rest: `git init` and a commit, then the push under
+`dd-gh-app run --app dd-bot --owner <account> --perms contents=write`, the tags
+to set and the registry row. The push step follows dd-gh-app's
+documentation and has not been run against a client repo. `--programme` is
+required; `--owner` is the account the repo will live in (default Doman-Digital).
+
+`--programme DOM-123` is passed to create-site for every kind. `--no-gate`
+(create-site skips its programme gate) is accepted only with `--local`, for the
+nightly starter in dd-packages; the start label records the skipped gate and the
+estate sweep does not count such a site as started.
 
 ### Exemptions
 
@@ -590,8 +608,30 @@ has to pass a policy check to merge, not get caught in the next audit.
   installs the root workspace and exits 0, and the next frozen install fails
   (DOM-1273). PKG-002 reports that layout; the fix is a
   `pnpm-workspace.yaml` with `packages: []` in the nested folder.
+
   Raise both together. Where a claude-kit checkout is present, `dd doctor`
   says when they differ.
+
+  **PKG-003 (DOM-18123): a site is started with create-site.** A `client-site`
+  or `dd-site` repo needs a valid `.dd/site-start.json` (`{ tool, version,
+  mode: "programme" | "handover", programme, reason?, stage05Gate?,
+  startedAt }`, written by `@domandigital/create-site`) and `create-site
+  --check` must exit 0 (3 means a house file has drifted). The label only
+  describes; a hand-written one with a drifted site still fails the check.
+  `dd doctor` runs the check itself (`lib/site-start.mjs`): the repo's own
+  `node_modules/.bin/create-site`, else `npx @domandigital/create-site@latest`,
+  or `DD_CREATE_SITE=<cli.js>`; `--site-answers <file>` (or `DD_SITE_ANSWERS`)
+  gives it the answers the site was made with. Exit 0 passes, exit 3 is drift,
+  and create-site refusing the folder (exit 1: the folder is not a Next.js or Astro
+  project, so the label has no site behind it) is a finding. `--check` exits 2 when it lacks the
+  answers, and then the doctor adds a note and judges the label alone. **This rule is not the hard stop.**
+  Most client repos sit in the client's account, where our Actions never run:
+  the estate sweep in dd-repo-registry is the guard that reaches every account.
+  PKG-003 warns from 18 November 2026. Its `enforce_from` is the 90-day cap, 16
+  February 2027, which takes effect on its own that day unless the founder has
+  set the real date after the backfill. A label made with `--no-gate` is valid
+  here (and may name no programme); the sweep, not this rule, counts it as not
+  started.
 
 ## Public repos name no client and no staff member (SEC-010)
 
