@@ -43,7 +43,7 @@ import { planAdopt } from "../lib/adopt.mjs";
 import { resolvePins } from "../lib/pins.mjs";
 import { POLICY_RULESET } from "../lib/rules.mjs";
 import { selectRules, issueRefElsewhere, livePullRequest } from "../lib/issue-ref.mjs";
-import { planNew, governedNextStep, addToRegistry, cleanVerdict, starterBudgetRows, starterBudgetYaml, ruleset, PR_BODY, REGISTRY_REPO, POLICY_CHECK } from "../lib/new.mjs";
+import { planNew, createSiteEnv, governedNextStep, addToRegistry, cleanVerdict, starterBudgetRows, starterBudgetYaml, ruleset, PR_BODY, REGISTRY_REPO, POLICY_CHECK } from "../lib/new.mjs";
 
 const HOME = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const rulebook = JSON.parse(readFileSync(join(HOME, "rules.json"), "utf8"));
@@ -281,7 +281,9 @@ async function api(token, method, path, body) {
 /** Run a command with the terminal attached; throws on a non-zero exit. */
 function step(cmd, args, cwd, env) {
   console.log(`$ ${[cmd === process.execPath ? "node" : cmd, ...args].join(" ")}`);
-  execFileSync(cmd, args, { cwd, stdio: "inherit", env: env ? { ...process.env, ...env } : process.env });
+  const merged = env ? { ...process.env, ...env } : process.env;
+  for (const key of Object.keys(merged)) if (merged[key] === undefined) delete merged[key]; // an undefined value removes the variable
+  execFileSync(cmd, args, { cwd, stdio: "inherit", env: merged });
 }
 
 // git authenticates with the token through the environment, as
@@ -364,7 +366,7 @@ async function newRepo(args) {
   mkdirSync(dirname(dir), { recursive: true });
   step(scaffold.cmd, scaffold.args, dirname(dir));
   step(install.cmd, install.args, dir);
-  step(createSite.cmd, createSite.args, dir);
+  step(createSite.cmd, createSite.args, dir, createSiteEnv(plan));
 
   // 2. Adopt, then the doctor must be clean.
   const budget = budgetForRepo(readFileSync(join(HOME, "budget.yml"), "utf8"), plan.name);
