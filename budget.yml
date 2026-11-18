@@ -945,7 +945,11 @@ repos:
     vercel_crons: []
 
   verqan-api:
-    github_actions_crons: []
+    github_actions_crons:
+      - workflow: live-drift.yml
+        cron: "23 7 * * *"
+        owner: "Doman Digital"
+        reason: "daily check that the live Worker matches main (DOM-458): cron triggers against src/jobs.ts, the live image against the tag in the config, and apps/api changes over a day old against the image; one checkout and a few read-only API calls, no install, 5min cap on the light pool, off the hour"
     vercel_crons: []
     ceiling_usd: 2
     workflows:
