@@ -89,6 +89,11 @@ test("on a checkout, git finds the files: red on a planted offender, green once 
   assert.deepEqual(found(loadFsView(dir)), []);
 });
 
+test("a job-name table that holds the metrics name as a value is not a folder (dd-relay watch.ts)", () => {
+  assert.equal(found(script("src/jobs/watch.ts", '  "client-metrics": "dd-client-metrics",\n')).length, 0);
+  assert.equal(found(script("src/jobs/a.mjs", 'const metrics = join(homedir(), "dd-client-metrics");\n')).length, 1);
+});
+
 test("the pattern is built from storage-drift.json and nothing else", () => {
   assert.ok(storageNamePattern(config).test("~/dd-client-capsule"));
   assert.equal(storageNamePattern({ names: [], retired_prefixes: [] }), null);

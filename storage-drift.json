@@ -14,6 +14,21 @@
       "reason": "runs on the fleet box, where a dd-repo-registry checkout for the resolver is not guaranteed; routing it needs that checkout on the fleet first (logged as a follow-up under DOM-438)"
     },
     {
+      "repo": "Doman-Digital",
+      "path": "apps/site/scripts/launch-watch.mjs",
+      "reason": "reads the collector's Search Console archive from a Mac folder it names itself; the collector no longer keeps that folder on the Mac, so it needs the archive from the cloud state instead (DOM-438 follow-up)"
+    },
+    {
+      "repo": "Doman-Digital",
+      "path": "apps/site/scripts/search-console-snapshot.mjs",
+      "reason": "writes a source label that names the old Mac folder; reword it to say where the data came from (DOM-438 follow-up)"
+    },
+    {
+      "repo": "dd-repo-registry",
+      "path": "bin/onboarding.mjs",
+      "reason": "an error message that names the old Mac folder of recipients; reword it to point at the registry storage block (DOM-438 follow-up)"
+    },
+    {
       "repo": "dd-netcup-config",
       "path": "scripts/dd-work-01-guardrails/dd-r2-env.sh",
       "reason": "the one place the literal bucket, account, capsule root and nightly excludes are written, for the workflows that load it without a registry checkout; dd_r2_env checks every value against the registry's storage block whenever prepare.sh has run (DOM-438 Phase 1b)"
