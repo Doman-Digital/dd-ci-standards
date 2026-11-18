@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { planNew, governedNextStep, addToRegistry, registryEntry, cleanVerdict, ruleset, POLICY_CHECK } from "../lib/new.mjs";
+import { planNew, createSiteEnv, governedNextStep, addToRegistry, registryEntry, cleanVerdict, ruleset, POLICY_CHECK } from "../lib/new.mjs";
 import { POLICY_CALLER } from "../lib/adopt.mjs";
 
 const rulebook = JSON.parse(readFileSync(new URL("../rules.json", import.meta.url), "utf8"));
@@ -149,4 +149,13 @@ test("without a programme dd new stops before anything is made, unless a --local
     if (was === undefined) delete process.env.DD_CREATE_SITE_NO_GATE;
     else process.env.DD_CREATE_SITE_NO_GATE = was;
   }
+});
+
+test("the no-gate variable reaches create-site only for a --local starter", () => {
+  const local = planNew({ ...ok, programme: undefined, local: true, noGate: true }, taxonomy, rulebook);
+  assert.deepEqual(createSiteEnv(local), {});
+  assert.ok("DD_CREATE_SITE_NO_GATE" in createSiteEnv(planNew(ok, taxonomy, rulebook)), "a repo that will be pushed");
+  assert.equal(createSiteEnv(planNew(ok, taxonomy, rulebook)).DD_CREATE_SITE_NO_GATE, undefined);
+  const client = planNew({ ...ok, kind: "client-site", owner: "acme-ltd", local: true }, taxonomy, rulebook);
+  assert.ok("DD_CREATE_SITE_NO_GATE" in createSiteEnv(client), "a client repo, even though it is built locally");
 });
