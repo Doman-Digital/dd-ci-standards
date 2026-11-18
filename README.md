@@ -33,7 +33,8 @@ same way in three places.
   catch its own target.
 - **`bin/dd.mjs`**: the command. `dd doctor` reports; `dd adopt` brings a
   repo up to the rules (`lib/adopt.mjs`); `dd new` makes a repo that starts
-  compliant (`lib/new.mjs`).
+  compliant (`lib/new.mjs`); `dd client new <slug>` onboards a client by
+  forwarding to dd-repo-registry's step table (`lib/client.mjs`).
 
 ### Adopting a repo
 

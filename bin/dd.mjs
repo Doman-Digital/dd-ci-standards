@@ -6,6 +6,10 @@
 //   dd adopt [dir]    bring a repo up to the rules: owned files written,
 //                     existing findings recorded as 60-day exemptions (lib/adopt.mjs);
 //                     --only CI-022 writes that rule's fix and nothing else
+//   dd client new <slug> --intake <file> [--dry-run]
+//                     onboard a client: one idempotent command, driven by the step table in
+//                     dd-repo-registry (onboarding-steps.yaml). Forwards to that checkout's
+//                     bin/client-new.mjs (lib/client.mjs).
 //   dd new --kind <kind> <name> --description "<text>"
 //                     a repo that starts compliant: create-next-app, create-site,
 //                     dd adopt, dd doctor clean, then the GitHub repo and a
@@ -43,6 +47,7 @@ import { planAdopt } from "../lib/adopt.mjs";
 import { resolvePins } from "../lib/pins.mjs";
 import { POLICY_RULESET } from "../lib/rules.mjs";
 import { selectRules, issueRefElsewhere, livePullRequest } from "../lib/issue-ref.mjs";
+import { clientCommand } from "../lib/client.mjs";
 import { planNew, createSiteEnv, governedNextStep, addToRegistry, cleanVerdict, starterBudgetRows, starterBudgetYaml, ruleset, PR_BODY, REGISTRY_REPO, POLICY_CHECK } from "../lib/new.mjs";
 
 const HOME = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -487,12 +492,14 @@ export async function main(argv) {
   if (cmd === "rules") return rules(args);
   if (cmd === "adopt") return adopt(args);
   if (cmd === "new") return newRepo(args);
+  if (cmd === "client") return clientCommand(args);
   console.error(`usage: dd doctor [dir] [--kind k] [--visibility private|public] [--today YYYY-MM-DD] [--format text|github|json]
        dd adopt [dir] [--kind k] [--only RULE,...] [--dry-run]
        dd new --kind <kind> <name> --description "<text>" [--visibility private|public] [--framework next|astro]
               [--answers <file> | --client <name> --site-url <url> --sector <sector>] [--dir <path>]
               [--programme DOM-123 --owner <account>]   (client-site and client-app: local folder only; the GitHub App makes the repo)
               [--create-site <create-site cli.js>] [--local [--no-gate]] [--dry-run]
+       dd client new <slug> [--intake <file>] [--dry-run] [--checklist]   (onboard a client; see dd client)
        dd rules`);
   return 2;
 }
