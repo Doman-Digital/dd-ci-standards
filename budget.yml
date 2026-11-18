@@ -78,6 +78,10 @@ repos:
         schedule: "15 2 * * *"
         reason: "nightly sweep for conversion dispatches claimed but never confirmed — without it a lead's outcome silently never reaches Google"
     ceiling_usd: 101
+    over_ceiling_until: "2026-12-15"
+    over_ceiling_issue: DOM-18024
+    over_ceiling_usd: 249.69
+    over_ceiling_reason: "ci.yml is priced at its measured $0.1586 a run (about $233.60 a month, DOM-17629) and the ceiling is left at $101; the queue runs are two thirds of it. DOM-18024 brings it to $84.91 a month or less (Doman-Digital#1813, DOM-17820 and fewer billed minutes per entry), due 12 December. The founder agreed to declare the honest price on 18 November 2026. Covers this repo at $249.69 a month and no more"
     workflows:
       - workflow: ci-setup-benchmark.yml
         events: "workflow_dispatch"
@@ -99,10 +103,10 @@ repos:
         measured_basis: "100 completed runs of ci.yml (71 pull request, 28 merge queue, 1 schedule) from 16 November 00:00 to 17 November 21:47 UTC, cancelled and failed runs included because they bill: 2,614 billed minutes at $0.006 = $15.68, from the runs and jobs APIs with each job rounded up to a whole minute. The same method gave 1,041 minutes against billing's 1,034 on 16 November and 2,093 against 2,091 on 17 November (all workflows of the repo). Two weekdays at a heavy pace, so plus or minus 30%; the ledger (BUD-004) measures it live from the 7-day window."
         events: "pull_request, merge_group, schedule"
         runner_class: hosted-linux
-        per_run_usd: 0.0292
-        runs_a_month: 2212
+        per_run_usd: 0.1586
+        runs_a_month: 1473
         owner: "DD Framework"
-        reason: "1106 runs 1 to 15 November 2026 (2212 a month at that rate), mean of 12 sampled November runs (range $0.006 to $0.804), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; x1.25 for merge-queue rebuilds (DOM-17819); seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+        reason: "measured 17 November 2026 (DOM-17629) after the browser tier left pull requests (Doman-Digital#1777, 15 November): every completed run 16 November 00:00 to 17 November 19:07 UTC (43.1 hours), cancelled and failed runs included, each job rounded up to the minute, all on GitHub-hosted Linux at $0.006 a minute. 62 pull_request runs at 12.8 billed minutes ($0.077), 1035 a month; 26 merge_group runs at 58.1 ($0.349), 434 a month; the weekly schedule at 105 ($0.63), 4 a month. $79.70 + $151.20 + $2.70 = $233.60 a month over 1473 runs. 15 November is left out: a 101-run burst of pull requests that still ran the browser jobs. Cross-check: the job minutes of 15 to 17 November (8789, $52.73) agree with the billing usage API's $55.02 for the repo, whose rows start on 15 November. Replaces the 15 November seed, whose per-run price was scaled by 0.11"
         pr_exempt_jobs: "verify, build, linear-command-centre"
         pr_exempt_reason: "verify (30 minute cap) and build (20) are the pull request check itself, scoped to the changed paths by the changes job's plan; linear-command-centre (15) runs only for its own paths. The browser tier (phone-first, website reviews, visual regression, portal journeys) is queue-only since Doman-Digital#1777. DOM-17682"
         job_minutes: "portal-phone-first=46.9, verify=19.5, portal-journeys / journeys=9.3, portal-website-reviews=4.2, build=2.6, visual-regression-portal=2.4, dd-checks / test=2.3, linear-command-centre / test=0.5, portal-a11y=11"
