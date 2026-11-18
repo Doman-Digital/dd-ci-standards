@@ -99,7 +99,7 @@ node <dd-ci-standards checkout>/bin/dd.mjs new --kind dd-site dd-example \
 `--programme` is the site's programme issue. The released create-site refuses
 to scaffold without it (its Stage 05 gate), so `dd new` stops before making
 anything when it is missing. A `--local` starter, such as the nightly check,
-may skip the gate with `--no-gate` or `DD_CREATE_SITE_NO_GATE=1`.
+may skip the gate with `--no-gate` or `DD_CREATE_SITE_NO_GATE=1` (that exact value).
 
 In order, and stopping at the first failure:
 

@@ -133,13 +133,16 @@ test("the next step for a client repo is only what is true: the owner makes the 
 });
 
 test("without a programme dd new stops before anything is made, unless a --local starter skips the gate", () => {
+  const was = process.env.DD_CREATE_SITE_NO_GATE;
+  delete process.env.DD_CREATE_SITE_NO_GATE; // set in some test and starter environments; create-site honours "1" only
   const bare = { ...ok, programme: undefined };
   assert.match(planNew(bare, taxonomy, rulebook).error, /start in a site programme: pass --programme DOM-123/);
   assert.match(planNew({ ...bare, local: true }, taxonomy, rulebook).error, /start in a site programme/);
   assert.equal(planNew({ ...bare, local: true, noGate: true }, taxonomy, rulebook).error, undefined);
-  const was = process.env.DD_CREATE_SITE_NO_GATE;
-  process.env.DD_CREATE_SITE_NO_GATE = "1";
   try {
+    process.env.DD_CREATE_SITE_NO_GATE = "true"; // not "1": create-site would still refuse
+    assert.match(planNew({ ...bare, local: true }, taxonomy, rulebook).error, /start in a site programme/);
+    process.env.DD_CREATE_SITE_NO_GATE = "1";
     assert.equal(planNew({ ...bare, local: true }, taxonomy, rulebook).error, undefined);
     assert.match(planNew(bare, taxonomy, rulebook).error, /start in a site programme/); // a repo that will be pushed still needs one
   } finally {
