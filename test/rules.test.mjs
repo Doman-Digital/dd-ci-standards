@@ -101,6 +101,9 @@ test("LIN-001 reads Closes, Part of and the branch, exempts dependency bots and 
   assert.equal(run({ title: "Fix the form", body: "Part of CRO-7", branch: "x" }), false);
   assert.equal(run({ title: "Update dependency sharp", body: "", branch: "renovate/npm-sharp" }), false);
   assert.equal(run({ title: "Bump x", body: "", branch: "dependabot/npm_and_yarn/x" }), false);
+  assert.equal(run({ title: "Version Packages", body: "This PR was opened by the Changesets release GitHub action.", branch: "changeset-release/main" }), false, "the Version Packages PR, green on the opened event");
+  assert.equal(run({ title: "Version Packages", body: "", branch: "feat/changeset-release/main" }), true, "only a branch that starts with changeset-release/");
+  assert.equal(run({ title: "Version Packages", body: "", branch: "changeset-release-notes" }), true, "the slash is part of the prefix");
   assert.equal(run({ title: "Tidy", body: "", branch: "tidy", labels: ["No-Issue"] }), false, "the label, whatever its case");
   assert.equal(run({ title: "Tidy", body: "", branch: "tidy", labels: ["dependencies"] }), true, "another label does not count");
   assert.equal(run({ title: "Mention ADOM-12 or DOM-", body: "", branch: "x" }), true, "only a whole key counts");
@@ -144,6 +147,7 @@ test("LIN-002 flags a closing word in a quote beside a key the pull request does
   assert.equal(run(pr, "2026-10-27")[0].level, "warn");
   assert.equal(run(pr, "2026-10-26").length, 0, "off before its warn date");
   assert.equal(run({ ...pr, branch: "renovate/x" }, "2026-10-27").length, 0, "bots are exempt");
+  assert.equal(run({ ...pr, branch: "changeset-release/main" }, "2026-10-27").length, 1, "the release branch is exempt from LIN-001 only");
 });
 
 test("CI-001 checks only repos the organisation owns, since only they can use its runners", () => {

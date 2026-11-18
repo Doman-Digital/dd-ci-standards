@@ -414,11 +414,24 @@ jobs:
     // The same job on merge to main only.
     pass: wf("on:\n  pull_request:\n  push:\n    branches: [main]\njobs:\n  slow:\n    if: ${{ github.event_name != 'pull_request' }}\n    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 20\n    steps:\n      - run: make slow\n"),
   },
+  "CI-042": {
+    // A keep-warm switch on in a deploy workflow, with no reason.
+    fail: wf("on:\n  workflow_dispatch:\njobs:\n  deploy:\n    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 10\n    steps:\n      - run: ./deploy.sh\n        env:\n          KEEP_WARM: \"1\"\n", ".github/workflows/deploy.yml"),
+    // The same switch with a dated reason on the line above.
+    pass: wf("on:\n  workflow_dispatch:\njobs:\n  deploy:\n    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 10\n    steps:\n      - run: ./deploy.sh\n        env:\n          # 2026-11-17 DOM-1: the demo API must answer in under a second for the sales call\n          KEEP_WARM: \"1\"\n", ".github/workflows/deploy.yml"),
+  },
   "CI-038": {
     // A short job, so only the browser rule sees it.
     fail: wf("on:\n  pull_request:\njobs:\n  e2e:\n    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 8\n    steps:\n      - run: pnpm exec playwright install chromium\n      - run: pnpm exec playwright test\n"),
     // The browser step waits for the merge queue.
     pass: wf("on:\n  pull_request:\n  merge_group:\njobs:\n  e2e:\n    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 8\n    steps:\n      - run: pnpm test\n      - run: pnpm exec playwright test\n        if: ${{ github.event_name != 'pull_request' }}\n"),
+  },
+  "CI-041": {
+    // A 45-minute merge-queue job with no expected duration in the workflow's budget row.
+    fail: wf("on:\n  merge_group:\njobs:\n  slow:\n    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 45\n    steps:\n      - run: make slow\n"),
+    pass: wf("on:\n  merge_group:\njobs:\n  slow:\n    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 45\n    steps:\n      - run: make slow\n"),
+    ctx: { budget: { ghCrons: [], vercelCrons: [], workflows: [{ workflow: "ci.yml", events: ["merge_group"], runner_class: "hosted-linux", per_run_usd: 0.3, runs_a_month: 100, owner: "DD Framework", reason: "the slow job, once per queue entry" }] } },
+    passCtx: { budget: { ghCrons: [], vercelCrons: [], workflows: [{ workflow: "ci.yml", events: ["merge_group"], runner_class: "hosted-linux", per_run_usd: 0.3, runs_a_month: 100, owner: "DD Framework", reason: "the slow job, once per queue entry", job_minutes: { slow: 30 } }] } },
   },
   "CI-039": {
     fail: wf("on:\n  push:\n    branches: [main]\n  pull_request:\njobs:\n  voiceover:\n    runs-on: macos-latest\n    timeout-minutes: 20\n    steps:\n      - run: echo hi\n", ".github/workflows/screen-reader.yml"),

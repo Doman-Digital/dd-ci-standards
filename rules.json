@@ -281,12 +281,28 @@
       "enforce_from": "2026-12-01"
     },
     {
+      "id": "CI-041",
+      "title": "A pull request or merge-queue job over ten minutes has no expected duration",
+      "why": "17 November 2026 (DOM-17629, CI audit gap 3): CI-003 refuses a job with no timeout and CI-037 a job over ten minutes on every pull request push, but a job that is allowed there (verify, build) or runs only in the merge queue (phone-first, 48 minutes of a 65 to 75 minute cap) had no stated length. It could double under its cap and only the bill would show it, weeks later. A job on pull_request, pull_request_target or merge_group whose timeout-minutes (or the largest number in a runner-aware cap) is over 10 has its expected minutes in dd-ci-standards budget.yml, in its workflow's row as job_minutes (\"job=minutes, other job=minutes\", the measured median), or a cap of 10 or less. The expected figure must be above 0 and no higher than the cap, and a figure for a job that is gone is refused, so a stale number cannot hide. The daily ledger in dd-repo-registry reads the same figures and raises BUD-002 when a job's 7-day median is more than 30 percent over them, so the number lives in one place. Only repos of the Doman-Digital organisation are read. Warn from 17 November, enforced from 1 December.",
+      "applies": "all",
+      "warn_from": "2026-11-17",
+      "enforce_from": "2026-12-01"
+    },
+    {
       "id": "CI-023",
       "title": "A workflow still uses Vercel",
       "why": "Vercel was retired for CI and deploys (DOM-555, DOM-776). On 19 October 2026 its leftovers were still in five repos: six VERCEL_TOKEN_* inputs in dd-repo-registry's sweep, a kv.vercel-storage placeholder in the monorepo's lighthouse.yml, and comments in three other repos describing Vercel building main. A workflow that names Vercel either does nothing or depends on an account nobody watches. A portal still served by Vercel records it as an exemption.",
       "applies": "full",
       "warn_from": "2026-10-20",
       "enforce_from": "2026-10-27"
+    },
+    {
+      "id": "CI-042",
+      "title": "Something is set to stay awake with no dated reason",
+      "why": "17 November 2026 (DOM-17629, DOM-17703): Meridian's API container was held awake around the clock by a keep-warm cron every 15 minutes, billing for an instance that was idle nearly all day, and nothing in the repo recorded why. Meridian's own test now refuses the switch without a dated reason; this makes that the house rule for every repo. Three things need a dated reason on the same line or the line above (`# YYYY-MM-DD <issue>: <why it must stay awake>`): a keep-warm or keep-alive switch set on (a KEEP_WARM or KEEP_ALIVE key set to 1, true, yes or on, in a workflow, a composite action or a Wrangler config); a cron more often than every 30 minutes (a workflow `schedule:` cron, or a Wrangler `crons` entry in a config that declares a container: a Worker cron on its own is an ordinary poller and is not read, but one in front of a container is the keep-warm ping); and a minimum instance count above zero (min_instances, minInstances, min-instances or min_machines_running). The list is short and exact on purpose: a cron every 30 minutes or less often, a switch set to 0 or false, and a count of 0 are never read. An expression such as `KEEP_WARM: ${{ inputs.warm }}` is not read either. The date is when the reason was written, so a reviewer can ask whether it still holds. Warn from 17 November, enforced from 1 December.",
+      "applies": "all",
+      "warn_from": "2026-11-17",
+      "enforce_from": "2026-12-01"
     },
     {
       "id": "CI-024",
@@ -461,7 +477,7 @@
     {
       "id": "LIN-001",
       "title": "A pull request names no Linear issue",
-      "why": "20 October 2026: client work was shipping with nothing in Linear or HubSpot to show for it. Since 22 July, 640 of 869 pull requests merged into the client repos named no issue, so the founder could not see what had been done for whom (DOM-1100). Every pull request names its issue: a `Closes DOM-123` or `Part of DOM-123` line (CRO-7 works too) in the title or description, or the key at the start of the branch name (dom-123-short-name), read the way dd-relay reads them when it moves Linear on a merge. A key mentioned in passing does not count (27 October 2026, DOM-1363: the relay ignores it). Work with no issue carries the no-issue label. Renovate and Dependabot branches are exempt. After fixing the description or adding the label, push a commit (an empty one will do): editing does not start the check again, and a re-run reads the old description (probed 27 October 2026).",
+      "why": "20 October 2026: client work was shipping with nothing in Linear or HubSpot to show for it. Since 22 July, 640 of 869 pull requests merged into the client repos named no issue, so the founder could not see what had been done for whom (DOM-1100). Every pull request names its issue: a `Closes DOM-123` or `Part of DOM-123` line (CRO-7 works too) in the title or description, or the key at the start of the branch name (dom-123-short-name), read the way dd-relay reads them when it moves Linear on a merge. A key mentioned in passing does not count (27 October 2026, DOM-1363: the relay ignores it). Work with no issue carries the no-issue label. Renovate and Dependabot branches are exempt, and so are changeset-release/ branches: the Changesets Version Packages PR names no issue by design and its bot rewrites the title and body, so a label added after it opens came too late and a new Version PR stayed red until the next push to main (17 November 2026). After fixing the description or adding the label, push a commit (an empty one will do): editing does not start the check again, and a re-run reads the old description (probed 27 October 2026).",
       "applies": "all",
       "warn_from": "2026-10-21",
       "enforce_from": "2026-10-28"
