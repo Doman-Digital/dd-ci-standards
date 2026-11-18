@@ -6,7 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { runDoctor } from "../lib/engine.mjs";
-import { datedReason, approvalAt, APPROVAL, AWAKE_CRON_MINUTES } from "../lib/rules.mjs";
+import { datedReason, approvalAt, approvalKey, APPROVAL, AWAKE_CRON_MINUTES } from "../lib/rules.mjs";
 
 const rulebook = JSON.parse(readFileSync(new URL("../rules.json", import.meta.url), "utf8"));
 const taxonomy = JSON.parse(readFileSync(new URL("../repo-topics.json", import.meta.url), "utf8"));
@@ -18,7 +18,8 @@ const wf = (text, path = ".github/workflows/deploy.yml") => ({ workflows: [{ pat
 const deploy = (envLines) => `on:\n  workflow_dispatch:\njobs:\n  deploy:\n    runs-on: x\n    timeout-minutes: 10\n    steps:\n      - run: ./deploy.sh\n        env:\n${envLines}\n`;
 const cron = (expr, comment = "") => `on:\n  schedule:\n    - cron: '${expr}'${comment}\njobs:\n  j:\n    runs-on: x\n    timeout-minutes: 5\n    steps:\n      - run: echo hi\n`;
 const APPROVED = "# founder-approved 2026-11-18 cost GBP 45/month: the demo API must answer in under a second";
-const REG = [{ repo: "Doman-Digital/demo", file: ".github/workflows/deploy.yml", date: "2026-11-18", cost_gbp_month: 45 }];
+const FILE = ".github/workflows/deploy.yml";
+const REG = [approvalKey("demo", FILE, "2026-11-18", 45)];
 
 /* ---------- CI-042: workflow crons ---------- */
 
@@ -78,9 +79,10 @@ test("CI-044: an approval line on the same line or the line above passes only wh
     assert.equal(unregistered.length, 1, "in the file but not in the register");
     assert.match(unregistered[0].message, /founder approval of 2026-11-18 at GBP 45 a month, but dd-repo-registry costs\.yaml.*no matching row for demo/);
   }
-  for (const wrong of [{ date: "2026-11-19" }, { cost_gbp_month: 90 }, { file: ".github/workflows/other.yml" }, { repo: "Doman-Digital/other" }]) {
-    assert.equal(f44(above, { ...base, alwaysOn: [{ ...REG[0], ...wrong }] }).length, 1, `a register row that differs in ${Object.keys(wrong)}`);
+  for (const [what, key] of [["date", approvalKey("demo", FILE, "2026-11-19", 45)], ["cost", approvalKey("demo", FILE, "2026-11-18", 90)], ["file", approvalKey("demo", ".github/workflows/other.yml", "2026-11-18", 45)], ["repo", approvalKey("other", FILE, "2026-11-18", 45)]]) {
+    assert.equal(f44(above, { ...base, alwaysOn: [key] }).length, 1, `a register row that differs in ${what}`);
   }
+  assert.deepEqual(f44(above, { ...base, alwaysOn: [approvalKey("Doman-Digital/demo", FILE, "2026-11-18", 45.0)] }), [], "the owner prefix and the decimals do not matter");
 });
 
 test("CI-044: the approval form is fixed: date, cost in pounds a month, a reason", () => {
@@ -107,7 +109,7 @@ test("CI-044: a minimum instance count above zero is refused; zero is not", () =
   const toml = (n, comment = "") => ({ wrangler: [{ path: "wrangler.toml", name: "api", text: `name = "api"\n[[containers]]\nmin_instances = ${n}${comment}\n`, crons: [] }] });
   assert.equal(f44(toml(1)).length, 1);
   assert.deepEqual(f44(toml(0)), []);
-  assert.deepEqual(f44(toml(1, " # founder-approved 2026-11-18 cost GBP 12/month: a cold start breaks the payment webhook"), { ...base, alwaysOn: [{ repo: "Doman-Digital/demo", file: "wrangler.toml", date: "2026-11-18", cost_gbp_month: 12 }] }), []);
+  assert.deepEqual(f44(toml(1, " # founder-approved 2026-11-18 cost GBP 12/month: a cold start breaks the payment webhook"), { ...base, alwaysOn: [approvalKey("demo", "wrangler.toml", "2026-11-18", 12)] }), []);
 });
 
 test("CI-044: a Wrangler cron is read only where the Worker fronts a container, with // comments for JSONC", () => {
@@ -126,7 +128,8 @@ test("CI-044: a Wrangler cron is read only where the Worker fronts a container, 
 test("CI-044 applies to every repo, a client's included, and always-on.json starts empty", () => {
   assert.equal(f44(wf(deploy('          KEEP_WARM: "1"')), { ...base, meta: { owner: { login: "someclient" } } }).length, 1);
   const projected = JSON.parse(readFileSync(new URL("../always-on.json", import.meta.url), "utf8"));
-  assert.deepEqual(projected, { approvals: [] }, "no approval has been given; each one arrives with its costs.yaml row");
+  assert.deepEqual(projected.approvals, [], "no approval has been given; each one arrives with its costs.yaml row");
+  assert.ok(!JSON.stringify(projected).includes("GBP"), "a public file: hashes only, never a repo name or a cost");
   const rule = rulebook.rules.find((r) => r.id === "CI-044");
   assert.equal(rule.warn_from, rule.enforce_from, "no warn-first period");
 });

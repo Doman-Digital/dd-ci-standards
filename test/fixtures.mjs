@@ -6,7 +6,7 @@
 // ctx is merged over a default context: private dd-tooling repo "demo".
 // The inventories are hashed projections (DOM-1643), so their rows are built with h().
 
-import { inventoryHash as h, nameHash } from "../lib/rules.mjs";
+import { inventoryHash as h, nameHash, approvalKey } from "../lib/rules.mjs";
 
 // SEC-010's list, built the way dd-repo-registry builds public-names.json, for made-up names only.
 const NAMES_SALT = "0123456789abcdef0123456789abcdef";
@@ -425,7 +425,7 @@ jobs:
     fail: wf("on:\n  workflow_dispatch:\njobs:\n  deploy:\n    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 10\n    steps:\n      - run: ./deploy.sh\n        env:\n          KEEP_WARM: \"1\"\n", ".github/workflows/deploy.yml"),
     // The same switch with the approval line above it, and the register carrying the same approval.
     pass: wf("on:\n  workflow_dispatch:\njobs:\n  deploy:\n    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 10\n    steps:\n      - run: ./deploy.sh\n        env:\n          # founder-approved 2026-11-18 cost GBP 45/month: the demo API must answer in under a second\n          KEEP_WARM: \"1\"\n", ".github/workflows/deploy.yml"),
-    passCtx: { alwaysOn: [{ repo: "Doman-Digital/demo", file: ".github/workflows/deploy.yml", date: "2026-11-18", cost_gbp_month: 45 }] },
+    passCtx: { alwaysOn: [approvalKey("demo", ".github/workflows/deploy.yml", "2026-11-18", 45)] },
   },
   "CI-038": {
     // A short job, so only the browser rule sees it.
