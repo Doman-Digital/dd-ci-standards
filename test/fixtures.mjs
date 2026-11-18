@@ -407,6 +407,12 @@ jobs:
     // The same job on merge to main only.
     pass: wf("on:\n  pull_request:\n  push:\n    branches: [main]\njobs:\n  slow:\n    if: ${{ github.event_name != 'pull_request' }}\n    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 20\n    steps:\n      - run: make slow\n"),
   },
+  "CI-042": {
+    // A keep-warm switch on in a deploy workflow, with no reason.
+    fail: wf("on:\n  workflow_dispatch:\njobs:\n  deploy:\n    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 10\n    steps:\n      - run: ./deploy.sh\n        env:\n          KEEP_WARM: \"1\"\n", ".github/workflows/deploy.yml"),
+    // The same switch with a dated reason on the line above.
+    pass: wf("on:\n  workflow_dispatch:\njobs:\n  deploy:\n    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 10\n    steps:\n      - run: ./deploy.sh\n        env:\n          # 2026-11-17 DOM-1: the demo API must answer in under a second for the sales call\n          KEEP_WARM: \"1\"\n", ".github/workflows/deploy.yml"),
+  },
   "CI-038": {
     // A short job, so only the browser rule sees it.
     fail: wf("on:\n  pull_request:\njobs:\n  e2e:\n    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 8\n    steps:\n      - run: pnpm exec playwright install chromium\n      - run: pnpm exec playwright test\n"),
