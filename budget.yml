@@ -607,6 +607,9 @@ repos:
       - workflow: client-jobs.yml
         cron: "15 5 * * *"
         reason: "Daily capsule content guard (DOM-438), after the 02:45 backups job: lists the R2 bucket and the newest capsule-nightly snapshot and fails when the backup does not hold the bucket's content. Read only, about 5 minutes; admitted by CLIENT_BACKUPS_ENABLED."
+      - workflow: client-jobs.yml
+        cron: "20 8 * * 1"
+        reason: "Monthly search-rank check for one SEO client (DOM-17889), 53 DataForSEO searches, about 2 minutes and $0.20. A cron cannot say first Monday, so every Monday starts and select-job.py chooses the first two Mondays of the UK month (the second is the retry); other Mondays skip in seconds. Runs only while CLIENT_RANK_CHECK_ENABLED is true."
       - workflow: install-plan.yml
         cron: "43 5 * * *"
         reason: "daily dry run of install.sh's plan() against dd-repo-registry origin/main (DOM-17994): a register change made with no commit here still goes red, about 11 seconds a run"
