@@ -394,6 +394,13 @@ jobs:
     ctx: { budget: { ghCrons: [], vercelCrons: [], workflows: [] } },
     passCtx: { budget: { ghCrons: [], vercelCrons: [], workflows: [{ workflow: "ci.yml", events: ["push"], runner_class: "hosted-linux", per_run_usd: 0.12, runs_a_month: 60, owner: "DD Framework", reason: "the slow job, once per merge" }] } },
   },
+  "CI-043": {
+    // A row declared at $0.03 a run that records a measured $0.16.
+    fail: wf("on:\n  push:\n    branches: [main]\njobs: {}\n"),
+    pass: wf("on:\n  push:\n    branches: [main]\njobs: {}\n"),
+    ctx: { budget: { ghCrons: [], vercelCrons: [], workflows: [{ workflow: "ci.yml", events: ["push"], runner_class: "hosted-linux", per_run_usd: 0.03, runs_a_month: 60, owner: "DD Framework", reason: "x", measured_per_run_usd: 0.16, measured_on: "2026-11-17" }] } },
+    passCtx: { budget: { ghCrons: [], vercelCrons: [], workflows: [{ workflow: "ci.yml", events: ["push"], runner_class: "hosted-linux", per_run_usd: 0.15, runs_a_month: 60, owner: "DD Framework", reason: "x", measured_per_run_usd: 0.16, measured_on: "2026-11-17" }] } },
+  },
   "CI-036": {
     // A row for a workflow that was deleted.
     fail: wf("on:\n  push:\n    branches: [main]\njobs: {}\n"),

@@ -313,6 +313,14 @@
       "enforce_from": "2026-10-27"
     },
     {
+      "id": "CI-043",
+      "title": "A declared price per run is far from the measured one",
+      "why": "17 November 2026 (DOM-17629, CI audit gap 2): budget.yml declared the monorepo's ci.yml at $0.0292 a run, a sampled mean scaled by 0.11, and the envelope test passed on it. Measured from the runs and jobs APIs (and matched to the billing rows within 1% on 16 and 17 November) a run cost about $0.157, five times the declared figure, so the 60% limit was being checked against a number that was never true. The test compares declared numbers only, so nothing could notice. A workflows: row may now record the measured price: measured_per_run_usd (dollars for one run, blended across the row's events, cancelled runs included), measured_on (YYYY-MM-DD) and measured_basis (how). When it does, per_run_usd must be within 50% of it, or the rule fires. The daily ledger in dd-repo-registry measures the same figure live for every watched workflow (BUD-004, published in ledger.json as workflow_costs) and compares it with per_run_usd with the same 50% band, so a measured_per_run_usd that was edited to match a wrong declaration is still seen. Only the organisation's own repos are read. Raising a repo's ceiling_usd is the founder's decision and is not changed by this rule. Warn from 17 November, enforced from 1 December.",
+      "applies": "all",
+      "warn_from": "2026-11-17",
+      "enforce_from": "2026-12-01"
+    },
+    {
       "id": "CI-025",
       "title": "A monorepo's pull request job runs every workspace",
       "why": "DOM-776 step 5, 19 October 2026: the monorepo's verify and build ran lint, typecheck, test and build for all ten workspaces on every pull request, 22 of its 32 VM-minutes per run, though most PRs touch one app. dd-ci-standards' workspace-scope action works out the affected workspaces (and runs everything when a shared file changes), so a turbo run on a PR passes its filters.",
