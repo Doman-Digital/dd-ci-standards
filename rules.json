@@ -281,6 +281,14 @@
       "enforce_from": "2026-12-01"
     },
     {
+      "id": "CI-041",
+      "title": "A pull request or merge-queue job over ten minutes has no expected duration",
+      "why": "17 November 2026 (DOM-17629, CI audit gap 3): CI-003 refuses a job with no timeout and CI-037 a job over ten minutes on every pull request push, but a job that is allowed there (verify, build) or runs only in the merge queue (phone-first, 48 minutes of a 65 to 75 minute cap) had no stated length. It could double under its cap and only the bill would show it, weeks later. A job on pull_request, pull_request_target or merge_group whose timeout-minutes (or the largest number in a runner-aware cap) is over 10 has its expected minutes in dd-ci-standards budget.yml, in its workflow's row as job_minutes (\"job=minutes, other job=minutes\", the measured median), or a cap of 10 or less. The expected figure must be above 0 and no higher than the cap, and a figure for a job that is gone is refused, so a stale number cannot hide. The daily ledger in dd-repo-registry reads the same figures and raises BUD-002 when a job's 7-day median is more than 30 percent over them, so the number lives in one place. Only repos of the Doman-Digital organisation are read. Warn from 17 November, enforced from 1 December.",
+      "applies": "all",
+      "warn_from": "2026-11-17",
+      "enforce_from": "2026-12-01"
+    },
+    {
       "id": "CI-023",
       "title": "A workflow still uses Vercel",
       "why": "Vercel was retired for CI and deploys (DOM-555, DOM-776). On 19 October 2026 its leftovers were still in five repos: six VERCEL_TOKEN_* inputs in dd-repo-registry's sweep, a kv.vercel-storage placeholder in the monorepo's lighthouse.yml, and comments in three other repos describing Vercel building main. A workflow that names Vercel either does nothing or depends on an account nobody watches. A portal still served by Vercel records it as an exemption.",

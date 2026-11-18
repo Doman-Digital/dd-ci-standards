@@ -413,6 +413,13 @@ jobs:
     // The browser step waits for the merge queue.
     pass: wf("on:\n  pull_request:\n  merge_group:\njobs:\n  e2e:\n    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 8\n    steps:\n      - run: pnpm test\n      - run: pnpm exec playwright test\n        if: ${{ github.event_name != 'pull_request' }}\n"),
   },
+  "CI-041": {
+    // A 45-minute merge-queue job with no expected duration in the workflow's budget row.
+    fail: wf("on:\n  merge_group:\njobs:\n  slow:\n    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 45\n    steps:\n      - run: make slow\n"),
+    pass: wf("on:\n  merge_group:\njobs:\n  slow:\n    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 45\n    steps:\n      - run: make slow\n"),
+    ctx: { budget: { ghCrons: [], vercelCrons: [], workflows: [{ workflow: "ci.yml", events: ["merge_group"], runner_class: "hosted-linux", per_run_usd: 0.3, runs_a_month: 100, owner: "DD Framework", reason: "the slow job, once per queue entry" }] } },
+    passCtx: { budget: { ghCrons: [], vercelCrons: [], workflows: [{ workflow: "ci.yml", events: ["merge_group"], runner_class: "hosted-linux", per_run_usd: 0.3, runs_a_month: 100, owner: "DD Framework", reason: "the slow job, once per queue entry", job_minutes: { slow: 30 } }] } },
+  },
   "CI-039": {
     fail: wf("on:\n  push:\n    branches: [main]\n  pull_request:\njobs:\n  voiceover:\n    runs-on: macos-latest\n    timeout-minutes: 20\n    steps:\n      - run: echo hi\n", ".github/workflows/screen-reader.yml"),
     pass: wf("on:\n  workflow_dispatch:\njobs:\n  voiceover:\n    runs-on: macos-latest\n    timeout-minutes: 20\n    steps:\n      - run: echo hi\n", ".github/workflows/screen-reader.yml"),
