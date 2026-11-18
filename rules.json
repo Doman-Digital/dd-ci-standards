@@ -321,6 +321,14 @@
       "enforce_from": "2026-12-01"
     },
     {
+      "id": "CI-045",
+      "title": "A script or workflow names where the capsule and metrics live",
+      "why": "18 November 2026 (DOM-438, Phase 1b): the client capsule froze at October's bytes for 18 days partly because the bucket, the prefixes and the working-copy folders were spelt out in a dozen scripts, workflows and docs, each a second copy of one fact, so changing the home meant finding all of them. The one definition is `storage:` in dd-repo-registry registry.yaml; claude-kit's dd-storage resolver (Python, Node, shell) hands the values out. A workflow or script fails this rule when a line that is not a comment names the capsule folder or bucket (`dd-client-capsule`, as a path, a string or an rclone remote), a metrics folder as a path (`~/dd-client-metrics`, `$HOME/dd-client-metrics`, or the string \"dd-client-metrics\"), or the retired `_metrics/` prefix. Scripts are tracked files with a script extension (.sh .bash .zsh .py .mjs .cjs .js .ts .tsx .rb) or a shebang line; markdown, JSON and YAML data are not scripts, and workflows are always read. Tests and fixtures (a test or tests or fixtures folder, test_*, *_test.*, *.test.*, *.spec.*) are exempt. A file that must name them goes on the allow list in dd-ci-standards storage-drift.json, with its reason, in the change that adds it. Scripts need a checkout to be read: the estate sweep, which reads files through the API, checks workflows only. Warn from 18 November, enforced from 25 November, so open pull requests have a week.",
+      "applies": "all",
+      "warn_from": "2026-11-18",
+      "enforce_from": "2026-11-25"
+    },
+    {
       "id": "CI-025",
       "title": "A monorepo's pull request job runs every workspace",
       "why": "DOM-776 step 5, 19 October 2026: the monorepo's verify and build ran lint, typecheck, test and build for all ten workspaces on every pull request, 22 of its 32 VM-minutes per run, though most PRs touch one app. dd-ci-standards' workspace-scope action works out the affected workspaces (and runs everything when a shared file changes), so a turbo run on a PR passes its filters.",

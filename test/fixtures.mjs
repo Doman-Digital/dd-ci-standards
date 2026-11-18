@@ -148,6 +148,18 @@ jobs:
     // axe in CI, and a weekly script that calls the PageSpeed API (named lighthouse.mjs) is not Lighthouse on the runner.
     pass: wf("on:\n  pull_request:\n  schedule:\n    - cron: \"17 6 * * 1\"\njobs:\n  checks:\n    steps:\n      - run: npm install --no-save playwright @axe-core/playwright\n      - run: node .github/scripts/axe.mjs\n      - run: node bin/lighthouse.mjs $SITE\n"),
   },
+  "CI-045": {
+    // The nightly job as it was before the resolver: the bucket spelt out in a script, and a Mac folder in a workflow step.
+    fail: view({ scripts: [{ path: "scripts/sync.sh", text: "#!/bin/bash\nrclone copy \"$HOME/dd-client-metrics\" r2:dd-client-capsule/_state\n" }] }),
+    // The same job asking the resolver; the names appear only in a comment and in a test, which are exempt.
+    pass: view({
+      scripts: [
+        { path: "scripts/sync.sh", text: "#!/bin/bash\n# was r2:dd-client-capsule before DOM-438\nrclone copy \"$(dd-storage get local.metrics_dir)\" \"$(dd-storage dest --prefix state)\"\n" },
+        { path: "tests/sync.test.mjs", text: "assert.equal(path, '~/dd-client-capsule')\n" },
+        { path: "docs/notes.md", text: "The bucket is dd-client-capsule.\n" },
+      ],
+    }),
+  },
   "CI-030": {
     fail: wf("on:\n  workflow_run:\n    workflows: [CI]\n    types: [completed]\n    branches: [main]\npermissions:\n  contents: read\njobs:\n  deploy:\n    permissions:\n      contents: read\n      id-token: write\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/cloudflare-deploy.yml@v1\n    with:\n      doppler-config: relay\n", ".github/workflows/deploy.yml"),
     pass: wf("on:\n  workflow_run:\n    workflows: [CI]\n    types: [completed]\n    branches: [main]\npermissions:\n  contents: read\njobs:\n  deploy:\n    permissions:\n      contents: read\n      id-token: write\n      actions: write\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/cloudflare-deploy.yml@v1\n    with:\n      doppler-config: relay\n", ".github/workflows/deploy.yml"),
