@@ -604,6 +604,9 @@ repos:
       - workflow: client-jobs.yml
         cron: "0 9,10 * * 4"
         reason: "Weekly Google Business Profile post for one client (DOM-17669); the UK-time guard lets only the 10:00 local run post, and the second entry covers the clock change. Posts only while CLIENT_GBP_POSTS_ENABLED is true. Four posts are queued (19 November to 10 December)."
+      - workflow: client-jobs.yml
+        cron: "15 5 * * *"
+        reason: "Daily capsule content guard (DOM-438), after the 02:45 backups job: lists the R2 bucket and the newest capsule-nightly snapshot and fails when the backup does not hold the bucket's content. Read only, about 5 minutes; admitted by CLIENT_BACKUPS_ENABLED."
       - workflow: install-plan.yml
         cron: "43 5 * * *"
         reason: "daily dry run of install.sh's plan() against dd-repo-registry origin/main (DOM-17994): a register change made with no commit here still goes red, about 11 seconds a run"
@@ -621,9 +624,9 @@ repos:
         events: "schedule, workflow_dispatch"
         runner_class: hosted-linux
         per_run_usd: 0.0026
-        runs_a_month: 96
+        runs_a_month: 126
         owner: "DD Framework"
-        reason: "48 runs 1 to 15 November 2026 (96 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.090), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+        reason: "30 runs a month added on 18 November 2026 for the daily capsule-guard schedule (DOM-438), priced like the other client jobs until measured; before that: 48 runs 1 to 15 November 2026 (96 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.090), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
       - workflow: import-briefing-configs.yml
         events: "workflow_dispatch"
         runner_class: hosted-linux
