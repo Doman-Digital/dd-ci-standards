@@ -93,8 +93,13 @@ list is empty until the organisation's plan reads `enterprise`.
 
 ```sh
 node <dd-ci-standards checkout>/bin/dd.mjs new --kind dd-site dd-example \
-  --description "What the repo is, in a sentence." --answers answers.json
+  --description "What the repo is, in a sentence." --programme DOM-123 --answers answers.json
 ```
+
+`--programme` is the site's programme issue. The released create-site refuses
+to scaffold without it (its Stage 05 gate), so `dd new` stops before making
+anything when it is missing. A `--local` starter, such as the nightly check,
+may skip the gate with `--no-gate` or `DD_CREATE_SITE_NO_GATE=1`.
 
 In order, and stopping at the first failure:
 

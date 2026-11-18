@@ -6,7 +6,7 @@ import { POLICY_CALLER } from "../lib/adopt.mjs";
 
 const rulebook = JSON.parse(readFileSync(new URL("../rules.json", import.meta.url), "utf8"));
 const taxonomy = JSON.parse(readFileSync(new URL("../repo-topics.json", import.meta.url), "utf8"));
-const ok = { kind: "dd-site", name: "dd-scratch", description: "A scratch site.", today: "2026-10-03", dir: "/tmp/dd-scratch" };
+const ok = { kind: "dd-site", name: "dd-scratch", description: "A scratch site.", today: "2026-10-03", dir: "/tmp/dd-scratch", programme: "DOM-1" };
 
 test("dd new plans the starter, the adoption and the repo, in that order", () => {
   const plan = planNew(ok, taxonomy, rulebook);
@@ -107,12 +107,12 @@ test("a client repo needs its programme issue, and a real account name", () => {
 });
 
 test("a programme is forwarded for every kind; --no-gate is for a --local starter only", () => {
-  const forwarded = planNew({ ...ok, programme: "DOM-1" }, taxonomy, rulebook);
+  const forwarded = planNew(ok, taxonomy, rulebook);
   assert.equal(forwarded.governed, false);
   assert.equal(forwarded.local, false);
   assert.deepEqual(forwarded.steps[2].args.slice(forwarded.steps[2].args.indexOf("--programme")), ["--programme", "DOM-1"]);
-  assert.ok(!planNew(ok, taxonomy, rulebook).steps[2].args.includes("--programme"));
-  const nightly = planNew({ ...ok, local: true, noGate: true }, taxonomy, rulebook);
+  const nightly = planNew({ ...ok, programme: undefined, local: true, noGate: true }, taxonomy, rulebook);
+  assert.ok(!nightly.steps[2].args.includes("--programme"));
   assert.ok(nightly.steps[2].args.includes("--no-gate"));
   assert.match(planNew({ ...ok, noGate: true }, taxonomy, rulebook).error, /--local starter only/);
   assert.match(planNew({ ...client, local: true, noGate: true }, taxonomy, rulebook).error, /--local starter only/);
@@ -130,4 +130,20 @@ test("the next step for a client repo is only what is true: the owner makes the 
   assert.match(text, /- remote: github.com\/acme-plumbing-ltd\/acme-plumbing/);
   assert.match(text, /Programme DOM-18200\. Then run: node \/x\/dd.mjs doctor /);
   assert.ok(!/gh repo create|GH_TOKEN|gh auth/.test(text), "no repo creation and no token or login in the printed commands");
+});
+
+test("without a programme dd new stops before anything is made, unless a --local starter skips the gate", () => {
+  const bare = { ...ok, programme: undefined };
+  assert.match(planNew(bare, taxonomy, rulebook).error, /start in a site programme: pass --programme DOM-123/);
+  assert.match(planNew({ ...bare, local: true }, taxonomy, rulebook).error, /start in a site programme/);
+  assert.equal(planNew({ ...bare, local: true, noGate: true }, taxonomy, rulebook).error, undefined);
+  const was = process.env.DD_CREATE_SITE_NO_GATE;
+  process.env.DD_CREATE_SITE_NO_GATE = "1";
+  try {
+    assert.equal(planNew({ ...bare, local: true }, taxonomy, rulebook).error, undefined);
+    assert.match(planNew(bare, taxonomy, rulebook).error, /start in a site programme/); // a repo that will be pushed still needs one
+  } finally {
+    if (was === undefined) delete process.env.DD_CREATE_SITE_NO_GATE;
+    else process.env.DD_CREATE_SITE_NO_GATE = was;
+  }
 });
