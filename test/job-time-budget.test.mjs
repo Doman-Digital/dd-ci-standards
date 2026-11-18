@@ -56,7 +56,7 @@ test("a runner-aware cap is read as its largest number", () => {
   const [j] = jobBlocks(wf(QUEUE, job("phone", expr)));
   assert.equal(capMinutes(j), 75);
   assert.equal(capMinutes(jobBlocks(wf(QUEUE, job("a", "20 # why")))[0]), 20);
-  assert.equal(capMinutes(jobBlocks(wf(QUEUE, "  a:\n    runs-on: x\n    steps: []\n"))[0]), null, "no cap is CI-003's");
+  assert.equal(capMinutes(jobBlocks(wf(QUEUE, "  a:\n    runs-on: x\n    steps: []\n"))[0]), null, "a job with no cap is left to CI-003");
   const v = view(["ci.yml", wf(QUEUE, job("phone", expr))]);
   assert.equal(found(v, ctxWith([row()])).length, 1);
   assert.deepEqual(found(v, ctxWith([row({ job_minutes: { phone: 48 } })])), []);
