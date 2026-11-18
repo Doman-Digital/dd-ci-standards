@@ -634,7 +634,9 @@ copied into `lib/rules.mjs`):
 - the `no-issue` label, for work that has no issue.
 
 A key mentioned in passing (`see DOM-123`) does not count, because the relay
-ignores it too. Renovate and Dependabot branches are exempt. It warns from
+ignores it too. Renovate and Dependabot branches are exempt, and so are
+`changeset-release/` branches, the Changesets Version Packages PR, which names
+no issue by design (LIN-002 still reads them). It warns from
 21 October 2026 and fails from 28 October (27 October 2026, DOM-1363: the
 reading tightened to the relay's, and the `no-issue` label arrived).
 
