@@ -415,10 +415,17 @@ jobs:
     pass: wf("on:\n  pull_request:\n  push:\n    branches: [main]\njobs:\n  slow:\n    if: ${{ github.event_name != 'pull_request' }}\n    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 20\n    steps:\n      - run: make slow\n"),
   },
   "CI-042": {
-    // A keep-warm switch on in a deploy workflow, with no reason.
+    // A workflow cron every 15 minutes with no reason.
+    fail: wf("on:\n  schedule:\n    - cron: '*/15 * * * *'\njobs:\n  poll:\n    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 5\n    steps:\n      - run: ./poll.sh\n", ".github/workflows/poll.yml"),
+    // The same cron with a dated reason on its line.
+    pass: wf("on:\n  schedule:\n    - cron: '*/15 * * * *' # 2026-11-17 DOM-1: the queue must drain within a quarter of an hour\njobs:\n  poll:\n    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 5\n    steps:\n      - run: ./poll.sh\n", ".github/workflows/poll.yml"),
+  },
+  "CI-044": {
+    // A keep-warm switch on in a deploy workflow, with no founder approval.
     fail: wf("on:\n  workflow_dispatch:\njobs:\n  deploy:\n    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 10\n    steps:\n      - run: ./deploy.sh\n        env:\n          KEEP_WARM: \"1\"\n", ".github/workflows/deploy.yml"),
-    // The same switch with a dated reason on the line above.
-    pass: wf("on:\n  workflow_dispatch:\njobs:\n  deploy:\n    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 10\n    steps:\n      - run: ./deploy.sh\n        env:\n          # 2026-11-17 DOM-1: the demo API must answer in under a second for the sales call\n          KEEP_WARM: \"1\"\n", ".github/workflows/deploy.yml"),
+    // The same switch with the approval line above it, and the register carrying the same approval.
+    pass: wf("on:\n  workflow_dispatch:\njobs:\n  deploy:\n    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 10\n    steps:\n      - run: ./deploy.sh\n        env:\n          # founder-approved 2026-11-18 cost GBP 45/month: the demo API must answer in under a second\n          KEEP_WARM: \"1\"\n", ".github/workflows/deploy.yml"),
+    passCtx: { alwaysOn: [{ repo: "Doman-Digital/demo", file: ".github/workflows/deploy.yml", date: "2026-11-18", cost_gbp_month: 45 }] },
   },
   "CI-038": {
     // A short job, so only the browser rule sees it.

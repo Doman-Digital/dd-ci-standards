@@ -298,11 +298,19 @@
     },
     {
       "id": "CI-042",
-      "title": "Something is set to stay awake with no dated reason",
-      "why": "17 November 2026 (DOM-17629, DOM-17703): Meridian's API container was held awake around the clock by a keep-warm cron every 15 minutes, billing for an instance that was idle nearly all day, and nothing in the repo recorded why. Meridian's own test now refuses the switch without a dated reason; this makes that the house rule for every repo. Three things need a dated reason on the same line or the line above (`# YYYY-MM-DD <issue>: <why it must stay awake>`): a keep-warm or keep-alive switch set on (a KEEP_WARM or KEEP_ALIVE key set to 1, true, yes or on, in a workflow, a composite action or a Wrangler config); a cron more often than every 30 minutes (a workflow `schedule:` cron, or a Wrangler `crons` entry in a config that declares a container: a Worker cron on its own is an ordinary poller and is not read, but one in front of a container is the keep-warm ping); and a minimum instance count above zero (min_instances, minInstances, min-instances or min_machines_running). The list is short and exact on purpose: a cron every 30 minutes or less often, a switch set to 0 or false, and a count of 0 are never read. An expression such as `KEEP_WARM: ${{ inputs.warm }}` is not read either. The date is when the reason was written, so a reviewer can ask whether it still holds. Warn from 17 November, enforced from 1 December.",
+      "title": "A workflow cron more often than every 30 minutes has no dated reason",
+      "why": "17 November 2026 (DOM-17629): a workflow cron more often than every 30 minutes holds a runner busy all day, and nothing in the repo said why. It needs a dated reason on the same line or the line above (`# YYYY-MM-DD <issue>: <why>`: a date and a few words; a date alone, or a reason with no date, does not count). A cron every 30 minutes or less often is never read, and a Worker's own cron is an ordinary poller and is not read here. A cron in front of a container, a keep-warm switch and a minimum instance count are CI-044, which is stricter. Warn from 17 November, enforced from 1 December.",
       "applies": "all",
       "warn_from": "2026-11-17",
       "enforce_from": "2026-12-01"
+    },
+    {
+      "id": "CI-044",
+      "title": "A container, or a service billed while idle, is kept awake with no recorded founder approval",
+      "why": "Founder rule, 17 November 2026 (DOM-17629, DOM-17703): ban any and all always-on containers unless explicitly agreed with the specific known cost implications known to the founder. Meridian's API container was held awake around the clock by a keep-warm cron every 15 minutes and billed about $42 of one invoice for an instance that was idle most of the day. The rule fails, with no warn-first period, when a workflow, composite action or Wrangler config sets a KEEP_WARM or KEEP_ALIVE switch on (1, true, yes or on), sets a minimum instance count above zero (min_instances, minInstances, min-instances, min_machines_running), or has a cron more often than every 30 minutes in a Wrangler config that declares a container, unless the way through is taken: a recorded founder approval stating the date and the monthly cost he was told. The fixed form is one comment, on the same line or the line above: `# founder-approved YYYY-MM-DD cost GBP <amount>/month: <reason>` (the amount in pounds, at most two decimals, the reason at least eight characters). The same approval is a row of dd-repo-registry costs.yaml under always_on (app, repo, file, approved_by, approved_on, cost_gbp_month, reason), which that repo projects into always-on.json here; a line with no matching row fails too. This is narrow: it covers a container or a service billed while idle that is held awake on purpose. It does not cover the CI runner VMs on dd-ci-01, the services on dd-work-01, databases, or Workers without containers, and it is not an instruction to switch anything off: a session that finds an unapproved setting reports it and leaves it as it is. Enforced from 18 November 2026, the day it was written.",
+      "applies": "all",
+      "warn_from": "2026-11-18",
+      "enforce_from": "2026-11-18"
     },
     {
       "id": "CI-024",
