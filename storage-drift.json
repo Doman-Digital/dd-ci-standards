@@ -12,6 +12,26 @@
       "repo": "dd-agent-kit",
       "path": "tools/sync/dd-claude-state-sync.sh",
       "reason": "runs on the fleet box, where a dd-repo-registry checkout for the resolver is not guaranteed; routing it needs that checkout on the fleet first (logged as a follow-up under DOM-438)"
+    },
+    {
+      "repo": "dd-netcup-config",
+      "path": "scripts/dd-work-01-guardrails/dd-r2-env.sh",
+      "reason": "the one place the literal bucket, account, capsule root and nightly excludes are written, for the workflows that load it without a registry checkout; dd_r2_env checks every value against the registry's storage block whenever prepare.sh has run (DOM-438 Phase 1b)"
+    },
+    {
+      "repo": "dd-netcup-config",
+      "path": "scripts/dd-work-01-guardrails/dd-capsule-sync.sh",
+      "reason": "retired writer for the dd-work-01 box (deleted 9 November 2026): it writes the retired _metrics prefix by design, is installed on no live host and is kept only until its units are removed from the kit (DOM-438 Phase 1b)"
+    },
+    {
+      "repo": "dd-netcup-config",
+      "path": "scripts/dd-main-01-timers-cutover.sh",
+      "reason": "one-off cutover record for the retired dd-main-01 box: it copies that box's archive once and runs nowhere now (DOM-438 Phase 1b)"
+    },
+    {
+      "repo": "dd-netcup-config",
+      "path": "scripts/dd-work-01-guardrails/install.sh",
+      "reason": "installer for the deleted dd-work-01 box; the one line removes the working-copy folder that a hand install left there, so it names that folder to delete it (DOM-438 Phase 1b)"
     }
   ]
 }
