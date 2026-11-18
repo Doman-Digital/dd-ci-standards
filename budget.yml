@@ -78,6 +78,10 @@ repos:
         schedule: "15 2 * * *"
         reason: "nightly sweep for conversion dispatches claimed but never confirmed — without it a lead's outcome silently never reaches Google"
     ceiling_usd: 101
+    over_ceiling_until: "2026-12-15"
+    over_ceiling_issue: DOM-18024
+    over_ceiling_usd: 249.69
+    over_ceiling_reason: "ci.yml is priced at its measured $0.1586 a run (about $233.60 a month, DOM-17629) and the ceiling is left at $101; the queue runs are two thirds of it. DOM-18024 brings it to $84.91 a month or less (Doman-Digital#1813, DOM-17820 and fewer billed minutes per entry), due 12 December. The founder agreed to declare the honest price on 18 November 2026. Covers this repo at $249.69 a month and no more"
     workflows:
       - workflow: ci-setup-benchmark.yml
         events: "workflow_dispatch"

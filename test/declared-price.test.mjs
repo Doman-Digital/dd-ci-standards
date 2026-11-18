@@ -58,11 +58,10 @@ test("budget.yml reads the measured price as a number, and the monorepo's ci.yml
   assert.equal(parseBudget(sample).get("demo").workflows[0].measured_per_run_usd, 0.157);
 });
 
-test("every row that records a measured price in budget.yml is within the band, bar the monorepo row held for the founder (it passes on its own once #178 lands)", () => {
+test("every row that records a measured price in budget.yml is within the band, the monorepo row included", () => {
   const raw = readFileSync(new URL("../budget.yml", import.meta.url), "utf8");
   const apart = workflowRows(raw).filter((r) => "measured_per_run_usd" in r && Math.abs(r.per_run_usd - r.measured_per_run_usd) > PRICE_TOLERANCE * r.measured_per_run_usd);
-  // The monorepo ci.yml row is far from its measurement until Doman-Digital's corrected row (dd-ci-standards#178) lands:
-  // that correction breaks the envelope test, and raising a ceiling is the founder's decision, so it is held. Nothing else may be.
-  const known = new Set(["Doman-Digital ci.yml"]);
-  assert.deepEqual(apart.map((r) => `${r.repo} ${r.workflow}`).filter((k) => !known.has(k)), [], "a row far from its measurement, and not the held monorepo row");
+  // The monorepo ci.yml row is priced at its measured $0.1586 a run (DOM-17629, dd-ci-standards#178). The envelope it breaks is
+  // carried by a dated acknowledgement in budget.yml (DOM-18024), not by an exception here: no row may be far from its measurement.
+  assert.deepEqual(apart.map((r) => `${r.repo} ${r.workflow}`), [], "a row far from its measurement");
 });
