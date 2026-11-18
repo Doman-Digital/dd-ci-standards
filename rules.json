@@ -483,6 +483,14 @@
       "enforce_from": "2026-10-28"
     },
     {
+      "id": "PKG-003",
+      "title": "The site was not started with create-site, or its start check does not pass",
+      "why": "18 November 2026 (DOM-18123): nothing forced a site through @domandigital/create-site, the scaffold that carries the programme gates, the facts file, the JSON-LD graph and the SEO tests. A repo made with create-astro, create-next-app or a GitHub click, or a live site copied in as Astro, skipped all of it. The proof is `create-site --check` exiting 0 (3 means a house file drifted), not a file anyone can write by hand, so the repo needs a valid .dd/site-start.json (tool, version, mode programme or handover, the programme issue, a reason for a handover, startedAt) and the check must pass. This rule is a convenience for the organisation: most client repos sit in the client's own account, where our Actions never run, so the estate sweep in dd-repo-registry is the hard stop. Warns from 18 November 2026. enforce_from is the 90-day cap, 16 February 2027, and takes effect on its own on that day unless the founder has set a real date after the backfill (A5) or moved it: until then no site that has not been backfilled should be left to meet it.",
+      "applies": ["client-site", "dd-site"],
+      "warn_from": "2026-11-18",
+      "enforce_from": "2027-02-16"
+    },
+    {
       "id": "LIN-001",
       "title": "A pull request names no Linear issue",
       "why": "20 October 2026: client work was shipping with nothing in Linear or HubSpot to show for it. Since 22 July, 640 of 869 pull requests merged into the client repos named no issue, so the founder could not see what had been done for whom (DOM-1100). Every pull request names its issue: a `Closes DOM-123` or `Part of DOM-123` line (CRO-7 works too) in the title or description, or the key at the start of the branch name (dom-123-short-name), read the way dd-relay reads them when it moves Linear on a merge. A key mentioned in passing does not count (27 October 2026, DOM-1363: the relay ignores it). Work with no issue carries the no-issue label. Renovate and Dependabot branches are exempt, and so are changeset-release/ branches: the Changesets Version Packages PR names no issue by design and its bot rewrites the title and body, so a label added after it opens came too late and a new Version PR stayed red until the next push to main (17 November 2026). After fixing the description or adding the label, push a commit (an empty one will do): editing does not start the check again, and a re-run reads the old description (probed 27 October 2026).",

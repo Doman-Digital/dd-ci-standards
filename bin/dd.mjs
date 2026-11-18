@@ -6,16 +6,24 @@
 //   dd adopt [dir]    bring a repo up to the rules: owned files written,
 //                     existing findings recorded as 60-day exemptions (lib/adopt.mjs);
 //                     --only CI-022 writes that rule's fix and nothing else
+//   dd client new <slug> --intake <file> [--dry-run]
+//                     onboard a client: one idempotent command, driven by the step table in
+//                     dd-repo-registry (onboarding-steps.yaml). Forwards to that checkout's
+//                     bin/client-new.mjs (lib/client.mjs).
 //   dd new --kind <kind> <name> --description "<text>"
 //                     a repo that starts compliant: create-next-app, create-site,
 //                     dd adopt, dd doctor clean, then the GitHub repo and a
-//                     registry PR (lib/new.mjs)
+//                     registry PR (lib/new.mjs). client-site and client-app
+//                     (with --programme DOM-n) stop at the clean local folder
+//                     and print the step for the Doman Digital GitHub App.
 //
 // doctor options:
 //   --kind <kind>            repo kind (default: read from the repo's GitHub tags)
 //   --visibility <v>         private | public (default: read from GitHub)
 //   --repo <owner/name>      (default: GITHUB_REPOSITORY, or the git remote)
 //   --today <YYYY-MM-DD>     the day the rules are judged on (default: today, UTC)
+//   --site-answers <file>    the answers file the site was made with, for PKG-003's
+//                            `create-site --check` (or DD_SITE_ANSWERS)
 //   --format text|github|json
 //
 // Exit: 0 when nothing fails today, 1 when a rule at its enforce date fails,
@@ -33,12 +41,14 @@ import { branchRules } from "../lib/view-github.mjs";
 import { budgetForRepo } from "../lib/budget.mjs";
 import { readCfJobs } from "../lib/cf-jobs.mjs";
 import { craftContext, craftFloor } from "../lib/craft.mjs";
-import { runDoctor, levelOn } from "../lib/engine.mjs";
+import { runDoctor, levelOn, applies } from "../lib/engine.mjs";
+import { siteStartContext } from "../lib/site-start.mjs";
 import { planAdopt } from "../lib/adopt.mjs";
 import { resolvePins } from "../lib/pins.mjs";
 import { POLICY_RULESET } from "../lib/rules.mjs";
 import { selectRules, issueRefElsewhere, livePullRequest } from "../lib/issue-ref.mjs";
-import { planNew, addToRegistry, cleanVerdict, starterBudgetRows, starterBudgetYaml, ruleset, PR_BODY, REGISTRY_REPO, POLICY_CHECK } from "../lib/new.mjs";
+import { clientCommand } from "../lib/client.mjs";
+import { planNew, createSiteEnv, governedNextStep, addToRegistry, cleanVerdict, starterBudgetRows, starterBudgetYaml, ruleset, PR_BODY, REGISTRY_REPO, POLICY_CHECK } from "../lib/new.mjs";
 
 const HOME = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const rulebook = JSON.parse(readFileSync(join(HOME, "rules.json"), "utf8"));
@@ -212,6 +222,12 @@ async function doctor(args) {
   const floors = readFileSync(join(HOME, "floors.json"), "utf8");
   ctx.craft = only ? null : await craftContext(view, floors);
   ctx.craftNotes = only ? [] : floorDrift(floors);
+  // PKG-003: run create-site --check here, where commands may run; the rule only reads the answer.
+  const siteRule = picked.rulebook.rules.find((r) => r.id === "PKG-003");
+  if (siteRule && applies(siteRule, picked.rulebook, ctx.kind, ctx.visibility)) {
+    const answers = opt(args, "--site-answers") || process.env.DD_SITE_ANSWERS;
+    ctx.siteStart = siteStartContext(dir, view, { answers: answers ? resolve(answers) : null, visibility: ctx.visibility });
+  }
   const result = runDoctor(view, picked.rulebook, ctx);
   if (handedOff) result.notes.push(`${POLICY_RULESET.issueRefRules.join(" and ")} run in the issue-ref job here (an org ruleset runs ${POLICY_RULESET.issueRefPath}), not in this one.`);
   if (only) result.notes.push(`only ${only.join(", ")} were checked.`);
@@ -270,7 +286,9 @@ async function api(token, method, path, body) {
 /** Run a command with the terminal attached; throws on a non-zero exit. */
 function step(cmd, args, cwd, env) {
   console.log(`$ ${[cmd === process.execPath ? "node" : cmd, ...args].join(" ")}`);
-  execFileSync(cmd, args, { cwd, stdio: "inherit", env: env ? { ...process.env, ...env } : process.env });
+  const merged = env ? { ...process.env, ...env } : process.env;
+  for (const key of Object.keys(merged)) if (merged[key] === undefined) delete merged[key]; // an undefined value removes the variable
+  execFileSync(cmd, args, { cwd, stdio: "inherit", env: merged });
 }
 
 // git authenticates with the token through the environment, as
@@ -282,7 +300,7 @@ const gitAuthEnv = (token) => ({
 });
 
 async function newRepo(args) {
-  const positional = args.filter((a, i) => !a.startsWith("--") && !(i > 0 && args[i - 1].startsWith("--") && !["--dry-run", "--local"].includes(args[i - 1])));
+  const positional = args.filter((a, i) => !a.startsWith("--") && !(i > 0 && args[i - 1].startsWith("--") && !["--dry-run", "--local", "--no-gate"].includes(args[i - 1])));
   const siteArgs = [];
   for (const flag of ["--answers", "--client", "--trading-name", "--site-url", "--sector"]) {
     // --answers is a file: absolute, because create-site runs inside the new repo's folder.
@@ -302,6 +320,8 @@ async function newRepo(args) {
       dir: resolve(opt(args, "--dir") || positional[0] || "."),
       createSite: opt(args, "--create-site") ? resolve(opt(args, "--create-site")) : null,
       siteArgs,
+      programme: opt(args, "--programme"),
+      noGate: args.includes("--no-gate"),
       local: args.includes("--local"),
       today,
     },
@@ -313,10 +333,11 @@ async function newRepo(args) {
     return 2;
   }
   const dir = resolve(plan.dir);
-  console.log(`dd new: ${plan.repo} (${plan.kind}, ${plan.visibility}, ${plan.framework}) in ${dir}${plan.local ? ", local only" : ""}`);
+  console.log(`dd new: ${plan.repo} (${plan.kind}, ${plan.visibility}, ${plan.framework}) in ${dir}${plan.governed ? ", local folder only: the GitHub App makes the repo" : plan.local ? ", local only" : ""}`);
   if (args.includes("--dry-run")) {
     for (const s of plan.steps) console.log(`  run      ${s.cmd === process.execPath ? "node" : s.cmd} ${s.args.join(" ")}`);
     console.log("  run      dd adopt, then dd doctor (must be clean)");
+    if (plan.governed) for (const l of governedNextStep(plan, dir, `node ${join(HOME, "bin/dd.mjs")}`)) console.log(`  ${l}`);
     if (!plan.local) {
       console.log(`  create   github.com/${plan.repo}, ${plan.visibility}, tags ${plan.topics.join(", ")}`);
       console.log("  push     the first commit to main");
@@ -350,7 +371,7 @@ async function newRepo(args) {
   mkdirSync(dirname(dir), { recursive: true });
   step(scaffold.cmd, scaffold.args, dirname(dir));
   step(install.cmd, install.args, dir);
-  step(createSite.cmd, createSite.args, dir);
+  step(createSite.cmd, createSite.args, dir, createSiteEnv(plan));
 
   // 2. Adopt, then the doctor must be clean.
   const budget = budgetForRepo(readFileSync(join(HOME, "budget.yml"), "utf8"), plan.name);
@@ -367,12 +388,20 @@ async function newRepo(args) {
     budget.workflows = starterBudgetRows(loadFsView(dir));
     if (budget.workflows.length) console.log(`dd new: add this to ${join(HOME, "budget.yml")} (Doman-Digital/dd-ci-standards) so the repo's workflows are priced:\n${starterBudgetYaml(plan.name, budget.workflows)}`);
   }
-  const result = runDoctor(loadFsView(dir), rulebook, ctx);
+  // PKG-003: the site was just started, so create-site --check must already pass in it.
+  const started = loadFsView(dir);
+  ctx.siteStart = siteStartContext(dir, started, { visibility: plan.visibility, extra: [...(plan.programme ? ["--programme", plan.programme] : []), ...siteArgs], env: opt(args, "--create-site") ? { ...process.env, DD_CREATE_SITE: resolve(opt(args, "--create-site")) } : process.env });
+  const result = runDoctor(started, rulebook, ctx);
   console.log(format(result, "text", plan.repo));
   const verdict = cleanVerdict(result);
   if (!verdict.clean) {
     console.error(`dd new: the starter is not clean (${verdict.counted.length} finding(s), ${verdict.exempted.length} exempt). That is a bug in the starter; nothing was created on GitHub. The folder is left at ${dir}.`);
     return 1;
+  }
+  if (plan.governed) {
+    console.log(`dd new: ${dir} is clean and started with create-site (programme ${plan.programme}).`);
+    for (const l of governedNextStep(plan, dir, `node ${join(HOME, "bin/dd.mjs")}`)) console.log(l);
+    return 0;
   }
   if (plan.local) {
     console.log(`dd new: ${dir} is clean. --local: no GitHub repo, no registry PR.`);
@@ -463,11 +492,14 @@ export async function main(argv) {
   if (cmd === "rules") return rules(args);
   if (cmd === "adopt") return adopt(args);
   if (cmd === "new") return newRepo(args);
+  if (cmd === "client") return clientCommand(args);
   console.error(`usage: dd doctor [dir] [--kind k] [--visibility private|public] [--today YYYY-MM-DD] [--format text|github|json]
        dd adopt [dir] [--kind k] [--only RULE,...] [--dry-run]
        dd new --kind <kind> <name> --description "<text>" [--visibility private|public] [--framework next|astro]
               [--answers <file> | --client <name> --site-url <url> --sector <sector>] [--dir <path>]
-              [--create-site <create-site cli.js>] [--local] [--dry-run]
+              [--programme DOM-123 --owner <account>]   (client-site and client-app: local folder only; the GitHub App makes the repo)
+              [--create-site <create-site cli.js>] [--local [--no-gate]] [--dry-run]
+       dd client new <slug> [--intake <file>] [--dry-run] [--checklist]   (onboard a client; see dd client)
        dd rules`);
   return 2;
 }

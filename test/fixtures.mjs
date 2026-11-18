@@ -16,6 +16,9 @@ export const TEST_NAMES = {
   allow: [{ repo: "Doman-Digital/demo", path: "^owners\\.yml$", line: "^\\s*-\\s*[\\w-]+\\s*$", reason: "a data key" }],
 };
 
+// A valid .dd/site-start.json, as @domandigital/create-site writes it (PKG-003).
+export const LABEL = JSON.stringify({ tool: "@domandigital/create-site", version: "0.12.0", mode: "programme", programme: "DOM-18123", stage05Gate: true, startedAt: "2026-11-18" });
+
 const wf = (text, path = ".github/workflows/ci.yml") => ({ workflows: [{ path, text }], vercel: [], files: {} });
 const view = (over) => ({ workflows: [], vercel: [], files: {}, ...over });
 
@@ -232,6 +235,13 @@ jobs:
     // astro/ is outside apps/* and packages/*; apps/web is a member with a lockfile of its own.
     fail: view({ files: { "pnpm-workspace.yaml": "packages:\n  - 'apps/*'\n  - 'packages/*'\n" }, paths: ["pnpm-workspace.yaml", "pnpm-lock.yaml", "astro/package.json", "astro/pnpm-lock.yaml"] }),
     pass: view({ files: { "pnpm-workspace.yaml": "packages:\n  - 'apps/*'\n  - 'packages/*'\n" }, paths: ["pnpm-workspace.yaml", "pnpm-lock.yaml", "astro/pnpm-lock.yaml", "astro/pnpm-workspace.yaml", "apps/web/pnpm-lock.yaml"] }),
+  },
+  "PKG-003": {
+    // A client site with no start label; the passing one has a valid label and a create-site --check that exited 0.
+    ctx: { kind: "client-site" },
+    fail: view({}),
+    pass: view({ files: { ".dd/site-start.json": LABEL } }),
+    passCtx: { siteStart: { check: { ran: true, exit: 0, command: "create-site --check --yes", output: "" } } },
   },
   "CI-027": {
     fail: wf("on:\n  pull_request:\nconcurrency:\n  group: ci-${{ github.ref }}\n  cancel-in-progress: true\njobs:\n  gate:\n    needs: [test]\n    if: ${{ always() }}\n    runs-on: x\n    steps:\n      - run: x\n"),

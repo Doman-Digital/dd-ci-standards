@@ -590,8 +590,8 @@ repos:
         cron: "0 7 * * *"
         reason: "Daily client briefing build using the existing script and restored R2 state."
       - workflow: client-jobs.yml
-        cron: "15 6,7 * * 1"
-        reason: "Weekly client delivery; UK-time guard permits only the 07:15 local run."
+        cron: "15 7 * * 1"
+        reason: "Weekly client delivery (Client Watch): one schedule, so a week runs once. GitHub starts it hours late, so any start that Monday in UK time runs the job (DOM-777); the old pair with an hour-7 guard skipped every late start."
       - workflow: client-jobs.yml
         cron: "45 2 * * *"
         reason: "Nightly Neon, Sanity, metrics and capsule backups to Backblaze B2."
@@ -945,7 +945,11 @@ repos:
     vercel_crons: []
 
   verqan-api:
-    github_actions_crons: []
+    github_actions_crons:
+      - workflow: live-drift.yml
+        cron: "23 7 * * *"
+        owner: "Doman Digital"
+        reason: "daily check that the live Worker matches main (DOM-458): cron triggers against src/jobs.ts, the live image against the tag in the config, and apps/api changes over a day old against the image; one checkout and a few read-only API calls, no install, 5min cap on the light pool, off the hour"
     vercel_crons: []
     ceiling_usd: 2
     workflows:
