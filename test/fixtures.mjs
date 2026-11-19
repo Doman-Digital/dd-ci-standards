@@ -148,6 +148,22 @@ jobs:
     // axe in CI, and a weekly script that calls the PageSpeed API (named lighthouse.mjs) is not Lighthouse on the runner.
     pass: wf("on:\n  pull_request:\n  schedule:\n    - cron: \"17 6 * * 1\"\njobs:\n  checks:\n    steps:\n      - run: npm install --no-save playwright @axe-core/playwright\n      - run: node .github/scripts/axe.mjs\n      - run: node bin/lighthouse.mjs $SITE\n"),
   },
+  "CI-046": {
+    // a barber site at the failing commit: the SDK loaded from booking.mts, and a policy whose frame-src and form-action name only Square's hosts.
+    fail: view({
+      csp: [
+        { path: "astro/src/client/booking.mts", text: 'await loadScript("https://web.squarecdn.com/v1/square.js");\n' },
+        { path: "astro/src/lib/http-policy.mjs", text: 'export const buildCsp = () => [\n  "frame-src \'self\' https://web.squarecdn.com https://pci-connect.squareup.com",\n  "form-action \'self\' https://web.squarecdn.com",\n].join("; ");\n' },
+      ],
+    }),
+    // The fix: the same builder, with `https:` added by a flag the file assigns.
+    pass: view({
+      csp: [
+        { path: "astro/src/client/booking.mts", text: 'await loadScript("https://web.squarecdn.com/v1/square.js");\n' },
+        { path: "astro/src/lib/http-policy.mjs", text: 'export function buildCsp(h, { cardChallenge = false } = {}) {\n  const challenge = cardChallenge ? " https:" : "";\n  return [\n    "frame-src \'self\' https://web.squarecdn.com" + challenge,\n    "form-action \'self\'" + challenge,\n  ].join("; ");\n}\n' },
+      ],
+    }),
+  },
   "CI-045": {
     // The nightly job as it was before the resolver: the bucket spelt out in a script, and a Mac folder in a workflow step.
     fail: view({ scripts: [{ path: "scripts/sync.sh", text: "#!/bin/bash\nrclone copy \"$HOME/dd-client-metrics\" r2:dd-client-capsule/_state\n" }] }),
