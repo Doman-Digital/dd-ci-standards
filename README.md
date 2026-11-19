@@ -34,7 +34,12 @@ same way in three places.
 - **`bin/dd.mjs`**: the command. `dd doctor` reports; `dd adopt` brings a
   repo up to the rules (`lib/adopt.mjs`); `dd new` makes a repo that starts
   compliant (`lib/new.mjs`); `dd client new <slug>` onboards a client by
-  forwarding to dd-repo-registry's step table (`lib/client.mjs`).
+  forwarding to dd-repo-registry's step table (`lib/client.mjs`). On dd-work-01
+  and other Linux boxes `dd` is the coreutils disk copy, so run it as
+  `dd-framework <verb>` (dd-claude-kit `tools/box/dd-framework`): it refreshes
+  `~/.dd/run/dd-ci-standards` to origin/main and runs this `bin/dd.mjs` from there.
+  A run that writes (`dd-framework client new` without `--dry-run`) uses the
+  working clone of dd-repo-registry in `~/GitHub`, never the job copy.
 
 ### Adopting a repo
 
