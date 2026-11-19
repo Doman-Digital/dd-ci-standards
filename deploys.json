@@ -94,7 +94,7 @@
     {
       "repo": "6267df3f8bd7b84d536a313977c74d88af024b4de487fb8df2577f3c27e38750",
       "worker": "25920323ed247c59219da26b248650fc5b2b928697cd27abe57100f00a573b0c",
-      "path": "workers-builds"
+      "path": "actions"
     },
     {
       "repo": "6267df3f8bd7b84d536a313977c74d88af024b4de487fb8df2577f3c27e38750",
@@ -380,6 +380,11 @@
     },
     {
       "repo": "b1f98cde4317c663ef493cf8cc04b23d77769509c23513e46cdd6508030022da",
+      "worker": "3ddf56e50016f4ab391912cd152ed0e4985e32da4bcb202a4c8278f62cb2c78a",
+      "path": "manual"
+    },
+    {
+      "repo": "b1f98cde4317c663ef493cf8cc04b23d77769509c23513e46cdd6508030022da",
       "worker": "5c600261c39e4d93cd6d12b62c88c5c119f88779f79ff8370cdf9b7904c1d321",
       "path": "actions"
     },
@@ -446,7 +451,7 @@
     {
       "repo": "da997b0d2e1a66b452366896d35944b85fc0a053f658e5b670e02f22de1595e8",
       "worker": "b7bfaa81769d570c61274d9a7f76a019896b66e65abd7c36a01325caf4fc58f1",
-      "path": "workers-builds"
+      "path": "actions"
     },
     {
       "repo": "f0ce069c8a4f2d860e4428f1a0ee6b7a12d85b65768c0b5ce34b54f7e5a8e277",
