@@ -81,12 +81,12 @@ test("a repo with no caller (covered by the org ruleset) gets no required check 
 
 const client = { ...ok, kind: "client-site", name: "acme-plumbing", owner: "acme-plumbing-ltd", programme: "DOM-18200", dir: "/tmp/acme-plumbing" };
 
-test("a client repo has a governed route: create-site with --programme, then adopt and doctor, then the GitHub App", () => {
+test("a client repo has a governed route: create-site with --programme, then adopt and doctor, then the founder pushes", () => {
   for (const kind of ["client-site", "client-app"]) {
     const plan = planNew({ ...client, kind }, taxonomy, rulebook);
     assert.equal(plan.error, undefined, kind);
     assert.equal(plan.governed, true);
-    assert.equal(plan.local, true, "dd new never creates a client repo: the App does");
+    assert.equal(plan.local, true, "dd new never creates a client repo: its owner does");
     assert.equal(plan.repo, "acme-plumbing-ltd/acme-plumbing");
     const site = plan.steps[2].args;
     assert.equal(site[site.indexOf("--programme") + 1], "DOM-18200");
@@ -119,17 +119,42 @@ test("a programme is forwarded for every kind; --no-gate is for a --local starte
   assert.match(planNew({ ...ok, owner: "somebody" }, taxonomy, rulebook).error, /cannot run Actions/);
 });
 
-test("the next step for a client repo is only what is true: the owner makes the repo, the App pushes", () => {
+test("the next step for a client repo is only what is true: the owner makes the repo, the founder pushes under their own gh login", () => {
   const plan = planNew(client, taxonomy, rulebook);
   const text = governedNextStep(plan, "/tmp/acme-plumbing", "node /x/dd.mjs").join("\n");
   assert.match(text, /not created here/);
-  assert.match(text, /does not let an App create a repository in a personal account/);
-  assert.match(text, /dd-gh-app run --app dd-bot --owner acme-plumbing-ltd --perms contents=write -- git -C '\/tmp\/acme-plumbing' push -u origin main/);
+  assert.match(text, /invites the founder as a collaborator with Write/);
+  assert.match(text, /gh auth status && test "\$\(gh api repos\/acme-plumbing-ltd\/acme-plumbing --jq \.permissions\.push\)" = true/);
+  assert.match(text, /accepts the invitation[^\n]*gh api user\/repository_invitations[^\n]*acme-plumbing-ltd\/acme-plumbing[^\n]*-X PATCH/);
+  assert.match(text, /a 404 usually means the invitation is not accepted yet/);
+  assert.match(text, /stop here if either fails \(do not start a login flow; a 404/);
+  assert.match(text, /git -C '\/tmp\/acme-plumbing' -c credential\.helper= -c 'credential\.helper=!gh auth git-credential' push -u origin main/);
+  assert.match(text, /for checks and workflow dispatch only, not for this push/);
   assert.match(text, /remote add origin https:\/\/github.com\/acme-plumbing-ltd\/acme-plumbing.git/);
   assert.match(text, /client-site, in-development, doman-digital/);
   assert.match(text, /- remote: github.com\/acme-plumbing-ltd\/acme-plumbing/);
   assert.match(text, /Programme DOM-18200\. Then run: node \/x\/dd.mjs doctor /);
-  assert.ok(!/gh repo create|GH_TOKEN|gh auth/.test(text), "no repo creation and no token or login in the printed commands");
+  assert.ok(!/gh repo create|GH_TOKEN|gh auth (login|refresh|token|setup-git)/.test(text), "no repo creation, no token and no login flow in the printed commands");
+  const order = ["repository_invitations", "gh auth status", "init -q -b main", "remote add origin", "push -u origin main"].map((t) => text.indexOf(t));
+  assert.ok(order.every((n, i) => n >= 0 && (i === 0 || n > order[i - 1])), "the login check comes before the commit, the remote and the push");
+});
+
+// DOM-18155: the guard. A client repo's push path must not ask for a GitHub App installation token.
+test("the client-repo push path never asks for an App installation token", () => {
+  const FORBIDDEN = /dd-gh-app|--perms\b|installation[ -]token|app[ -]token|create-github-app-token|GH_TOKEN|GITHUB_TOKEN|gh auth (login|refresh|token|setup-git)/i;
+  for (const kind of ["client-site", "client-app"]) {
+    const plan = planNew({ ...client, kind }, taxonomy, rulebook);
+    const printed = governedNextStep(plan, "/tmp/acme-plumbing", "node /x/dd.mjs").join("\n");
+    // The printed lines say what the route does not use ("needs no GitHub App token"), so the one allowed phrase is removed first.
+    const asked = printed.replace(/It needs no GitHub App token\./, "");
+    assert.ok(!FORBIDDEN.test(asked), `${kind}: ${asked.match(FORBIDDEN)?.[0]}`);
+    // The App is only ever named for checks and workflow dispatch.
+    for (const line of printed.split("\n").filter((l) => /GitHub App/.test(l))) assert.match(line, /checks and workflow dispatch|needs no GitHub App token/, line);
+  }
+  // The code that builds and prints the route does not call dd-gh-app or mint a token either.
+  const src = readFileSync(new URL("../lib/new.mjs", import.meta.url), "utf8");
+  const route = src.slice(src.indexOf("export function governedNextStep"), src.indexOf("// The check run the policy caller produces"));
+  assert.ok(!/dd-gh-app|--perms\b|create-github-app-token|installation[ -]token/i.test(route), "governedNextStep builds no App-token command");
 });
 
 test("without a programme dd new stops before anything is made, unless a --local starter skips the gate", () => {
