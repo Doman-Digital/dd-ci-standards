@@ -138,10 +138,14 @@ create repos in the organisation (`GH_TOKEN`, or `gh auth login`).
 It refuses `personal` and `it-portfolio` (outside the framework) and any owner
 but Doman-Digital (personal-account repos cannot run Actions).
 
-**Client repos (`client-site`, `client-app`; DOM-18123).** A client repo is
-pushed by the Doman Digital GitHub App (dd-bot), never with a person's token or
-login, and many sit in the client's own account, where this repo's Actions and
-rulesets do not reach. So `dd new` takes the governed route:
+**Client repos (`client-site`, `client-app`; DOM-18123, DOM-18155).** A client
+repo is pushed by the founder, the invited collaborator with Write, under their
+own `gh` login. It is not pushed with a GitHub App installation token (the
+founder, 19 November 2026: Apps are no longer needed for pushing). The Doman
+Digital GitHub App is installed on the repo for checks and workflow dispatch
+only, as `access-standard.yaml` in dd-repo-registry says. Many client repos sit
+in the client's own account, where this repo's Actions and rulesets do not
+reach. So `dd new` takes the governed route:
 
 ```sh
 node <dd-ci-standards checkout>/bin/dd.mjs new --kind client-site acme-plumbing \
@@ -151,14 +155,21 @@ node <dd-ci-standards checkout>/bin/dd.mjs new --kind client-site acme-plumbing 
 
 It runs steps 1 and 2 above (create-site with `--programme`, `dd adopt`, `dd
 doctor` clean, which now includes PKG-003) and stops: **it does not create the
-GitHub repo.** GitHub does not let an App create a repository in a personal
-account, and every client account in dd-repo-registry today is one (checked 18
-November 2026), so the account owner creates the empty repo and installs the
-App, and `dd new` prints the rest: `git init` and a commit, then the push under
-`dd-gh-app run --app dd-bot --owner <account> --perms contents=write`, the tags
-to set and the registry row. The push step follows dd-gh-app's
-documentation and has not been run against a client repo. `--programme` is
-required; `--owner` is the account the repo will live in (default Doman-Digital).
+GitHub repo and does not push.** Every client account in dd-repo-registry today
+is a personal one (checked 18 November 2026), so the account owner creates the
+empty repo, invites the founder as a collaborator with Write, and installs the
+App on it (adding the repo to the installation if they picked selected
+repositories). Once the folder is clean, `dd new` prints the rest: a check that
+`gh` is logged in and the login can push (`gh auth status`, then
+`gh api repos/<repo> --jq .permissions.push`), which stops the run if either
+fails and never starts a login flow; `git init` and a commit; the remote; the
+first push through `gh`'s own credential helper
+(`-c 'credential.helper=!gh auth git-credential'`); then the tags to set and the
+registry row. The first real push has not yet been run against a client repo; it
+waits for the next brand-new client repo. `test/new.test.mjs` fails if the printed
+route asks for an installation token again (`dd-gh-app`, `--perms`, `GH_TOKEN`,
+a login flow). This applies to every brand-new client repo. The one existing client repo that still needs the App for bot merging and pushing keeps that setup; `dd new` never makes or touches it, and its change is a separate piece of work. `--programme` is required; `--owner` is the account the repo
+will live in (default Doman-Digital).
 
 `--programme DOM-123` is passed to create-site for every kind. `--no-gate`
 (create-site skips its programme gate) is accepted only with `--local`, for the

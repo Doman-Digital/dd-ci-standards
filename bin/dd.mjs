@@ -15,7 +15,7 @@
 //                     dd adopt, dd doctor clean, then the GitHub repo and a
 //                     registry PR (lib/new.mjs). client-site and client-app
 //                     (with --programme DOM-n) stop at the clean local folder
-//                     and print the step for the Doman Digital GitHub App.
+//                     and print the steps for the founder's own push as a collaborator.
 //
 // doctor options:
 //   --kind <kind>            repo kind (default: read from the repo's GitHub tags)
@@ -333,7 +333,7 @@ async function newRepo(args) {
     return 2;
   }
   const dir = resolve(plan.dir);
-  console.log(`dd new: ${plan.repo} (${plan.kind}, ${plan.visibility}, ${plan.framework}) in ${dir}${plan.governed ? ", local folder only: the GitHub App makes the repo" : plan.local ? ", local only" : ""}`);
+  console.log(`dd new: ${plan.repo} (${plan.kind}, ${plan.visibility}, ${plan.framework}) in ${dir}${plan.governed ? ", local folder only: the owner makes the repo, the founder pushes it" : plan.local ? ", local only" : ""}`);
   if (args.includes("--dry-run")) {
     for (const s of plan.steps) console.log(`  run      ${s.cmd === process.execPath ? "node" : s.cmd} ${s.args.join(" ")}`);
     console.log("  run      dd adopt, then dd doctor (must be clean)");
@@ -497,7 +497,7 @@ export async function main(argv) {
        dd adopt [dir] [--kind k] [--only RULE,...] [--dry-run]
        dd new --kind <kind> <name> --description "<text>" [--visibility private|public] [--framework next|astro]
               [--answers <file> | --client <name> --site-url <url> --sector <sector>] [--dir <path>]
-              [--programme DOM-123 --owner <account>]   (client-site and client-app: local folder only; the GitHub App makes the repo)
+              [--programme DOM-123 --owner <account>]   (client-site and client-app: local folder only; the owner makes the repo, the founder pushes it)
               [--create-site <create-site cli.js>] [--local [--no-gate]] [--dry-run]
        dd client new <slug> [--intake <file>] [--dry-run] [--checklist]   (onboard a client; see dd client)
        dd rules`);
