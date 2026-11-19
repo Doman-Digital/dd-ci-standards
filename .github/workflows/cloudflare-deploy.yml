@@ -11,7 +11,10 @@ name: cloudflare-deploy (reusable)
 #      rebuild (repository_dispatch from dd-rebuild-relay) and a manual run
 #      ship the tip and run the caller's manual-check first.
 #   2. Installs, runs the caller's checks (pre-deploy, and on a manual run
-#      the manual-check too), builds.
+#      the manual-check too), builds. A build that bakes secrets into the
+#      pages (a store domain, an analytics id) lists their names in
+#      build-env-names: they come from the same Doppler config as the deploy
+#      token, over the same identity, and only those names reach the build.
 #   3. Fetches the Cloudflare deploy token from Doppler `dd-deploy/<config>`
 #      with the repo's GitHub identity (OIDC). No Cloudflare token is stored
 #      in GitHub, and Doppler only trusts that identity on the default branch.
@@ -139,6 +142,14 @@ on:
           NAME:<sha>`), e.g. SENTRY_RELEASE, so errors carry the release that served them. Empty sets nothing.
         type: string
         default: ""
+      build-env-names:
+        description: >-
+          Names, one per line, of secrets in the same Doppler config as the deploy token (`dd-deploy/<doppler-config>`)
+          that the build command needs in its environment: a site that bakes a store domain or an analytics id into the
+          pages at build time. Only these names are exported to the build, nothing else in the config, and a name the
+          config does not hold fails the run. Empty exports nothing and fetches nothing extra.
+        type: string
+        default: ""
       runner:
         description: Runner label. Defaults to the CI_RUNNER variable, then ubuntu-latest.
         type: string
@@ -240,6 +251,40 @@ jobs:
         env:
           CMD: ${{ inputs.pre-deploy }}
         run: bash -euo pipefail -c "$CMD"
+      - name: Fetch the build environment from Doppler
+        id: buildenv
+        if: steps.tip.outputs.deploy == 'true' && inputs.build-env-names != ''
+        uses: dopplerhq/secrets-fetch-action@451892f16195f9ac360e1a5bcbf0b5fd0e957534 # v2.0.0
+        with:
+          auth-method: oidc
+          doppler-identity-id: ${{ vars.DOPPLER_IDENTITY_ID }}
+          doppler-project: ${{ inputs.doppler-project }}
+          doppler-config: ${{ inputs.doppler-config }}
+      - name: Export the build environment
+        if: steps.tip.outputs.deploy == 'true' && inputs.build-env-names != ''
+        env:
+          NAMES: ${{ inputs.build-env-names }}
+          FETCHED: ${{ toJSON(steps.buildenv.outputs) }}
+        run: |
+          set -euo pipefail
+          # An allow-list: each listed name is exported to the build, and nothing else in the config is.
+          node -e '
+            const { appendFileSync } = require("node:fs");
+            const { randomBytes } = require("node:crypto");
+            const names = process.env.NAMES.split("\n").map((n) => n.trim()).filter(Boolean);
+            const fetched = JSON.parse(process.env.FETCHED || "{}");
+            const bad = names.filter((n) => !/^[A-Z][A-Z0-9_]*$/.test(n));
+            if (bad.length) { console.error(`::error::build-env-names holds a name that is not UPPER_SNAKE_CASE: ${bad.join(", ")}`); process.exit(1); }
+            const missing = names.filter((n) => typeof fetched[n] !== "string" || fetched[n] === "");
+            if (missing.length) { console.error(`::error::Doppler has no value for build-env-names: ${missing.join(", ")}`); process.exit(1); }
+            for (const name of names) {
+              const value = fetched[name];
+              for (const line of value.split("\n")) if (line) console.log(`::add-mask::${line}`);
+              const delimiter = `ghadelim_${randomBytes(16).toString("hex")}`;
+              appendFileSync(process.env.GITHUB_ENV, `${name}<<${delimiter}\n${value}\n${delimiter}\n`);
+            }
+            console.log(`exported ${names.length} build variable(s): ${names.join(", ")}`);
+          '
       - name: Build
         if: steps.tip.outputs.deploy == 'true' && inputs.build != ''
         env:

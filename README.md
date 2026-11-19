@@ -443,6 +443,15 @@ has to pass a policy check to merge, not get caught in the next audit.
   because the tip's own CI run may not have finished. `release-var:
   SENTRY_RELEASE` sets that Worker variable to the deployed commit.
 
+  A site whose build bakes secrets into the pages (a store domain and
+  storefront token, analytics tags) lists their names in `build-env-names`,
+  one per line. They are read from the same Doppler config as the deploy
+  token (`dd-deploy/<doppler-config>`) with the same identity, and only the
+  listed names reach the build: not the rest of the config, and not the
+  install or the manual checks. A listed name the config does not hold fails
+  the run before the build. Copy the values into the deploy config from their
+  source with a script, never by hand (DOM-1644).
+
   ```yaml
   on:
     workflow_run:
