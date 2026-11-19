@@ -148,6 +148,17 @@ jobs:
     // axe in CI, and a weekly script that calls the PageSpeed API (named lighthouse.mjs) is not Lighthouse on the runner.
     pass: wf("on:\n  pull_request:\n  schedule:\n    - cron: \"17 6 * * 1\"\njobs:\n  checks:\n    steps:\n      - run: npm install --no-save playwright @axe-core/playwright\n      - run: node .github/scripts/axe.mjs\n      - run: node bin/lighthouse.mjs $SITE\n"),
   },
+  "CI-047": {
+    // A nightly backup on the pool pull request CI queues on (dd-netcup-config on 19 November 2026: 43 minutes behind it).
+    fail: wf("on:\n  schedule:\n    - cron: \"10 4 * * *\"\n  workflow_dispatch:\njobs:\n  backup:\n    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 120\n    steps:\n      - run: x\n"),
+    // The scheduled lane; a workflow that also runs on a pull request is CI, and keeps the pool its timeout decides (CI-022).
+    pass: view({
+      workflows: [
+        { path: ".github/workflows/backup.yml", text: "on:\n  schedule:\n    - cron: \"10 4 * * *\"\n  workflow_dispatch:\njobs:\n  backup:\n    runs-on: ${{ vars.CI_RUNNER_SCHEDULED || vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 120\n    steps:\n      - run: x\n" },
+        { path: ".github/workflows/plan.yml", text: "on:\n  pull_request:\n  schedule:\n    - cron: \"5 2 * * *\"\njobs:\n  plan:\n    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 20\n    steps:\n      - run: x\n" },
+      ],
+    }),
+  },
   "CI-046": {
     // a barber site at the failing commit: the SDK loaded from booking.mts, and a policy whose frame-src and form-action name only Square's hosts.
     fail: view({
