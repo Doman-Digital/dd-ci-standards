@@ -48,6 +48,11 @@
     },
     {
       "repo": "2085af09249015be7f992c3c5cc4581f383e5a19a348ef2ea41f5cb1efb8bd6d",
+      "worker": "18d087239b083ecb97ad5bc7c62c69f868ae881a9c3d3a6947736b658723a302",
+      "path": "manual"
+    },
+    {
+      "repo": "2085af09249015be7f992c3c5cc4581f383e5a19a348ef2ea41f5cb1efb8bd6d",
       "worker": "ad455b30273b6f4bb4a39ef9265db5a0a3b64edc4351f0428c0bf1747b8b6d05",
       "path": "retired"
     },
