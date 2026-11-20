@@ -320,10 +320,6 @@ repos:
   dd-repo-registry:
     github_actions_crons:
       - workflow: sweep.yml
-        cron: "15 6 * * *"
-        owner: "DD Framework"
-        reason: "daily estate sweep: every repo the GitHub App can see, against the register; API reads only, about a minute, 10min cap. Also the estate's secret scan of each default branch's last 26 hours (DOM-776)"
-      - workflow: sweep.yml
         cron: "17 3 * * 6"
         owner: "DD Framework"
         reason: "weekly secret scan of all history in every repo the GitHub App can see: the one full-history scan, replacing each repo's own (DOM-776 step 5), 60min cap"
