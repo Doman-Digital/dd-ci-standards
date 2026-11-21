@@ -320,10 +320,6 @@ repos:
   dd-repo-registry:
     github_actions_crons:
       - workflow: sweep.yml
-        cron: "15 6 * * *"
-        owner: "DD Framework"
-        reason: "daily estate sweep: every repo the GitHub App can see, against the register; API reads only, about a minute, 10min cap. Also the estate's secret scan of each default branch's last 26 hours (DOM-776)"
-      - workflow: sweep.yml
         cron: "17 3 * * 6"
         owner: "DD Framework"
         reason: "weekly secret scan of all history in every repo the GitHub App can see: the one full-history scan, replacing each repo's own (DOM-776 step 5), 60min cap"
@@ -590,8 +586,8 @@ repos:
         cron: "0 7 * * *"
         reason: "Daily client briefing build using the existing script and restored R2 state."
       - workflow: client-jobs.yml
-        cron: "15 6,7 * * 1"
-        reason: "Weekly client delivery; UK-time guard permits only the 07:15 local run."
+        cron: "15 7 * * 1"
+        reason: "Weekly client delivery (Client Watch): one schedule, so a week runs once. GitHub starts it hours late, so any start that Monday in UK time runs the job (DOM-777); the old pair with an hour-7 guard skipped every late start."
       - workflow: client-jobs.yml
         cron: "45 2 * * *"
         reason: "Nightly Neon, Sanity, metrics and capsule backups to Backblaze B2."
@@ -604,6 +600,21 @@ repos:
       - workflow: client-jobs.yml
         cron: "0 9,10 * * 4"
         reason: "Weekly Google Business Profile post for one client (DOM-17669); the UK-time guard lets only the 10:00 local run post, and the second entry covers the clock change. Posts only while CLIENT_GBP_POSTS_ENABLED is true. Four posts are queued (19 November to 10 December)."
+      - workflow: client-jobs.yml
+        cron: "15 5 * * *"
+        reason: "Daily capsule content guard (DOM-438), after the 02:45 backups job: lists the R2 bucket and the newest capsule-nightly snapshot and fails when the backup does not hold the bucket's content. Read only, about 5 minutes; admitted by CLIENT_BACKUPS_ENABLED."
+      - workflow: client-jobs.yml
+        cron: "20 8 * * 1"
+        reason: "Monthly search-rank check for one SEO client (DOM-17889), 53 DataForSEO searches, about 2 minutes and $0.20. A cron cannot say first Monday, so every Monday starts and select-job.py chooses the first two Mondays of the UK month (the second is the retry); other Mondays skip in seconds. Runs only while CLIENT_RANK_CHECK_ENABLED is true."
+      - workflow: client-jobs.yml
+        cron: "11,41 8-17 * * 1-5"
+        reason: "An SEO client approved Google review replies (DOM-17621): 20 starts a weekday for 14 batch days (about three weeks), at most one reply per run. select-job.py chooses no job unless it is 09:00 to 17:59 UK, CLIENT_REVIEW_REPLIES_ENABLED is true and today is within 35 days of CLIENT_REVIEW_REPLIES_START, so most starts cost seconds; a chosen run loads and saves the client state, about 3 to 5 minutes. Remove this row with the cron after day 14 (DOM-18268)."
+      - workflow: client-jobs.yml
+        cron: "50 4 * * *"
+        reason: "Nightly append-only export of the client work log (DOM-18253, programme DOM-18247): reads the relay's non-personal rows after the pointer's cursor and writes JSON lines under the capsule bucket's _events/ prefix, version first, pointer last. About 2 minutes a run and a few cents, because it loads and saves the client state like the other client jobs. Admitted by CLIENT_WORK_EVENTS_ENABLED; the relay's job record (window 36h) and dd-repo-registry jobs/dd-work-events-export.yaml are the check that a night was missed."
+      - workflow: install-plan.yml
+        cron: "43 5 * * *"
+        reason: "daily dry run of install.sh's plan() against dd-repo-registry origin/main (DOM-17994): a register change made with no commit here still goes red, about 11 seconds a run"
     vercel_crons: []
     ceiling_usd: 1
     workflows:
@@ -618,9 +629,9 @@ repos:
         events: "schedule, workflow_dispatch"
         runner_class: hosted-linux
         per_run_usd: 0.0026
-        runs_a_month: 96
+        runs_a_month: 126
         owner: "DD Framework"
-        reason: "48 runs 1 to 15 November 2026 (96 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.090), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+        reason: "30 runs a month added on 18 November 2026 for the daily capsule-guard schedule (DOM-438), priced like the other client jobs until measured; before that: 48 runs 1 to 15 November 2026 (96 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.090), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
       - workflow: import-briefing-configs.yml
         events: "workflow_dispatch"
         runner_class: hosted-linux
@@ -628,6 +639,13 @@ repos:
         runs_a_month: 16
         owner: "DD Framework"
         reason: "8 runs 1 to 15 November 2026 (16 a month at that rate), mean of 8 sampled November runs (range $0.006 to $0.060), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+      - workflow: install-plan.yml
+        events: "pull_request, schedule, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.0012
+        runs_a_month: 40
+        owner: "DD Framework"
+        reason: "estimate, not yet measured (DOM-17994): one short job of about 1 minute, 30 daily runs plus about 10 pull-request runs a month, priced like neon-backup-watch.yml; re-price from measured runs after two weeks (CI-043)"
       - workflow: neon-backup-watch.yml
         events: "schedule, workflow_dispatch"
         runner_class: hosted-linux
@@ -932,7 +950,11 @@ repos:
     vercel_crons: []
 
   verqan-api:
-    github_actions_crons: []
+    github_actions_crons:
+      - workflow: live-drift.yml
+        cron: "23 7 * * *"
+        owner: "Doman Digital"
+        reason: "daily check that the live Worker matches main (DOM-458): cron triggers against src/jobs.ts, the live image against the tag in the config, and apps/api changes over a day old against the image; one checkout and a few read-only API calls, no install, 5min cap on the light pool, off the hour"
     vercel_crons: []
     ceiling_usd: 2
     workflows:

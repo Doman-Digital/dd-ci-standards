@@ -279,6 +279,21 @@ test("CF-001 accepts an Actions deploy that runs wrangler inside a script, when 
   assert.doesNotMatch(missing[0].message, /[0-9a-f]{64}/);
 });
 
+test("CF-001 sees a Worker named only in an env block: a register row that says actions needs a deploy workflow (DOM-1644)", () => {
+  // A client site's shape: the top-level name is a retired Worker, the live one is env.production.name.
+  const cfg = '{ "name": "demo-top", "env": { "production": { "name": "demo-site", "routes": [] } } }';
+  const deploys = { workers: [{ worker: h("demo-top"), repo: h("Doman-Digital/demo"), path: "retired" }, { worker: h("demo-site"), repo: h("Doman-Digital/demo"), path: "actions" }] };
+  const v = (workflows) => ({ workflows, vercel: [], files: {}, wrangler: [{ path: "astro/wrangler.jsonc", name: "demo-top", text: cfg }] });
+  const missing = runDoctor(v([]), rulebook, { ...base, repo: "Doman-Digital/demo", deploys }).findings.filter((f) => f.rule === "CF-001");
+  assert.equal(missing.length, 1);
+  assert.match(missing[0].message, /Worker "demo-site"/);
+  const call = { path: ".github/workflows/deploy.yml", text: "on:\n  workflow_dispatch:\njobs:\n  deploy:\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/cloudflare-deploy.yml@v1\n" };
+  assert.equal(runDoctor(v([call]), rulebook, { ...base, repo: "Doman-Digital/demo", deploys }).findings.filter((f) => f.rule === "CF-001").length, 0);
+  // An env name the register does not list is not a finding.
+  const none = { workers: [{ worker: h("demo-top"), repo: h("Doman-Digital/demo"), path: "manual" }] };
+  assert.equal(runDoctor(v([]), rulebook, { ...base, repo: "Doman-Digital/demo", deploys: none }).findings.filter((f) => f.rule === "CF-001").length, 0);
+});
+
 test("an OpenNext deploy counts as a production deploy (CI-013, SEC-007)", () => {
   const text = "on:\n  push:\n    branches: [main]\njobs:\n  deploy:\n    steps:\n      - run: pnpm exec opennextjs-cloudflare deploy\n        env:\n          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}\n";
   const r = runDoctor({ workflows: [{ path: ".github/workflows/deploy.yml", text }], vercel: [], files: {} }, rulebook, base);

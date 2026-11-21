@@ -33,7 +33,13 @@ same way in three places.
   catch its own target.
 - **`bin/dd.mjs`**: the command. `dd doctor` reports; `dd adopt` brings a
   repo up to the rules (`lib/adopt.mjs`); `dd new` makes a repo that starts
-  compliant (`lib/new.mjs`).
+  compliant (`lib/new.mjs`); `dd client new <slug>` onboards a client by
+  forwarding to dd-repo-registry's step table (`lib/client.mjs`). On dd-work-01
+  and other Linux boxes `dd` is the coreutils disk copy, so run it as
+  `dd-framework <verb>` (dd-claude-kit `tools/box/dd-framework`): it refreshes
+  `~/.dd/run/dd-ci-standards` to origin/main and runs this `bin/dd.mjs` from there.
+  A run that writes (`dd-framework client new` without `--dry-run`) uses the
+  working clone of dd-repo-registry in `~/GitHub`, never the job copy.
 
 ### Adopting a repo
 
@@ -93,8 +99,13 @@ list is empty until the organisation's plan reads `enterprise`.
 
 ```sh
 node <dd-ci-standards checkout>/bin/dd.mjs new --kind dd-site dd-example \
-  --description "What the repo is, in a sentence." --answers answers.json
+  --description "What the repo is, in a sentence." --programme DOM-123 --answers answers.json
 ```
+
+`--programme` is the site's programme issue. The released create-site refuses
+to scaffold without it (its Stage 05 gate), so `dd new` stops before making
+anything when it is missing. A `--local` starter, such as the nightly check,
+may skip the gate with `--no-gate` or `DD_CREATE_SITE_NO_GATE=1` (that exact value). For any other run `dd new` removes that variable before create-site starts, so a repo that will be pushed always meets the gate.
 
 In order, and stopping at the first failure:
 
@@ -124,17 +135,46 @@ starter job in dd-packages uses it); `--create-site <cli.js>` runs a
 create-site build instead of the published one. It needs a token that can
 create repos in the organisation (`GH_TOKEN`, or `gh auth login`).
 
-It refuses `client-site` and `client-app`: client repos are pushed and merged
-by the Doman Digital GitHub App, from the client work's own tooling. It also
-refuses `personal` and `it-portfolio` (outside the framework) and any owner
+It refuses `personal` and `it-portfolio` (outside the framework) and any owner
 but Doman-Digital (personal-account repos cannot run Actions).
-- **`doctor/action.yml`**: the same command as a GitHub Action.
-- **`lib/view-github.mjs`**: the same repo view read through the API, which
-  the estate sweep uses, so it runs exactly these rules.
 
-Kinds come from `repo-topics.json`. Organisation sites, products and tooling
-and client sites and apps get every rule; `sales-demo` gets the light set;
-`personal` and `it-portfolio` repos are outside the framework.
+**Client repos (`client-site`, `client-app`; DOM-18123, DOM-18155).** A client
+repo is pushed by the founder, the invited collaborator with Write, under their
+own `gh` login. It is not pushed with a GitHub App installation token (the
+founder, 19 November 2026: Apps are no longer needed for pushing). The Doman
+Digital GitHub App is installed on the repo for checks and workflow dispatch
+only, as `access-standard.yaml` in dd-repo-registry says. Many client repos sit
+in the client's own account, where this repo's Actions and rulesets do not
+reach. So `dd new` takes the governed route:
+
+```sh
+node <dd-ci-standards checkout>/bin/dd.mjs new --kind client-site acme-plumbing \
+  --description "What the repo is, in a sentence." --owner acme-plumbing-ltd \
+  --programme DOM-123 --answers answers.json
+```
+
+It runs steps 1 and 2 above (create-site with `--programme`, `dd adopt`, `dd
+doctor` clean, which now includes PKG-003) and stops: **it does not create the
+GitHub repo and does not push.** Every client account in dd-repo-registry today
+is a personal one (checked 18 November 2026), so the account owner creates the
+empty repo, invites the founder as a collaborator with Write, and installs the
+App on it (adding the repo to the installation if they picked selected
+repositories). Once the folder is clean, `dd new` prints the rest: a check that
+`gh` is logged in and the login can push (`gh auth status`, then
+`gh api repos/<repo> --jq .permissions.push`), which stops the run if either
+fails and never starts a login flow; `git init` and a commit; the remote; the
+first push through `gh`'s own credential helper
+(`-c 'credential.helper=!gh auth git-credential'`); then the tags to set and the
+registry row. The first real push has not yet been run against a client repo; it
+waits for the next brand-new client repo. `test/new.test.mjs` fails if the printed
+route asks for an installation token again (`dd-gh-app`, `--perms`, `GH_TOKEN`,
+a login flow). This applies to every brand-new client repo. The one existing client repo that still needs the App for bot merging and pushing keeps that setup; `dd new` never makes or touches it, and its change is a separate piece of work. `--programme` is required; `--owner` is the account the repo
+will live in (default Doman-Digital).
+
+`--programme DOM-123` is passed to create-site for every kind. `--no-gate`
+(create-site skips its programme gate) is accepted only with `--local`, for the
+nightly starter in dd-packages; the start label records the skipped gate and the
+estate sweep does not count such a site as started.
 
 ### Exemptions
 
@@ -403,6 +443,15 @@ has to pass a policy check to merge, not get caught in the next audit.
   because the tip's own CI run may not have finished. `release-var:
   SENTRY_RELEASE` sets that Worker variable to the deployed commit.
 
+  A site whose build bakes secrets into the pages (a store domain and
+  storefront token, analytics tags) lists their names in `build-env-names`,
+  one per line. They are read from the same Doppler config as the deploy
+  token (`dd-deploy/<doppler-config>`) with the same identity, and only the
+  listed names reach the build: not the rest of the config, and not the
+  install or the manual checks. A listed name the config does not hold fails
+  the run before the build. Copy the values into the deploy config from their
+  source with a script, never by hand (DOM-1644).
+
   ```yaml
   on:
     workflow_run:
@@ -590,8 +639,30 @@ has to pass a policy check to merge, not get caught in the next audit.
   installs the root workspace and exits 0, and the next frozen install fails
   (DOM-1273). PKG-002 reports that layout; the fix is a
   `pnpm-workspace.yaml` with `packages: []` in the nested folder.
+
   Raise both together. Where a claude-kit checkout is present, `dd doctor`
   says when they differ.
+
+  **PKG-003 (DOM-18123): a site is started with create-site.** A `client-site`
+  or `dd-site` repo needs a valid `.dd/site-start.json` (`{ tool, version,
+  mode: "programme" | "handover", programme, reason?, stage05Gate?,
+  startedAt }`, written by `@domandigital/create-site`) and `create-site
+  --check` must exit 0 (3 means a house file has drifted). The label only
+  describes; a hand-written one with a drifted site still fails the check.
+  `dd doctor` runs the check itself (`lib/site-start.mjs`): the repo's own
+  `node_modules/.bin/create-site`, else `npx @domandigital/create-site@latest`,
+  or `DD_CREATE_SITE=<cli.js>`; `--site-answers <file>` (or `DD_SITE_ANSWERS`)
+  gives it the answers the site was made with. Exit 0 passes, exit 3 is drift,
+  and create-site refusing the folder (exit 1: the folder is not a Next.js or Astro
+  project, so the label has no site behind it) is a finding. `--check` exits 2 when it lacks the
+  answers, and then the doctor adds a note and judges the label alone. **This rule is not the hard stop.**
+  Most client repos sit in the client's account, where our Actions never run:
+  the estate sweep in dd-repo-registry is the guard that reaches every account.
+  PKG-003 warns from 18 November 2026. Its `enforce_from` is the 90-day cap, 16
+  February 2027, which takes effect on its own that day unless the founder has
+  set the real date after the backfill. A label made with `--no-gate` is valid
+  here (and may name no programme); the sweep, not this rule, counts it as not
+  started.
 
 ## Public repos name no client and no staff member (SEC-010)
 

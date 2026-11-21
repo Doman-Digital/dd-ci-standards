@@ -23,7 +23,8 @@
     "schedule": ["at any time"],
     "prConcurrentLimit": 0,
     "prCreation": "immediate",
-    "labels": ["security"]
+    "labels": ["security"],
+    "rangeStrategy": "bump"
   },
   "packageRules": [
     {
@@ -123,6 +124,12 @@
       "matchDepTypes": ["pnpm.overrides", "pnpm-workspace.overrides", "overrides", "resolutions"],
       "matchUpdateTypes": ["major"],
       "enabled": false
+    },
+    {
+      "description": "npm dependencies move by raising the range in package.json (bump), so Renovate rebuilds the lock with pnpm install. The default (auto) keeps an in-range update in the lock alone and runs pnpm update --no-save with every picked version at once and --recursive; pnpm then gives one workspace package's pick to every other package that lists the same dependency, and the frozen install in CI fails with ERR_PNPM_OUTDATED_LOCKFILE before any test runs. Our own monorepo on 18 November 2026: @sanity/client 7.28.0, picked for the studio on ^7, was written over the site's pin of 8.16.0. In a repo that also keeps a package-lock.json the npm step saves the new range to package.json, pnpm writes it into the lock and Renovate commits only the locks, the same failure on a security PR. Peer dependencies keep the default (widen) so a shared package does not narrow what it accepts; vulnerabilityAlerts above sets bump for security branches, which Renovate applies with force over these rules (DOM-18090)",
+      "matchManagers": ["npm"],
+      "matchDepTypes": ["dependencies", "devDependencies", "optionalDependencies"],
+      "rangeStrategy": "bump"
     },
     {
       "description": "Never update dd-ci-standards itself. Callers use @v1 (and #v1 for this preset), which moves with every release; Renovate rewrote it to fixed releases (v1.0.13, v1.0.22), and a pinned caller stops getting new rules (FW-003, 13 October 2026)",

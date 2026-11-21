@@ -16,6 +16,9 @@ export const TEST_NAMES = {
   allow: [{ repo: "Doman-Digital/demo", path: "^owners\\.yml$", line: "^\\s*-\\s*[\\w-]+\\s*$", reason: "a data key" }],
 };
 
+// A valid .dd/site-start.json, as @domandigital/create-site writes it (PKG-003).
+export const LABEL = JSON.stringify({ tool: "@domandigital/create-site", version: "0.12.0", mode: "programme", programme: "DOM-18123", stage05Gate: true, startedAt: "2026-11-18" });
+
 const wf = (text, path = ".github/workflows/ci.yml") => ({ workflows: [{ path, text }], vercel: [], files: {} });
 const view = (over) => ({ workflows: [], vercel: [], files: {}, ...over });
 
@@ -145,6 +148,45 @@ jobs:
     // axe in CI, and a weekly script that calls the PageSpeed API (named lighthouse.mjs) is not Lighthouse on the runner.
     pass: wf("on:\n  pull_request:\n  schedule:\n    - cron: \"17 6 * * 1\"\njobs:\n  checks:\n    steps:\n      - run: npm install --no-save playwright @axe-core/playwright\n      - run: node .github/scripts/axe.mjs\n      - run: node bin/lighthouse.mjs $SITE\n"),
   },
+  "CI-047": {
+    // A nightly backup on the pool pull request CI queues on (dd-netcup-config on 19 November 2026: 43 minutes behind it).
+    fail: wf("on:\n  schedule:\n    - cron: \"10 4 * * *\"\n  workflow_dispatch:\njobs:\n  backup:\n    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 120\n    steps:\n      - run: x\n"),
+    // The scheduled lane; a workflow that also runs on a pull request is CI, and keeps the pool its timeout decides (CI-022).
+    pass: view({
+      workflows: [
+        { path: ".github/workflows/backup.yml", text: "on:\n  schedule:\n    - cron: \"10 4 * * *\"\n  workflow_dispatch:\njobs:\n  backup:\n    runs-on: ${{ vars.CI_RUNNER_SCHEDULED || vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 120\n    steps:\n      - run: x\n" },
+        { path: ".github/workflows/plan.yml", text: "on:\n  pull_request:\n  schedule:\n    - cron: \"5 2 * * *\"\njobs:\n  plan:\n    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}\n    timeout-minutes: 20\n    steps:\n      - run: x\n" },
+      ],
+    }),
+  },
+  "CI-046": {
+    // a barber site at the failing commit: the SDK loaded from booking.mts, and a policy whose frame-src and form-action name only Square's hosts.
+    fail: view({
+      csp: [
+        { path: "astro/src/client/booking.mts", text: 'await loadScript("https://web.squarecdn.com/v1/square.js");\n' },
+        { path: "astro/src/lib/http-policy.mjs", text: 'export const buildCsp = () => [\n  "frame-src \'self\' https://web.squarecdn.com https://pci-connect.squareup.com",\n  "form-action \'self\' https://web.squarecdn.com",\n].join("; ");\n' },
+      ],
+    }),
+    // The fix: the same builder, with `https:` added by a flag the file assigns.
+    pass: view({
+      csp: [
+        { path: "astro/src/client/booking.mts", text: 'await loadScript("https://web.squarecdn.com/v1/square.js");\n' },
+        { path: "astro/src/lib/http-policy.mjs", text: 'export function buildCsp(h, { cardChallenge = false } = {}) {\n  const challenge = cardChallenge ? " https:" : "";\n  return [\n    "frame-src \'self\' https://web.squarecdn.com" + challenge,\n    "form-action \'self\'" + challenge,\n  ].join("; ");\n}\n' },
+      ],
+    }),
+  },
+  "CI-045": {
+    // The nightly job as it was before the resolver: the bucket spelt out in a script, and a Mac folder in a workflow step.
+    fail: view({ scripts: [{ path: "scripts/sync.sh", text: "#!/bin/bash\nrclone copy \"$HOME/dd-client-metrics\" r2:dd-client-capsule/_state\n" }] }),
+    // The same job asking the resolver; the names appear only in a comment and in a test, which are exempt.
+    pass: view({
+      scripts: [
+        { path: "scripts/sync.sh", text: "#!/bin/bash\n# was r2:dd-client-capsule before DOM-438\nrclone copy \"$(dd-storage get local.metrics_dir)\" \"$(dd-storage dest --prefix state)\"\n" },
+        { path: "tests/sync.test.mjs", text: "assert.equal(path, '~/dd-client-capsule')\n" },
+        { path: "docs/notes.md", text: "The bucket is dd-client-capsule.\n" },
+      ],
+    }),
+  },
   "CI-030": {
     fail: wf("on:\n  workflow_run:\n    workflows: [CI]\n    types: [completed]\n    branches: [main]\npermissions:\n  contents: read\njobs:\n  deploy:\n    permissions:\n      contents: read\n      id-token: write\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/cloudflare-deploy.yml@v1\n    with:\n      doppler-config: relay\n", ".github/workflows/deploy.yml"),
     pass: wf("on:\n  workflow_run:\n    workflows: [CI]\n    types: [completed]\n    branches: [main]\npermissions:\n  contents: read\njobs:\n  deploy:\n    permissions:\n      contents: read\n      id-token: write\n      actions: write\n    uses: Doman-Digital/dd-ci-standards/.github/workflows/cloudflare-deploy.yml@v1\n    with:\n      doppler-config: relay\n", ".github/workflows/deploy.yml"),
@@ -220,6 +262,13 @@ jobs:
     // astro/ is outside apps/* and packages/*; apps/web is a member with a lockfile of its own.
     fail: view({ files: { "pnpm-workspace.yaml": "packages:\n  - 'apps/*'\n  - 'packages/*'\n" }, paths: ["pnpm-workspace.yaml", "pnpm-lock.yaml", "astro/package.json", "astro/pnpm-lock.yaml"] }),
     pass: view({ files: { "pnpm-workspace.yaml": "packages:\n  - 'apps/*'\n  - 'packages/*'\n" }, paths: ["pnpm-workspace.yaml", "pnpm-lock.yaml", "astro/pnpm-lock.yaml", "astro/pnpm-workspace.yaml", "apps/web/pnpm-lock.yaml"] }),
+  },
+  "PKG-003": {
+    // A client site with no start label; the passing one has a valid label and a create-site --check that exited 0.
+    ctx: { kind: "client-site" },
+    fail: view({}),
+    pass: view({ files: { ".dd/site-start.json": LABEL } }),
+    passCtx: { siteStart: { check: { ran: true, exit: 0, command: "create-site --check --yes", output: "" } } },
   },
   "CI-027": {
     fail: wf("on:\n  pull_request:\nconcurrency:\n  group: ci-${{ github.ref }}\n  cancel-in-progress: true\njobs:\n  gate:\n    needs: [test]\n    if: ${{ always() }}\n    runs-on: x\n    steps:\n      - run: x\n"),
