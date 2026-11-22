@@ -26,6 +26,10 @@ repos:
         cron: "40 6 * * *"
         owner: "Doman Digital / Website QA"
         reason: "daily access-probe job only: one curl that checks the GitHub copy of the staging Access token still opens staging, no browser, under a minute on the light runner (dd-repo-registry creds.yaml site-staging-access-journeys)"
+      - workflow: access-probe-own.yml
+        cron: "47 6 * * *"
+        owner: "Doman Digital / Ops"
+        reason: "daily signed-out curl that our own Access-gated pages (flat.domandigital.co.uk first) still redirect to Cloudflare Access and their workers.dev address serves nothing; no browser, no secrets, under a minute on the light runner (DOM-18507, dd-repo-registry gh.doman-digital.access-probe-own)"
       - workflow: stale.yml
         cron: "30 1 * * *"
         reason: "daily stale issue/PR sweep, no checkout, near-zero cost"
