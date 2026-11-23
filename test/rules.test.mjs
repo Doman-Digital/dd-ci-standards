@@ -683,3 +683,25 @@ test("REG-007 counts the jobs of workflows an organisation ruleset runs", async 
   // A check no org workflow produces is still caught.
   assert.ok(ids(runDoctor({ ...v, required: ["check", "scan"] }, rulebook, base)).includes("REG-007"));
 });
+
+test("SEC-011: a test job never holds a client's production email key (DOM-18589)", () => {
+  const run = (text) => runDoctor({ workflows: [{ path: ".github/workflows/e2e.yml", text }], vercel: [], files: {} }, rulebook, base).findings.filter((f) => f.rule === "SEC-011").map((f) => `${f.line} ${f.message}`);
+  const job = (steps, env = "") => `on:\n  schedule:\n    - cron: "17 5 * * *"\njobs:\n  e2e:\n    runs-on: x\n${env}    steps:\n${steps}`;
+  // The secret handed to a test, in the step or in the job's env.
+  assert.equal(run(job("      - run: pnpm exec playwright test\n        env:\n          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}\n")).length, 1);
+  assert.equal(run(job("      - run: npm run test:e2e\n", "    env:\n      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}\n")).length, 1);
+  // A test run under the production config holds every production secret.
+  assert.match(run(job("      - run: doppler run --project shop --config prd -- pnpm test\n"))[0], /production Doppler config/);
+  assert.match(run(job("      - run: doppler run -p shop -c production -- node --test\n"))[0], /production Doppler config/);
+  // The same job building under production and testing under staging passes: the build sends no email.
+  assert.deepEqual(run(job("      - run: doppler run --project shop --config prd -- pnpm build\n      - run: doppler run --project shop --config stg -- pnpm e2e:sandbox\n")), []);
+  // The test key, the staging key, and a commented-out line pass.
+  assert.deepEqual(run(job("      - run: pnpm vitest\n        env:\n          RESEND_API_KEY: ${{ secrets.E2E_RESEND_API_KEY }}\n")), []);
+  assert.deepEqual(run(job("      # RESEND_API_KEY=$(doppler secrets get RESEND_API_KEY --config prd)\n      - run: pnpm test\n")), []);
+  // A job that runs no test (a deploy pushing the key to its Worker) passes.
+  assert.deepEqual(run(job("      - run: doppler secrets get RESEND_API_KEY --plain --config prd | npx wrangler secret put RESEND_API_KEY\n")), []);
+  // Started only by hand, the launch's one live booking on production passes; the same job on a schedule fails.
+  const live = "jobs:\n  live:\n    steps:\n      - run: doppler run --project shop --config prd -- pnpm e2e:live\n";
+  assert.deepEqual(run(`on:\n  workflow_dispatch:\n    inputs:\n      confirm:\n        type: string\n${live}`), []);
+  assert.equal(run(`on:\n  workflow_dispatch:\n  schedule:\n    - cron: "17 5 * * *"\n${live}`).length, 1);
+});

@@ -387,6 +387,12 @@ jobs:
     fail: wf("jobs:\n  deploy:\n    steps:\n      - run: npx wrangler deploy\n        env:\n          CLOUDFLARE_API_TOKEN: ${{ steps.doppler.outputs.CLOUDFLARE_DEPLOY_VALUE || secrets.CLOUDFLARE_API_TOKEN }}\n", ".github/workflows/deploy.yml"),
     pass: wf("jobs:\n  deploy:\n    steps:\n      - run: npx wrangler deploy\n        env:\n          CLOUDFLARE_API_TOKEN: ${{ steps.doppler.outputs.CLOUDFLARE_DEPLOY_VALUE }}\n", ".github/workflows/deploy.yml"),
   },
+  "SEC-011": {
+    // The incident: the Sandbox suite took the client's own key from production to send its test email.
+    fail: wf("jobs:\n  sandbox:\n    steps:\n      - run: pnpm build\n      - name: Book on Square Sandbox\n        run: |\n          RESEND_API_KEY=\"$(doppler secrets get RESEND_API_KEY --plain --project shop --config prd)\"\n          doppler run --project shop --config stg -- pnpm e2e:sandbox\n", ".github/workflows/booking-e2e.yml"),
+    // The standard: the test key from staging, and a deploy job that pushes the production key to the Worker.
+    pass: wf("jobs:\n  sandbox:\n    steps:\n      - name: Book on Square Sandbox\n        run: |\n          RESEND_API_KEY=\"$(doppler secrets get E2E_RESEND_API_KEY --plain --project shop --config stg)\"\n          doppler run --project shop --config stg -- pnpm e2e:sandbox\n  deploy:\n    steps:\n      - run: doppler secrets get RESEND_API_KEY --plain --config prd | npx wrangler secret put RESEND_API_KEY\n", ".github/workflows/booking-e2e.yml"),
+  },
   "REG-002": {
     ctx: { meta: { description: "", topics: ["dd-tooling"] } },
     fail: view({}),
