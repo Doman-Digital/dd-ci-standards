@@ -34,7 +34,7 @@ jobs:
       (github.event_name == 'workflow_dispatch' &&
        github.ref_name == github.event.repository.default_branch &&
        inputs.healthy-release != '')
-    runs-on: ${{ vars.DD_RUNNER || 'ubuntu-latest' }}
+    runs-on: ${{ vars.DD_RUNNER || 'dd-client' }}
     timeout-minutes: 5
     steps:
       - name: Recognise the production build in its provider suite
