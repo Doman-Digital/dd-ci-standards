@@ -732,7 +732,7 @@ repos:
   RMP-Electrical:
     github_actions_crons:
       - workflow: deploy-astro.yml
-        cron: "17 3 * * *"
+        cron: "17 5 * * *"
         reason: "daily rebuild of the Astro site so Google reviews and the footer year stay current"
     vercel_crons: []
 
