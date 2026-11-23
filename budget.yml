@@ -862,6 +862,13 @@ repos:
     vercel_crons: []
     ceiling_usd: 1
     workflows:
+      - workflow: public-customer-task.yml
+        events: "check_run, workflow_dispatch"
+        runner_class: box
+        per_run_usd: 0
+        runs_a_month: 150
+        owner: "Doman Digital"
+        reason: "117 main commits were recorded in the 30 days to 22 November. Allow up to 33 additional manual portal releases for the first month and compare with actual successful release requests after 30 days. The production repository uses the dd-client runner."
       - workflow: ci.yml
         events: "pull_request, push, workflow_dispatch"
         runner_class: hosted-linux
@@ -1085,6 +1092,13 @@ repos:
     vercel_crons: []
     ceiling_usd: 1
     workflows:
+      - workflow: public-customer-task.yml
+        events: "check_run"
+        runner_class: box
+        per_run_usd: 0
+        runs_a_month: 13
+        owner: "Doman Digital"
+        reason: "Thirteen public release observations from the production PageSpeed workflow in the 30 days to 22 November. Its recorded runner is dd-ci-ephemeral. Only an eligible confirmed public Workers Builds release is admitted."
       - workflow: build.yml
         events: "pull_request, workflow_dispatch"
         runner_class: box
