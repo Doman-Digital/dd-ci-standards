@@ -129,6 +129,10 @@ on:
           as well as the deploy. Empty deploys the top-level config.
         type: string
         default: ""
+      public-accessibility-client:
+        description: Registered DD Checks client for this public production release. Requests only that client’s public-accessibility journey.
+        type: string
+        default: ""
       post-deploy:
         description: >-
           A command run right after the last wrangler deploy, with the deployed commit in DEPLOY_SHA (e.g. a check that
@@ -362,6 +366,16 @@ jobs:
           CMD: ${{ inputs.post-deploy }}
           DEPLOY_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
         run: bash -euo pipefail -c "$CMD"
+
+      - name: Request the public customer task after the release
+        if: steps.tip.outputs.deploy == 'true' && inputs.public-accessibility-client != ''
+        uses: Doman-Digital/dd-ci-standards/.github/actions/post-deploy-checks@v1
+        env:
+          ADMIN_RUN_TOKEN: ${{ steps.doppler.outputs.DD_CHECKS_CLIENT_RUN_TOKEN }}
+        with:
+          client: ${{ inputs.public-accessibility-client }}
+          check: ${{ format('{0}:public-accessibility', inputs.public-accessibility-client) }}
+          delay_seconds: "0"
 
   # The deploy job's tip guard stopped it: a newer commit is the tip and its own
   # run deploys it. Cancel this run so it reports cancelled, not success (DOM-1422).

@@ -664,6 +664,13 @@ has to pass a policy check to merge, not get caught in the next audit.
   here (and may name no programme); the sweep, not this rule, counts it as not
   started.
 
+A public production caller of the reusable Cloudflare deployment workflow can set
+`public-accessibility-client` to its DD Checks slug. After the release check
+passes, the job requests that client's `public-accessibility` journey. Use
+`DD_CHECKS_CLIENT_RUN_TOKEN` in the deployment configuration as a reference to
+the client's registered scoped bearer. The workflow summary records a missing
+or refused grant. Leave the input empty for staging and private services.
+
 ## Public repos name no client and no staff member (SEC-010)
 
 This repo and dd-packages are public, and a public repo publishes its history
