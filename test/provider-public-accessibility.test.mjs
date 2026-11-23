@@ -40,6 +40,7 @@ test('only a named successful production event or a default-branch manual releas
     "if: github.event_name == 'workflow_dispatch' || steps.provider.outputs.production == 'true'",
     "vars.DD_RUNNER || 'dd-client'",
     "actions/deploy-tip@v1",
+    "github.event_name == 'check_run' && github.event.check_run.head_sha || inputs.healthy-release",
     "if: steps.tip.outputs.deploy == 'true'",
     "secrets.client-run-token",
     "format('{0}:public-accessibility', inputs.client)",
