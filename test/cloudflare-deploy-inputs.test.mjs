@@ -47,3 +47,15 @@ test("release-var sets one Worker variable to the deployed commit, on every conf
   assert.match(step, /if \[ -n "\$\{RELEASE_VAR:-\}" \]; then extra=\(--var "\$\{RELEASE_VAR\}:\$\{DEPLOY_SHA\}"\); fi/);
   assert.equal(step.match(/deploy[^\n]*"\$\{extra\[@\]\}"/g)?.length, 2, "both the default config and each listed config");
 });
+
+test("a published public release requests only its scoped customer task", () => {
+  assert.match(WORKFLOW, /public-accessibility-client:\n[\s\S]*?type: string\n\s+default: ""/);
+  const start = WORKFLOW.indexOf("- name: Request the public customer task after the release");
+  assert.ok(start > WORKFLOW.indexOf("- name: Post-deploy check"));
+  const request = WORKFLOW.slice(start, WORKFLOW.indexOf("  superseded:", start));
+  assert.match(request, /steps\.tip\.outputs\.deploy == 'true' && inputs\.public-accessibility-client != ''/);
+  assert.match(request, /uses: Doman-Digital\/dd-ci-standards\/\.github\/actions\/post-deploy-checks@v1/);
+  assert.match(request, /ADMIN_RUN_TOKEN: \$\{\{ steps\.doppler\.outputs\.DD_CHECKS_CLIENT_RUN_TOKEN \}\}/);
+  assert.match(request, /check: \$\{\{ format\('\{0\}:public-accessibility', inputs\.public-accessibility-client\) \}\}/);
+  assert.doesNotMatch(request, /secrets\.|outputs\.ADMIN_RUN_TOKEN/);
+});
