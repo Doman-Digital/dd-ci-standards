@@ -1,0 +1,71 @@
+name: Verify a public release task
+
+on:
+  workflow_call:
+    inputs:
+      client:
+        description: DD Checks client slug for the public production site.
+        required: true
+        type: string
+      worker-check:
+        description: Exact check name from the production Cloudflare Workers Builds application.
+        required: true
+        type: string
+      healthy-release:
+        description: Commit verified by the caller's manual production health gate.
+        default: ""
+        type: string
+    secrets:
+      client-run-token:
+        description: Independent DD Checks credential for this client.
+        required: false
+
+permissions:
+  contents: read
+  checks: read
+
+jobs:
+  verify:
+    if: >-
+      (github.event_name == 'check_run' &&
+       github.event.check_run.app.slug == 'cloudflare-workers-and-pages' &&
+       github.event.check_run.name == inputs.worker-check &&
+       github.event.check_run.conclusion == 'success') ||
+      (github.event_name == 'workflow_dispatch' &&
+       github.ref_name == github.event.repository.default_branch &&
+       inputs.healthy-release != '')
+    runs-on: ${{ vars.DD_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 5
+    steps:
+      - name: Recognise the production build in its provider suite
+        if: github.event_name == 'check_run'
+        id: provider
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUITE: ${{ github.event.check_run.check_suite.id }}
+          RELEASE: ${{ github.event.check_run.head_sha }}
+          BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          suite=$(gh api "repos/$GITHUB_REPOSITORY/check-suites/$SUITE")
+          if jq -e --arg branch "$BRANCH" --arg release "$RELEASE" '.app.slug == "cloudflare-workers-and-pages" and .head_branch == $branch and .head_sha == $release' <<< "$suite" >/dev/null; then
+            echo 'production=true' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Confirm the checked commit still serves its default branch
+        id: tip
+        if: github.event_name == 'workflow_dispatch' || steps.provider.outputs.production == 'true'
+        uses: Doman-Digital/dd-ci-standards/.github/actions/deploy-tip@v1
+        with:
+          sha: ${{ inputs.healthy-release || github.event.check_run.head_sha }}
+
+      - name: Request this client's public customer task
+        if: steps.tip.outputs.deploy == 'true'
+        uses: Doman-Digital/dd-ci-standards/.github/actions/post-deploy-checks@v1
+        env:
+          ADMIN_RUN_TOKEN: ${{ secrets.client-run-token }}
+        with:
+          client: ${{ inputs.client }}
+          check: ${{ format('{0}:public-accessibility', inputs.client) }}
+          delay_seconds: "0"
