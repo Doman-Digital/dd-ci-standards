@@ -468,6 +468,14 @@
       "enforce_from": "2026-10-31"
     },
     {
+      "id": "SEC-011",
+      "title": "A test job holds a client's production email key",
+      "why": "22 November 2026 (DOM-18589): a barber's Square Sandbox booking suite read the client's production RESEND_API_KEY and sent about 16 real emails a run. That used up the client's free Resend allowance of 100 a day, and every customer confirmation after it would have failed. The synthetic standard (Doman-Digital services/checks/docs/synthetic-standard.md, section O2) says pull request and deploy runs post to the fake Resend in @domandigital/synthetic, and only the nightly run sends real test email, to canary addresses, with E2E_RESEND_API_KEY (Doman Digital's sending-only key for that client) from the client's staging config. This fails a job that runs a test (Playwright, Vitest, Jest, Cypress, node --test, or a test or e2e package script) and, anywhere in the job, reads RESEND_API_KEY through Doppler from a prd, prod or production config, is given secrets.RESEND_API_KEY, or runs a test under doppler run with a production config. A deploy job that pushes the key to its Worker runs no test, so it passes, and so does a workflow started only by hand (workflow_dispatch), such as a launch's one live booking on production. Reusable workflows are judged where they are written.",
+      "applies": "all",
+      "warn_from": "2026-11-24",
+      "enforce_from": "2026-11-30"
+    },
+    {
       "id": "CF-001",
       "title": "A Worker has no registered deploy path, or two",
       "why": "13 October 2026 (DOM-776): some Workers were built by Cloudflare's GitHub app, some by Actions, and seven repos had no trace of how they deploy. dd-repo-registry deploys.json lists every Worker with its one path, and deploys.json here is its projection (DOM-1643: repo and Worker as sha256 hashes, because this repo is public): Actions (cloudflare-deploy.yml) for internal Workers and anything gated, or retired. From 29 October 2026 client sites move off Workers Builds to Actions too, so every client deploy runs after CI with a narrow token per client (DOM-1644).",
@@ -511,7 +519,10 @@
       "id": "PKG-003",
       "title": "The site was not started with create-site, or its start check does not pass",
       "why": "18 November 2026 (DOM-18123): nothing forced a site through @domandigital/create-site, the scaffold that carries the programme gates, the facts file, the JSON-LD graph and the SEO tests. A repo made with create-astro, create-next-app or a GitHub click, or a live site copied in as Astro, skipped all of it. The proof is `create-site --check` exiting 0 (3 means a house file drifted), not a file anyone can write by hand, so the repo needs a valid .dd/site-start.json (tool, version, mode programme or handover, the programme issue, a reason for a handover, startedAt) and the check must pass. This rule is a convenience for the organisation: most client repos sit in the client's own account, where our Actions never run, so the estate sweep in dd-repo-registry is the hard stop. Warns from 18 November 2026. enforce_from is the 90-day cap, 16 February 2027, and takes effect on its own on that day unless the founder has set a real date after the backfill (A5) or moved it: until then no site that has not been backfilled should be left to meet it.",
-      "applies": ["client-site", "dd-site"],
+      "applies": [
+        "client-site",
+        "dd-site"
+      ],
       "warn_from": "2026-11-18",
       "enforce_from": "2027-02-16"
     },

@@ -1,0 +1,214 @@
+name: phone-visual (reusable)
+
+# The phone screenshot check on a site's pull requests (synthetic standard O2.5, Doman-Digital
+# services/checks/docs/synthetic-standard.md; DOM-18589). The founder asked on 23 November 2026 for phone-width
+# screenshot diffs on every pull request and a test that a sideways row cannot scroll up and down.
+#
+# One run builds the pull request and its base on the same machine, serves both, and at 375 x 812 takes a full-page
+# screenshot of every page the caller names on each, then compares the two. Fonts, the browser and the CMS content are
+# the same on both sides, so no baseline is kept in the repo and only the pull request's change shows. It fails when:
+#   - a page looks different from its base (any pixel, unless max-diff-ratio says otherwise; video and iframes are
+#     masked). A change that is meant to look different is approved with the pull request label `visual-change`:
+#     the run still compares and reports, and passes;
+#   - craft's phone measure finds a page that scrolls sideways, or a sideways row that also scrolls up and down
+#     (`rowscroll`), that the base did not have. A fault already on main does not fail every pull request.
+# The report (base, head and the difference for every changed page) is the artefact, kept 7 days.
+#
+# The one browser job a pull request runs (CI-038 reads the caller, not this file): a static build of the site's own
+# pages, nothing submitted, nothing sent. Call it from the site's repo:
+#
+#   on:
+#     pull_request:
+#       types: [opened, synchronize, reopened, labeled]
+#       paths: ["astro/**"]
+#   concurrency:
+#     group: ${{ github.workflow }}-${{ github.ref }}
+#     cancel-in-progress: true
+#   permissions:
+#     contents: read
+#   jobs:
+#     phone:
+#       uses: Doman-Digital/dd-ci-standards/.github/workflows/phone-visual.yml@v1
+#       with:
+#         working-directory: astro
+#         build: pnpm install --frozen-lockfile && pnpm build
+#         pages: |
+#           /
+#           /contact
+#         runner: ${{ vars.CI_RUNNER || 'dd-client' }}
+
+on:
+  workflow_call:
+    inputs:
+      build:
+        description: The command that installs and builds the static site, run in working-directory on each side.
+        type: string
+        required: true
+      pages:
+        description: The paths to compare, one per line, each starting with /.
+        type: string
+        required: true
+      dist:
+        description: The built site's folder, relative to working-directory.
+        type: string
+        default: dist
+      working-directory:
+        type: string
+        default: "."
+      env:
+        description: Plain KEY=VALUE lines for both builds, one per line. Never a secret.
+        type: string
+        default: ""
+      max-diff-ratio:
+        description: The share of a page's pixels that may differ before it counts as changed. 0 is any pixel.
+        type: string
+        default: "0"
+      node-version:
+        type: string
+        default: "24"
+      runner:
+        description: Runner label. Pass the repo's own variable, for example vars.CI_RUNNER.
+        type: string
+        default: ubuntu-latest
+      timeout-minutes:
+        type: number
+        default: 20
+      standards-ref:
+        description: The dd-ci-standards ref whose visual/ tooling runs. Keep v1, the same release as this file.
+        type: string
+        default: v1
+
+permissions:
+  contents: read
+
+jobs:
+  phone:
+    runs-on: ${{ inputs.runner }}
+    timeout-minutes: ${{ inputs.timeout-minutes }}
+    steps:
+      - name: Only on a pull request
+        if: github.event_name != 'pull_request'
+        run: |
+          echo "::error::phone-visual compares a pull request with its base, so it runs on pull_request only"
+          exit 1
+
+      - name: Check out the pull request
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: head
+          persist-credentials: false
+
+      - name: Check out its base
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: base
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+
+      - name: Check out the comparison
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: Doman-Digital/dd-ci-standards
+          ref: ${{ inputs.standards-ref }}
+          path: .dd-ci-standards
+          persist-credentials: false
+          sparse-checkout: visual
+
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+        with:
+          package_json_file: head/package.json
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Load the plain environment lines
+        env:
+          LINES: ${{ inputs.env }}
+        run: |
+          set -euo pipefail
+          printf '%s\n' "$LINES" | while IFS= read -r line; do
+            [ -z "$line" ] && continue
+            key="${line%%=*}"
+            if ! printf '%s' "$key" | grep -Eq '^[A-Z][A-Z0-9_]*$' || [ "$key" = "$line" ]; then
+              echo "::error::env line is not KEY=VALUE: $key"; exit 1
+            fi
+            case "$key" in
+              VISUAL_*|GITHUB_*|PATH|NODE_OPTIONS) echo "::error::env may not set $key"; exit 1 ;;
+            esac
+            printf '%s\n' "$line" >> "$GITHUB_ENV"
+          done
+
+      - name: Build the base
+        working-directory: base/${{ inputs.working-directory }}
+        env:
+          BUILD: ${{ inputs.build }}
+        run: bash -euo pipefail -c "$BUILD"
+
+      - name: Build the pull request
+        working-directory: head/${{ inputs.working-directory }}
+        env:
+          BUILD: ${{ inputs.build }}
+        run: bash -euo pipefail -c "$BUILD"
+
+      - name: Install the comparison and Chromium
+        working-directory: .dd-ci-standards/visual
+        env:
+          SELF_HOSTED: ${{ runner.environment == 'self-hosted' }}
+        run: |
+          set -euo pipefail
+          npm ci --ignore-scripts --no-audit --no-fund
+          if [ "$SELF_HOSTED" = "true" ]; then npx playwright install chromium; else npx playwright install --with-deps chromium; fi
+
+      - name: Compare every page at 375px
+        id: compare
+        working-directory: .dd-ci-standards/visual
+        env:
+          BASE_DIST: ${{ github.workspace }}/base/${{ inputs.working-directory }}/${{ inputs.dist }}
+          HEAD_DIST: ${{ github.workspace }}/head/${{ inputs.working-directory }}/${{ inputs.dist }}
+          VISUAL_PAGES: ${{ inputs.pages }}
+          VISUAL_OUT: ${{ github.workspace }}/phone-visual
+          VISUAL_MAX_DIFF_RATIO: ${{ inputs.max-diff-ratio }}
+          APPROVED: ${{ contains(github.event.pull_request.labels.*.name, 'visual-change') }}
+        run: |
+          set -euo pipefail
+          for d in "$BASE_DIST" "$HEAD_DIST"; do
+            [ -d "$d" ] || { echo "::error::no built site at $d (inputs.dist)"; exit 1; }
+          done
+          node serve.mjs "$BASE_DIST" 4601 & node serve.mjs "$HEAD_DIST" 4602 &
+          sleep 1
+          # A page the pull request adds is missing from the base: that side's run may fail, and the head run says so.
+          VISUAL_PHASE=base VISUAL_BASE_URL=http://127.0.0.1:4601 npx playwright test -c playwright.config.mjs --update-snapshots || true
+          status=0
+          VISUAL_PHASE=head VISUAL_BASE_URL=http://127.0.0.1:4602 npx playwright test -c playwright.config.mjs || status=$?
+          {
+            echo "### Phone screenshots, 375px"
+            node -e '
+              const r = require(process.env.VISUAL_OUT + "/results.json");
+              const rows = [];
+              const walk = (s) => { for (const c of s.suites ?? []) walk(c); for (const sp of s.specs ?? []) rows.push([sp.title, sp.ok]); };
+              walk(r);
+              for (const [t, ok] of rows) console.log(`- ${ok ? "same as the base" : "**changed or a new layout fault**"}: ${t}`);
+            ' || true
+            echo
+            echo "The report artefact has the base, the pull request and the difference for each changed page."
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$status" -ne 0 ] && [ "$APPROVED" = "true" ]; then
+            echo "::notice::pages look different from the base; the pull request carries the visual-change label, so the change is approved"
+            exit 0
+          fi
+          if [ "$status" -ne 0 ]; then
+            echo "::error::pages look different from the base, or have a new layout fault at 375px. Open the report artefact. If the change is meant, add the label visual-change to the pull request."
+          fi
+          exit "$status"
+
+      - name: Keep the report
+        if: ${{ !cancelled() }}
+        # Evidence for a person: a failed upload must not hide the comparison's own result (CI-008).
+        continue-on-error: true
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: phone-visual-${{ github.run_id }}
+          path: phone-visual/report
+          retention-days: 7
+          if-no-files-found: ignore

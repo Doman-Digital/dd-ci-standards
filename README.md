@@ -397,6 +397,26 @@ has to pass a policy check to merge, not get caught in the next audit.
   artefact. Other inputs: `artefact-path` (default `reports/journeys`),
   `results-json`, `retention-days` (14), `working-directory`, `node-version`
   (24), `timeout-minutes` (30). Guard: `test/playwright-journeys.test.mjs`.
+- **`.github/workflows/phone-visual.yml`**: the phone screenshot check on a
+  site's pull requests (synthetic standard O2.5 in Doman-Digital
+  `services/checks/docs/synthetic-standard.md`). One run builds the pull
+  request and its base on the same machine, takes a full-page 375 x 812
+  screenshot of each page the caller names on both, and fails a page that
+  looks different, or one with a new sideways scroll or a sideways row that
+  also scrolls up and down (craft's `rowscroll`). Nothing is kept in the
+  caller's repo: both sides are rendered in the same run, so fonts, the
+  browser and the CMS content match and only the change shows. A change that
+  is meant is approved with the label `visual-change`, and the report
+  artefact shows base, head and difference. The tooling is `visual/`, pinned
+  and locked. The caller example is at the top of the file. Guard:
+  `test/phone-visual.test.mjs`.
+- **SEC-011, test email**: a job that runs a test fails when it reads a
+  client's production `RESEND_API_KEY` (through Doppler from a prd config, as
+  a `secrets.RESEND_API_KEY`, or by running the test under a production
+  Doppler config). Test email goes to `fakeResend()` from
+  `@domandigital/synthetic` on pull request and deploy runs, and to the
+  canary inbox with Doman Digital's `E2E_RESEND_API_KEY` on the nightly run
+  only (synthetic standard O2).
 
   `ADMIN_RUN_TOKEN` is Doppler `dd-checks`/`prd`. Set it as a secret on the
   calling repo; client repos sit in their own GitHub accounts, so an
