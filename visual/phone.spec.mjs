@@ -11,23 +11,36 @@ const out = process.env.VISUAL_OUT ?? "phone-visual";
 const ratio = Number(process.env.VISUAL_MAX_DIFF_RATIO ?? "0");
 const pages = (process.env.VISUAL_PAGES ?? "/").split("\n").map((p) => p.trim()).filter((p) => p.startsWith("/"));
 const LAYOUT = new Set(["scroll", "rowscroll"]);
+// The page's own clock starts at one moment on both sides and is stopped before the capture, so a carousel on a
+// timer, a "posted 3 days ago" or the year in a footer draws the same on the base and the pull request.
+const MOMENT = new Date("2026-01-05T10:00:00Z");
 export const nameOf = (path) => (path === "/" ? "home" : path.replace(/^\/|\/$/g, "").replace(/[^a-z0-9]+/gi, "-").toLowerCase());
 
 for (const path of pages) {
   test(`phone ${path}`, async ({ page }) => {
     const name = nameOf(path);
-    const res = await page.goto(path, { waitUntil: "networkidle" });
+    // The clock is stopped before the page loads, so every script sees the same time, and it moves only when
+    // the run moves it: the page's timers and animation frames for the next five minutes, then a still page.
+    await page.clock.install({ time: MOMENT });
+    await page.clock.pauseAt(new Date(MOMENT.getTime() + 1_000));
+    // A request that never finishes (a map, a chat widget) must not hang the run: wait for quiet, but not for ever.
+    const settle = async () => {
+      await page.waitForLoadState("load", { timeout: 10_000 }).catch(() => {});
+      await page.waitForLoadState("networkidle", { timeout: 5_000 }).catch(() => {});
+    };
+    const res = await page.goto(path, { waitUntil: "domcontentloaded" });
     expect(res?.status(), `${path} answers`).toBeLessThan(400);
-    // Lazy images and fonts load before the capture: walk the page once, then back to the top.
-    await page.evaluate(async () => {
-      await document.fonts?.ready;
-      for (let y = 0; y < document.documentElement.scrollHeight; y += 600) {
-        window.scrollTo(0, y);
-        await new Promise((r) => setTimeout(r, 60));
-      }
-      window.scrollTo(0, 0);
-    });
-    await page.waitForLoadState("networkidle");
+    await settle();
+    // Lazy images and fonts load before the capture: walk the page once, then back to the top. The waits are the
+    // run's own, in real time, because the page's clock is stopped.
+    const height = await page.evaluate(async () => { await document.fonts?.ready; return document.documentElement.scrollHeight; });
+    for (let y = 0; y < height; y += 600) {
+      await page.evaluate((top) => window.scrollTo(0, top), y);
+      await page.waitForTimeout(60);
+    }
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.clock.runFor(5 * 60_000);
+    await settle();
     // A page the base does not have is new: nothing to compare it with, so it is reported and only measured.
     if (phase === "head" && !existsSync(`${out}/base/${name}.png`)) test.info().annotations.push({ type: "new page", description: `${path} is not on the base` });
     // A video's frame and a third-party frame differ between any two loads: masked on both sides.
