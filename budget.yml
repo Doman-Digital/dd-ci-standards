@@ -386,6 +386,13 @@ repos:
         pr_exempt_reason: "ordinary pull request checks; timeout-minutes is a cap, not a run time (creds-check 15), and per_run_usd is the average billed cost of a whole run. A new job over 10 minutes needs its own entry here (DOM-17682)"
         job_minutes: "creds-check=0.6"
         job_minutes_basis: "Median minutes of its successful pull-request and merge-queue runs in the 14 days to 17 November 2026 (3 or more runs each), from the runs and jobs APIs, no logs (DOM-17629). Raise a figure on purpose, in the same change as the job."
+      - workflow: workspace.yml
+        events: "workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.012
+        runs_a_month: 4
+        owner: "DD Framework"
+        reason: "by hand only, main only: the keyless Google Workspace read and the vendor login group creation (DOM-18333, DOM-18549); about two minutes a run on the CI_RUNNER_LIGHT pool, priced as hosted at $0.006 a minute until a month of runs is measured"
       - workflow: lighthouse-live.yml
         events: "schedule, workflow_dispatch"
         runner_class: hosted-linux
