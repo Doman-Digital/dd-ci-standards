@@ -33,7 +33,7 @@ test("phone-visual fails a new layout fault only, and measures with craft's own 
 
 test("phone-visual captures a still page: the page clock is stopped and a request that never ends cannot hang the run", () => {
   // A pull request that changes nothing on a page must pass: a carousel, a marquee or a "today" date drew
-  // differently on the base and the head, and a map that never finished loading timed the page out (MMM-Beauty#831).
+  // differently on the base and the head, and a map that never finished loading timed the page out (a beauty salon site's pull request, DOM-18589).
   assert.match(spec, /page\.clock\.install\(\{ time: MOMENT \}\)/);
   assert.match(spec, /page\.clock\.pauseAt\(/);
   assert.match(spec, /page\.clock\.runFor\(/);
