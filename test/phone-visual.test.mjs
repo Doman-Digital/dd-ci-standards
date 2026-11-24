@@ -31,6 +31,16 @@ test("phone-visual fails a new layout fault only, and measures with craft's own 
   assert.match(spec, /!before\.has/);
 });
 
+test("phone-visual captures a still page: the page clock is stopped and a request that never ends cannot hang the run", () => {
+  // A pull request that changes nothing on a page must pass: a carousel, a marquee or a "today" date drew
+  // differently on the base and the head, and a map that never finished loading timed the page out (a beauty salon site's pull request, DOM-18589).
+  assert.match(spec, /page\.clock\.install\(\{ time: MOMENT \}\)/);
+  assert.match(spec, /page\.clock\.pauseAt\(/);
+  assert.match(spec, /page\.clock\.runFor\(/);
+  assert.doesNotMatch(spec, /goto\([^)]*networkidle/);
+  assert.match(spec, /waitForLoadState\("networkidle", \{ timeout: \d/);
+});
+
 test("serve.mjs answers a page as its file, as <path>.html and as <path>/index.html, and nothing outside the site", async () => {
   const dir = mkdtempSync(join(tmpdir(), "visual-serve-"));
   writeFileSync(join(dir, "index.html"), "home");
