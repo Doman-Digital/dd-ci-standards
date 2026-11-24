@@ -4,7 +4,7 @@
   "description": "The phone screenshot comparison run by .github/workflows/phone-visual.yml: a pull request's pages against its base's, at 375px, in one run on one machine.",
   "type": "module",
   "dependencies": {
-    "@domandigital/craft": "0.24.3",
+    "@domandigital/craft": "0.25.0",
     "@playwright/test": "1.65.1"
   }
 }
