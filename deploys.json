@@ -340,6 +340,11 @@
     },
     {
       "repo": "9feaed38b23a1edc794b331a104019da839ae68aee933d297a28d8e565d49caf",
+      "worker": "36d57f71619ac2a810bcc572e26c8906c4c30e6ebfdf9d325d1b05ad9b4ad903",
+      "path": "manual"
+    },
+    {
+      "repo": "9feaed38b23a1edc794b331a104019da839ae68aee933d297a28d8e565d49caf",
       "worker": "ac80cee6b4cf768aa186cbfdaf9033d7a379b97b3ac9c4c1a912074ecda9f07c",
       "path": "retired"
     },
