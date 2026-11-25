@@ -47,6 +47,11 @@
       "repo": "dd-netcup-config",
       "path": "scripts/dd-work-01-guardrails/install.sh",
       "reason": "installer for the deleted dd-work-01 box; the one line removes the working-copy folder that a hand install left there, so it names that folder to delete it (DOM-438 Phase 1b)"
+    },
+    {
+      "repo": "dd-agent-kit",
+      "path": "tools/storage/dd_storage.py",
+      "reason": "the resolver's own usage text: its docstring shows the publish command with the capsule folder name, so the one file that explains where the names come from has to name it (DOM-18632, Part of DOM-438)"
     }
   ]
 }
