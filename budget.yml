@@ -347,6 +347,10 @@ repos:
         cron: "23 5 * * *"
         owner: "DD Framework"
         reason: "daily CI spend ledger (DOM-17682 I3): reads the org billing usage API, compares measured Actions spend per repo with the workflows: rows declared here, Slack at 60% and 80% projected, one Linear issue under DOM-17629; about a minute a run on vars.CI_RUNNER, 10min cap"
+      - workflow: workspace-log.yml
+        cron: "40 5 * * *"
+        owner: "DD Framework"
+        reason: "daily: reads the last 36 hours of admin Reports events for our own Workspace tenant and posts the key configuration changes to the relay's work log (DOM-18258, DOM-18247); keyless Google read and one Doppler sign-in, about two minutes a run on the CI_RUNNER_LIGHT pool, 5min cap, off the hour"
     vercel_crons: []
     ceiling_usd: 5
     workflows:
@@ -393,6 +397,13 @@ repos:
         runs_a_month: 4
         owner: "DD Framework"
         reason: "by hand only, main only: the keyless Google Workspace read and the vendor login group creation (DOM-18333, DOM-18549); about two minutes a run on the CI_RUNNER_LIGHT pool, priced as hosted at $0.006 a minute until a month of runs is measured"
+      - workflow: workspace-log.yml
+        events: "schedule, workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.012
+        runs_a_month: 31
+        owner: "DD Framework"
+        reason: "daily, main only: the Workspace feed of the client work log (DOM-18258); about two minutes a run on the CI_RUNNER_LIGHT pool, priced as hosted at $0.006 a minute until a month of runs is measured"
       - workflow: lighthouse-live.yml
         events: "schedule, workflow_dispatch"
         runner_class: hosted-linux
