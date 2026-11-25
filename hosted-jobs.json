@@ -1,6 +1,6 @@
 {
   "$comment": "dd-ci-01 serves the org's pools again (14 Nov 2026, founder): CI-001, CI-022, CI-028 and CI-029 apply to org private repos as before. Hosted runners are still wanted where a job is registered here. Set self_hosted_retired back to true to stop the rules requiring the pools.",
-  "updated": "2026-11-15",
+  "updated": "2026-11-25",
   "jobs": [
     {
       "repo": "dd-repo-registry",
@@ -64,6 +64,22 @@
       "why": "Playwright 1.59 cannot install chromium-headless-shell on ubuntu-latest, which became Ubuntu 26.04 on 13 November 2026, so the job is pinned to ubuntu-24.04 (comment in the workflow). Move it to the pools once services/checks' Playwright supports 26.04.",
       "minutes_a_month": 130,
       "measured": "30 runs between 27 October and 14 November 2026 at about 2.6 minutes each, about 50 a month"
+    },
+    {
+      "repo": "dd-client-ci",
+      "workflow": "client-ci.yml",
+      "job": "run",
+      "why": "Runs a client repo's CI on the included minutes, because the client repo sits in the client's own account and the dd-client pool on dd-ci-01 queues for hours at peak. The client repo's runner cannot draw on the org allowance, so the job has to run here (DOM-1644 follow-up).",
+      "minutes_a_month": 300,
+      "measured": "estimate, not yet measured: about 5 minutes a run, about 60 pull request runs a month for the pilot client; re-measure after a month and before a second client joins"
+    },
+    {
+      "repo": "dd-client-ci",
+      "workflow": "client-ci.yml",
+      "job": "report",
+      "why": "Posts the result of a run back to the client's commit. It must not queue on the pools, or the client's commit would show no verdict while its own check waits.",
+      "minutes_a_month": 60,
+      "measured": "estimate, not yet measured: one run of under a minute per client-ci run, billed as 1 minute, about 60 a month"
     }
   ],
   "self_hosted_retired": false
