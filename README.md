@@ -97,6 +97,8 @@ CI-028 reports a job on the variable that is not listed, a listed job that
 left it, and a listed job whose `runs-on` is not the expression above. The
 list is empty until the organisation's plan reads `enterprise`.
 
+The private repo `dd-client-ci` runs client repos' CI on the same allowance (DOM-1644): a client repo in its own account cannot draw on the org's minutes, so its checks run there and the result is posted back to the client's commit. Its two jobs are listed here like any other.
+
 ```sh
 node <dd-ci-standards checkout>/bin/dd.mjs new --kind dd-site dd-example \
   --description "What the repo is, in a sentence." --programme DOM-123 --answers answers.json
