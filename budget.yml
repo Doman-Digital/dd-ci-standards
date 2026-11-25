@@ -1336,3 +1336,16 @@ repos:
         runs_a_month: 0
         owner: "DD Framework"
         reason: "0 runs 1 to 15 November 2026 (0 a month at that rate), no November runs to measure; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+
+  dd-client-ci:
+    github_actions_crons: []
+    vercel_crons: []
+    ceiling_usd: 3
+    workflows:
+      - workflow: client-ci.yml
+        events: "workflow_dispatch"
+        runner_class: hosted-linux
+        per_run_usd: 0.036
+        runs_a_month: 60
+        owner: "DD Framework"
+        reason: "runs a client repo's CI on the included minutes (DOM-1644): about 5 billed minutes for the run job and 1 for the report job at $0.006 a Linux minute, about 60 pull request runs a month for the one pilot client; an estimate, not yet measured, so re-measure after a month and before a second client joins. Billed to the included allowance, priced here at list so the register stays honest"
