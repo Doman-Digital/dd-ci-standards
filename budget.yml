@@ -55,6 +55,10 @@ repos:
         cron: "20 6 * * *"
         owner: "Doman Digital / DD Checks"
         reason: "daily drift-domains and drift-mfa (the Cyber Essentials MFA guard, DOM-1339), moved off dd-work-01 when it was deleted; one install of services/checks, a few dozen API calls, 20min cap"
+      - workflow: dd-checks-drift.yml
+        cron: "35 6 * * 1"
+        owner: "Doman Digital / DD Checks"
+        reason: "weekly drift-speed, a job of its own (DOM-18766): every page dd-repo-registry lists under sites[].lighthouse.paths through the PageSpeed Insights API (Google's hardware, no browser or Lighthouse on the runner, CI-033), median of 3 phone runs, about four minutes on the scheduled lane, 30min cap; replaces dd-repo-registry lighthouse-live.yml"
       - workflow: dd-zap-baseline.yml
         cron: "41 3 * * 3"
         owner: "Doman Digital / Assurance"
@@ -149,7 +153,7 @@ repos:
         per_run_usd: 0.0009
         runs_a_month: 26
         owner: "Doman Digital / DD Checks"
-        reason: "13 runs 1 to 15 November 2026 (26 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.018), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
+        reason: "from 27 November 2026 a Monday drift-speed run as well (DOM-18766), about four a month, which replaces dd-repo-registry lighthouse-live.yml (4 a month at $0.0069): at this per-run figure they add under half a cent, so the count stays until a month of runs is measured; 13 runs 1 to 15 November 2026 (26 a month at that rate), mean of 12 sampled November runs (range $0.000 to $0.018), scaled by 0.11 to the repo's billed run-rate so cancelled and skipped runs count; seeded 15 November 2026 from the jobs API at $0.006 a Linux minute and $0.062 a macOS minute (DOM-17682)"
       - workflow: dd-checks-test.yml
         events: "workflow_dispatch"
         runner_class: hosted-linux
