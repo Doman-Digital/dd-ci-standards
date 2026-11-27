@@ -206,7 +206,7 @@ jobs:
         if: ${{ !cancelled() }}
         # Evidence for a person: a failed upload must not hide the comparison's own result (CI-008).
         continue-on-error: true
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: phone-visual-${{ github.run_id }}
           path: phone-visual/report
